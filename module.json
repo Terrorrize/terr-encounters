@@ -5,7 +5,7 @@
   "version": "0.0.1",
   "authors": [
     {
-      "name": "Terr Orrize"
+      "name": "Terrorrize"
     }
   ],
   "compatibility": {
@@ -29,5 +29,8 @@
   "styles": [
     "styles/styles.css"
   ],
-  "socket": false
+  "socket": false,
+  "manifest": "https://raw.githubusercontent.com/Terrorrize/terr-encounters/main/module.json",
+  "download": "https://github.com/Terrorrize/terr-encounters/releases/latest/download/terr-encounters.zip",
+  "url": "https://github.com/Terrorrize/terr-encounters"
 }
