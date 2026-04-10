@@ -1,0 +1,33 @@
+{
+  "id": "terr-encounters",
+  "title": "Terr Encounters",
+  "description": "PF2e biome, weather, and encounter generation tools.",
+  "version": "0.0.1",
+  "authors": [
+    {
+      "name": "Terr Orrize"
+    }
+  ],
+  "compatibility": {
+    "minimum": "12",
+    "verified": "13"
+  },
+  "relationships": {
+    "systems": [
+      {
+        "id": "pf2e",
+        "type": "system"
+      }
+    ]
+  },
+  "esmodules": [
+    "scripts/main.js",
+    "scripts/dispatcher.js",
+    "scripts/settings.js",
+    "scripts/ui-popup.js"
+  ],
+  "styles": [
+    "styles/styles.css"
+  ],
+  "socket": false
+}
