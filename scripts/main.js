@@ -1,47 +1,51 @@
 import { openWeatherPanel } from "./weather/weather-ui.js";
 
 const MODULE_ID = "terr-encounters";
+const TOOL_NAME = `${MODULE_ID}-open-weather`;
 
 function registerSceneControl(controls) {
     if (!game.user?.isGM) return;
     if (!Array.isArray(controls)) return;
 
-    let tokenTools = controls.find(control => control.name === "token");
-    if (!tokenTools) {
-        tokenTools = {
+    let tokenControls = controls.find(control => control.name === "token");
+    if (!tokenControls) {
+        tokenControls = {
             name: "token",
             title: "Token Controls",
-            tools: []
+            tools: [],
+            activeTool: "select"
         };
-        controls.push(tokenTools);
+        controls.push(tokenControls);
     }
 
-    tokenTools.tools ??= [];
+    tokenControls.tools ??= [];
 
-    const existingIndex = tokenTools.tools.findIndex(tool => tool.name === `${MODULE_ID}-weather`);
-    const toolDef = {
-        name: `${MODULE_ID}-weather`,
+    const tool = {
+        name: TOOL_NAME,
         title: "Terr Encounters",
         icon: "fas fa-cloud-sun",
         button: true,
         visible: true,
-        onClick: () => openWeatherPanel()
+        onClick: async () => {
+            await openWeatherPanel();
+        }
     };
 
+    const existingIndex = tokenControls.tools.findIndex(entry => entry.name === TOOL_NAME);
     if (existingIndex >= 0) {
-        tokenTools.tools[existingIndex] = toolDef;
+        tokenControls.tools[existingIndex] = tool;
     } else {
-        tokenTools.tools.push(toolDef);
+        tokenControls.tools.push(tool);
     }
 }
 
 Hooks.once("init", () => {
-    console.log("Terr Encounters | Main init");
+    console.log(`${MODULE_ID} | Main init`);
 });
 
 Hooks.once("ready", () => {
     game.terrEncounters ??= {};
-    game.terrEncounters.open = () => openWeatherPanel();
+    game.terrEncounters.openWeather = () => openWeatherPanel();
 });
 
 Hooks.on("getSceneControlButtons", (controls) => {

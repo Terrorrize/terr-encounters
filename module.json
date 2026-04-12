@@ -25,9 +25,6 @@
   },
   "esmodules": [
     "scripts/main.js",
-    "scripts/dispatcher.js",
-    "scripts/settings.js",
-    "scripts/ui-popup.js",
     "scripts/weather/weather-init.js"
   ],
   "styles": [
