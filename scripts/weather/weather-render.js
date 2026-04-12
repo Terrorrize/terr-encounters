@@ -1,6 +1,13 @@
+import { BIOME_DEFAULT_RUIN_FAMILIES } from "../data/weather-ruins-data.js";
+import { getAvailableSeasonsForBiome, WEATHER_BIOMES } from "../data/weather-biomes.js";
+
 export class WeatherRender {
     static buildTemplateData(record, environment) {
         const orderedOutput = this.getOrderedOutput(record);
+        const biomeChoices = Object.keys(WEATHER_BIOMES).map(value => ({ value, label: value }));
+        const seasonChoices = getAvailableSeasonsForBiome(environment.biome).map(value => ({ value, label: value }));
+        const phaseChoices = ["Early", "Mid", "Late"].map(value => ({ value, label: value }));
+        const manualRuinFamilyChoices = (BIOME_DEFAULT_RUIN_FAMILIES[environment.biome] ?? []).map(value => ({ value, label: value }));
 
         return {
             moduleId: "terr-encounters",
@@ -30,7 +37,20 @@ export class WeatherRender {
             },
             showRuins: !!environment.addRuins,
             showManualRuinFamily: !!environment.addRuins && environment.ruinStyleMode === "manual",
-            hasRuinsApplied: !!record.ruinModifier && !!record.ruinFamily
+            hasRuinsApplied: !!record.ruinModifier && !!record.ruinFamily,
+            biomeChoices,
+            seasonChoices,
+            phaseChoices,
+            ruinFrequencyChoices: [
+                { value: "faint", label: "Faint" },
+                { value: "light", label: "Light" },
+                { value: "mixed", label: "Mixed" }
+            ],
+            ruinStyleModeChoices: [
+                { value: "auto", label: "Auto by Biome" },
+                { value: "manual", label: "Manual" }
+            ],
+            manualRuinFamilyChoices
         };
     }
 

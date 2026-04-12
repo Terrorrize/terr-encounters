@@ -1,0 +1,3020 @@
+========================================================================================================================
+FILE: .\module.json
+========================================================================================================================
+{
+  "id": "terr-encounters",
+  "title": "Terr Encounters",
+  "description": "PF2e biome, weather, and encounter generation tools.",
+  "version": "0.0.4",
+  "authors": [
+    {
+      "name": "Terrorrize"
+    }
+  ],
+  "manifest": "https://github.com/Terrorrize/terr-encounters/releases/latest/download/module.json",
+  "download": "https://github.com/Terrorrize/terr-encounters/releases/download/0.0.4/module.zip",
+  "url": "https://github.com/Terrorrize/terr-encounters",
+  "compatibility": {
+    "minimum": "13",
+    "verified": "13"
+  },
+  "relationships": {
+    "systems": [
+      {
+        "id": "pf2e",
+        "type": "system"
+      }
+    ]
+  },
+  "esmodules": [
+    "scripts/main.js",
+    "scripts/settings.js",
+    "scripts/weather/weather-init.js"
+  ],
+  "styles": [
+    "styles/styles.css",
+    "styles/weather-panel.css"
+  ],
+  "socket": false
+}
+
+
+========================================================================================================================
+FILE: .\README.md
+========================================================================================================================
+# Terr Encounters
+
+PF2e biome, weather, and encounter generation module.
+
+## Current baseline
+- Manifest wired
+- Settings registered
+- Popup opens
+- Dispatcher creates stub chat output
+
+
+========================================================================================================================
+FILE: .\scripts\data\weather-biomes.js
+========================================================================================================================
+import { toKey } from "../weather/weather-utils.js";
+
+const SHARED_LOCKS = {
+    temperature: {
+        default: [1, 3],
+        "Cold Snap": [2, 4],
+        "Hard Cold": [2, 4],
+        "Deep Cold": [2, 5],
+        "Bitter Freeze": [3, 6],
+        "Severe Cold": [3, 6],
+        "Heat Wave": [3, 7],
+        "Humid Heat": [3, 7],
+        "Dry Heat": [3, 7],
+        "Harsh Dry Heat": [3, 7],
+        "Thaw / Mild Thaw / Warm Break": [1, 3],
+        "Cool Break": [1, 2]
+    },
+    weather: {
+        default: [1, 2],
+        "clear/fair": [1, 3],
+        "cloud cover": [1, 2],
+        "mist/fog": [1, 2],
+        "fog": [1, 2],
+        "freezing fog": [1, 2],
+        "sea mist": [1, 2],
+        "thaw mist": [1, 2],
+        "drizzle": [1, 2],
+        "rain": [1, 2],
+        "steady rain": [1, 3],
+        "light rain": [1, 2],
+        "brief rain": [1, 1],
+        "brief hard rain": [1, 1],
+        "wind": [1, 2],
+        "hard wind": [1, 2],
+        "dry wind": [1, 3],
+        "sea breeze": [1, 3],
+        "light snow": [1, 2],
+        "steady snow": [1, 3],
+        "blowing snow": [1, 2],
+        "blizzard": [1, 2],
+        "sleet": [1, 1],
+        "thunderstorm": [1, 1],
+        "storm squall": [1, 1],
+        "cold squall": [1, 1],
+        "humid haze": [1, 3],
+        "heat haze": [1, 3],
+        "dust wall": [1, 1],
+        "blowing dust": [1, 2],
+        "ice-crystal drift": [1, 2]
+    }
+};
+
+function entry(value, weight = 1) {
+    return { value, weight };
+}
+
+function buildPhaseData(groundStates, temperatureStates, weatherEvents) {
+    return { groundStates, temperatureStates, weatherEvents };
+}
+
+function profile(definition) {
+    return {
+        seasonType: definition.seasonType,
+        seasons: definition.seasons,
+        locks: foundry.utils.deepClone(SHARED_LOCKS)
+    };
+}
+
+const FOREST = profile({
+    seasonType: "temperate",
+    seasons: {
+        Spring: {
+            Early: buildPhaseData(
+                ["thawing ground", "wet leaf litter", "lingering frost pockets", "runoff-softened earth", "moss-darkened roots and stone", "bare patches under the trees"],
+                [entry("Chill", 4), entry("Mild", 3), entry("Cold Snap", 2), entry("Thaw / Mild Thaw / Warm Break", 1)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("mist/fog", 2), entry("drizzle", 3), entry("rain", 3), entry("wind", 2), entry("sleet", 1), entry("late snow", 1)]
+            ),
+            Mid: buildPhaseData(
+                ["wet leaf litter", "fresh undergrowth", "moss-darkened roots and stone", "runoff-softened earth", "damp forest floor", "thickening green beneath the trees"],
+                [entry("Chill", 3), entry("Mild", 4), entry("Warm", 2), entry("Cold Snap", 1)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("mist/fog", 2), entry("drizzle", 2), entry("rain", 3), entry("wind", 2), entry("thunderstorm", 1), entry("sleet", 1)]
+            ),
+            Late: buildPhaseData(
+                ["fresh undergrowth", "moss-darkened roots and stone", "damp forest floor", "thick green beneath the trees", "fern-thick ground", "soft leaf litter under new growth"],
+                [entry("Mild", 4), entry("Warm", 3), entry("Hot", 1), entry("Cool Break", 1)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("mist/fog", 1), entry("drizzle", 2), entry("rain", 2), entry("thunderstorm", 2), entry("wind", 2), entry("warm still air", 1)]
+            )
+        },
+        Summer: {
+            Early: buildPhaseData(
+                ["dense green undergrowth", "fern-thick ground", "shaded damp pockets", "overgrown forest floor", "moss-darkened roots and stone", "soft summer leaf litter"],
+                [entry("Mild", 2), entry("Warm", 4), entry("Hot", 2), entry("Cool Break", 1)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("mist/fog", 1), entry("light rain", 2), entry("steady rain", 2), entry("thunderstorm", 2), entry("wind", 2), entry("humid haze", 1)]
+            ),
+            Mid: buildPhaseData(
+                ["dense green undergrowth", "dry needle floor", "fern-thick ground", "shaded damp pockets", "overgrown forest floor", "sun-baked clearings"],
+                [entry("Warm", 4), entry("Hot", 3), entry("Heat Wave", 2), entry("Humid Heat", 2)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("mist/fog", 1), entry("steady rain", 1), entry("thunderstorm", 2), entry("wind", 2), entry("humid haze", 2), entry("heat haze", 1)]
+            ),
+            Late: buildPhaseData(
+                ["dry needle floor", "dense green undergrowth", "sun-baked clearings", "shaded damp pockets", "overgrown forest floor", "drying brush beneath the trees"],
+                [entry("Warm", 3), entry("Hot", 3), entry("Heat Wave", 2), entry("Dry Heat", 2)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("light rain", 1), entry("thunderstorm", 2), entry("dry wind", 2), entry("humid haze", 1), entry("heat haze", 1)]
+            )
+        },
+        Autumn: {
+            Early: buildPhaseData(
+                ["fallen leaves beginning to gather", "damp leaf litter", "thinning undergrowth", "bare root and stone", "cool darkening forest floor", "early leaf fall"],
+                [entry("Mild", 3), entry("Chill", 3), entry("Warm", 1), entry("Cool Break", 1)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("mist/fog", 2), entry("drizzle", 2), entry("steady rain", 2), entry("wind", 2), entry("thunderstorm", 1)]
+            ),
+            Mid: buildPhaseData(
+                ["fallen leaves", "damp leaf litter", "bare root and stone", "wet rot underfoot", "thinning brush", "early frost on leaves"],
+                [entry("Chill", 3), entry("Cold", 3), entry("Mild", 1), entry("Hard Cold", 1)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("fog", 2), entry("drizzle", 2), entry("steady rain", 2), entry("wind", 2), entry("sleet", 1), entry("first snow", 1)]
+            ),
+            Late: buildPhaseData(
+                ["fallen leaves lying thick", "bare root and stone", "wet rot underfoot", "late autumn dieback", "exposed forest floor", "first thin frost on the ground"],
+                [entry("Cold", 3), entry("Hard Cold", 3), entry("Thaw / Mild Thaw / Warm Break", 1), entry("Cold Snap", 1)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("fog", 2), entry("drizzle", 2), entry("steady rain", 2), entry("wind", 2), entry("sleet", 1), entry("first snow", 1)]
+            )
+        },
+        Winter: {
+            Early: buildPhaseData(
+                ["light snow cover", "hard frozen ground", "bare cold ground", "crusted snow", "patchy snow", "frost-stiffened grass"],
+                [entry("Cold", 3), entry("Deep Cold", 3), entry("Thaw / Mild Thaw / Warm Break", 1), entry("Bitter Freeze", 1)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("light snow", 2), entry("steady snow", 2), entry("sleet", 1), entry("hard wind", 2), entry("freezing fog", 1)]
+            ),
+            Mid: buildPhaseData(
+                ["deep snow cover", "crusted snow", "hard frozen ground", "bare cold ground", "drifted snow", "buried root and stone"],
+                [entry("Deep Cold", 3), entry("Severe Cold", 3), entry("Bitter Freeze", 2), entry("Thaw / Mild Thaw / Warm Break", 1)],
+                [entry("clear/fair", 1), entry("cloud cover", 2), entry("light snow", 2), entry("steady snow", 2), entry("blowing snow", 2), entry("blizzard", 1), entry("freezing fog", 1), entry("hard wind", 2)]
+            ),
+            Late: buildPhaseData(
+                ["crusted snow", "hard frozen ground", "deep snow cover", "slush-softened ground", "patchy snow", "drifted snow"],
+                [entry("Cold", 3), entry("Deep Cold", 3), entry("Thaw / Mild Thaw / Warm Break", 2), entry("Bitter Freeze", 1)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("light snow", 2), entry("steady snow", 2), entry("blowing snow", 1), entry("sleet", 1), entry("freezing fog", 1), entry("hard wind", 2)]
+            )
+        }
+    }
+});
+
+const PLAINS = profile({
+    seasonType: "temperate",
+    seasons: {
+        Spring: {
+            Early: buildPhaseData(
+                ["runoff-softened earth", "dry open ground", "patchy snow", "frost-stiffened grass", "wet leaf litter", "wind-stripped ground"],
+                [entry("Chill", 4), entry("Mild", 3), entry("Cold Snap", 2), entry("Thaw / Mild Thaw / Warm Break", 1)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("wind", 3), entry("drizzle", 2), entry("rain", 2), entry("mist/fog", 1), entry("sleet", 1), entry("late snow", 1)]
+            ),
+            Mid: buildPhaseData(
+                ["thick grass", "runoff-softened earth", "fresh undergrowth", "dry open ground", "wind-stripped ground"],
+                [entry("Chill", 3), entry("Mild", 4), entry("Warm", 2), entry("Cold Snap", 1)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("wind", 3), entry("drizzle", 2), entry("rain", 2), entry("thunderstorm", 1), entry("mist/fog", 1), entry("sleet", 1)]
+            ),
+            Late: buildPhaseData(
+                ["thick grass", "fresh undergrowth", "dry open ground", "baked ground"],
+                [entry("Mild", 4), entry("Warm", 3), entry("Hot", 1), entry("Cool Break", 1)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("wind", 3), entry("rain", 2), entry("thunderstorm", 2), entry("heat haze", 1)]
+            )
+        },
+        Summer: {
+            Early: buildPhaseData(
+                ["tall grass", "thick grass", "dry open ground", "fresh undergrowth"],
+                [entry("Mild", 2), entry("Warm", 4), entry("Hot", 2), entry("Cool Break", 1)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("wind", 3), entry("light rain", 1), entry("steady rain", 1), entry("thunderstorm", 2), entry("heat haze", 1)]
+            ),
+            Mid: buildPhaseData(
+                ["tall grass", "dry open ground", "baked ground", "thick grass"],
+                [entry("Warm", 4), entry("Hot", 3), entry("Heat Wave", 2), entry("Dry Heat", 2)],
+                [entry("clear/fair", 2), entry("cloud cover", 1), entry("wind", 2), entry("thunderstorm", 2), entry("dry wind", 2), entry("heat haze", 2), entry("brief hard rain", 1)]
+            ),
+            Late: buildPhaseData(
+                ["tall grass", "dry open ground", "baked ground", "loose dust", "open dust flats"],
+                [entry("Warm", 3), entry("Hot", 3), entry("Heat Wave", 2), entry("Harsh Dry Heat", 2)],
+                [entry("clear/fair", 2), entry("cloud cover", 1), entry("dry wind", 3), entry("thunderstorm", 1), entry("heat haze", 2), entry("brief hard rain", 1), entry("blowing dust", 1)]
+            )
+        },
+        Autumn: {
+            Early: buildPhaseData(
+                ["tall grass", "dry open ground", "frost-stiffened grass", "wind-stripped ground"],
+                [entry("Mild", 3), entry("Chill", 3), entry("Thaw / Mild Thaw / Warm Break", 1), entry("Cool Break", 1)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("wind", 3), entry("drizzle", 1), entry("steady rain", 2), entry("thunderstorm", 1), entry("mist/fog", 1)]
+            ),
+            Mid: buildPhaseData(
+                ["frost-stiffened grass", "dry open ground", "wind-stripped ground", "bare cold ground"],
+                [entry("Chill", 3), entry("Cold", 3), entry("Mild", 1), entry("Hard Cold", 1)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("wind", 3), entry("drizzle", 1), entry("steady rain", 2), entry("mist/fog", 1), entry("sleet", 1), entry("first snow", 1)]
+            ),
+            Late: buildPhaseData(
+                ["frost-stiffened grass", "bare cold ground", "wind-stripped ground", "hard frozen ground"],
+                [entry("Cold", 3), entry("Hard Cold", 3), entry("Thaw / Mild Thaw / Warm Break", 1), entry("Cold Snap", 1)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("wind", 3), entry("drizzle", 1), entry("steady rain", 1), entry("sleet", 2), entry("first snow", 1)]
+            )
+        },
+        Winter: {
+            Early: buildPhaseData(
+                ["frost-stiffened grass", "patchy snow", "hard frozen ground", "crusted snow"],
+                [entry("Cold", 3), entry("Deep Cold", 3), entry("Thaw / Mild Thaw / Warm Break", 1), entry("Bitter Freeze", 1)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("hard wind", 3), entry("light snow", 2), entry("steady snow", 2), entry("sleet", 1), entry("freezing fog", 1)]
+            ),
+            Mid: buildPhaseData(
+                ["deep snow cover", "drifted snow", "hard frozen ground", "crusted snow"],
+                [entry("Deep Cold", 3), entry("Severe Cold", 3), entry("Bitter Freeze", 2), entry("Thaw / Mild Thaw / Warm Break", 1)],
+                [entry("clear/fair", 1), entry("cloud cover", 2), entry("hard wind", 3), entry("light snow", 2), entry("steady snow", 2), entry("blowing snow", 2), entry("blizzard", 1), entry("freezing fog", 1)]
+            ),
+            Late: buildPhaseData(
+                ["crusted snow", "patchy snow", "hard frozen ground", "slush-softened ground", "drifted snow"],
+                [entry("Cold", 3), entry("Deep Cold", 3), entry("Thaw / Mild Thaw / Warm Break", 2), entry("Bitter Freeze", 1)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("hard wind", 3), entry("light snow", 2), entry("steady snow", 2), entry("sleet", 1), entry("blowing snow", 1), entry("freezing fog", 1)]
+            )
+        }
+    }
+});
+
+const HILLS = foundry.utils.deepClone(PLAINS);
+const URBAN_FRINGE = foundry.utils.deepClone(PLAINS);
+
+const MOUNTAINS = profile({
+    seasonType: "temperate",
+    seasons: {
+        Spring: {
+            Early: buildPhaseData(
+                ["patchy snow", "exposed stone and gravel", "runoff-softened earth", "dark damp ground", "hard frozen ground"],
+                [entry("Cold", 4), entry("Deep Cold", 3), entry("Thaw / Mild Thaw / Warm Break", 1), entry("Cold Snap", 2)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("hard wind", 3), entry("freezing fog", 1), entry("sleet", 1), entry("late snow", 2), entry("light snow", 2), entry("cold rain", 1)]
+            ),
+            Mid: buildPhaseData(
+                ["patchy snow", "exposed stone and gravel", "runoff-softened earth", "hard frozen ground"],
+                [entry("Cold", 3), entry("Chill", 2), entry("Thaw / Mild Thaw / Warm Break", 1), entry("Cold Snap", 2)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("hard wind", 3), entry("mist/fog", 1), entry("sleet", 1), entry("light snow", 2), entry("steady snow", 1), entry("cold rain", 1)]
+            ),
+            Late: buildPhaseData(
+                ["patchy snow", "exposed stone and gravel", "runoff-softened earth", "dry open ground"],
+                [entry("Chill", 3), entry("Mild", 2), entry("Cold", 2), entry("Thaw / Mild Thaw / Warm Break", 1)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("wind", 2), entry("mist/fog", 1), entry("rain", 1), entry("light snow", 1), entry("thunderstorm", 1), entry("sleet", 1)]
+            )
+        },
+        Summer: {
+            Early: buildPhaseData(
+                ["exposed stone and gravel", "runoff-softened earth", "fresh undergrowth", "patchy snow"],
+                [entry("Chill", 3), entry("Mild", 3), entry("Warm", 1), entry("Cool Break", 1)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("wind", 3), entry("mist/fog", 1), entry("rain", 1), entry("thunderstorm", 2), entry("light snow", 1), entry("heat haze", 1)]
+            ),
+            Mid: buildPhaseData(
+                ["exposed stone and gravel", "dry open ground", "fresh undergrowth", "baked ground"],
+                [entry("Mild", 3), entry("Warm", 2), entry("Chill", 1), entry("Hot", 1)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("wind", 3), entry("thunderstorm", 2), entry("brief hard rain", 1), entry("heat haze", 1), entry("dry wind", 1)]
+            ),
+            Late: buildPhaseData(
+                ["dry open ground", "exposed stone and gravel", "baked ground", "wind-stripped ground"],
+                [entry("Mild", 2), entry("Warm", 2), entry("Dry Heat", 1), entry("Cool Break", 1)],
+                [entry("clear/fair", 2), entry("cloud cover", 1), entry("dry wind", 2), entry("thunderstorm", 1), entry("brief hard rain", 1), entry("heat haze", 1), entry("mist/fog", 1)]
+            )
+        },
+        Autumn: {
+            Early: buildPhaseData(
+                ["exposed stone and gravel", "dry open ground", "fresh undergrowth", "wind-stripped ground"],
+                [entry("Chill", 2), entry("Cold", 2), entry("Mild", 1), entry("Hard Cold", 1)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("wind", 3), entry("mist/fog", 1), entry("cold rain", 1), entry("thunderstorm", 1), entry("sleet", 1), entry("first snow", 1)]
+            ),
+            Mid: buildPhaseData(
+                ["exposed stone and gravel", "bare cold ground", "patchy snow", "wind-stripped ground"],
+                [entry("Cold", 3), entry("Hard Cold", 2), entry("Thaw / Mild Thaw / Warm Break", 1), entry("Cold Snap", 1)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("hard wind", 3), entry("mist/fog", 1), entry("sleet", 2), entry("cold rain", 1), entry("steady snow", 1), entry("freezing fog", 1)]
+            ),
+            Late: buildPhaseData(
+                ["bare cold ground", "patchy snow", "hard frozen ground", "wind-stripped ground"],
+                [entry("Hard Cold", 3), entry("Deep Cold", 2), entry("Cold Snap", 1), entry("Thaw / Mild Thaw / Warm Break", 1)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("hard wind", 3), entry("sleet", 2), entry("light snow", 2), entry("steady snow", 1), entry("freezing fog", 1)]
+            )
+        },
+        Winter: {
+            Early: buildPhaseData(
+                ["patchy snow", "hard frozen ground", "drifted snow", "crusted snow"],
+                [entry("Deep Cold", 3), entry("Severe Cold", 2), entry("Bitter Freeze", 2), entry("Thaw / Mild Thaw / Warm Break", 1)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("hard wind", 3), entry("light snow", 2), entry("steady snow", 2), entry("blowing snow", 2), entry("freezing fog", 1), entry("sleet", 1)]
+            ),
+            Mid: buildPhaseData(
+                ["deep snow cover", "drifted snow", "hard frozen ground", "crusted snow"],
+                [entry("Severe Cold", 3), entry("Bitter Freeze", 3), entry("Deep Cold", 2), entry("Thaw / Mild Thaw / Warm Break", 1)],
+                [entry("clear/fair", 1), entry("cloud cover", 2), entry("hard wind", 3), entry("steady snow", 2), entry("blowing snow", 2), entry("blizzard", 2), entry("freezing fog", 1), entry("ice-crystal drift", 1)]
+            ),
+            Late: buildPhaseData(
+                ["crusted snow", "deep snow cover", "drifted snow", "hard frozen ground", "patchy snow"],
+                [entry("Deep Cold", 3), entry("Severe Cold", 2), entry("Bitter Freeze", 2), entry("Thaw / Mild Thaw / Warm Break", 1)],
+                [entry("clear/fair", 1), entry("cloud cover", 2), entry("hard wind", 3), entry("light snow", 2), entry("steady snow", 2), entry("blowing snow", 2), entry("blizzard", 1), entry("freezing fog", 1)]
+            )
+        }
+    }
+});
+
+const DESERT = profile({
+    seasonType: "desert",
+    seasons: {
+        "Cool Season": {
+            Early: buildPhaseData(
+                ["dry open ground", "loose dust", "exposed stone and gravel", "wind-stripped ground"],
+                [entry("Chill", 2), entry("Mild", 3), entry("Cold", 1), entry("Thaw / Mild Thaw / Warm Break", 1)],
+                [entry("clear/fair", 3), entry("cloud cover", 1), entry("dry wind", 3), entry("mist/fog", 1), entry("brief rain", 1), entry("hard wind", 2), entry("thunderstorm", 1), entry("blowing dust", 2)]
+            ),
+            Mid: buildPhaseData(
+                ["dry open ground", "loose dust", "exposed stone and gravel", "cracked hardpan"],
+                [entry("Mild", 3), entry("Warm", 2), entry("Chill", 1), entry("Cold Snap", 1)],
+                [entry("clear/fair", 3), entry("cloud cover", 1), entry("dry wind", 3), entry("brief rain", 1), entry("hard wind", 2), entry("thunderstorm", 1), entry("blowing dust", 2), entry("heat haze", 1)]
+            ),
+            Late: buildPhaseData(
+                ["dry open ground", "loose dust", "cracked hardpan", "baked ground"],
+                [entry("Warm", 3), entry("Hot", 2), entry("Chill", 1), entry("Heat Wave", 1)],
+                [entry("clear/fair", 3), entry("cloud cover", 1), entry("dry wind", 3), entry("hard wind", 2), entry("blowing dust", 2), entry("brief hard rain", 1), entry("thunderstorm", 1), entry("heat haze", 2)]
+            )
+        },
+        "Hot Season": {
+            Early: buildPhaseData(
+                ["loose dust", "cracked hardpan", "baked ground", "wind-stripped ground"],
+                [entry("Warm", 2), entry("Hot", 3), entry("Dry Heat", 3), entry("Cool Break", 1)],
+                [entry("clear/fair", 3), entry("cloud cover", 1), entry("dry wind", 3), entry("blowing dust", 2), entry("heat haze", 2), entry("hot still air", 2), entry("thunderstorm", 1), entry("brief hard rain", 1)]
+            ),
+            Mid: buildPhaseData(
+                ["loose dust", "cracked hardpan", "baked ground", "open dust flats"],
+                [entry("Hot", 3), entry("Heat Wave", 3), entry("Harsh Dry Heat", 3), entry("Dry Heat", 2)],
+                [entry("clear/fair", 3), entry("dry wind", 3), entry("blowing dust", 2), entry("sand-lifting gusts", 2), entry("heat haze", 3), entry("hot still air", 2), entry("thunderstorm", 1), entry("brief hard rain", 1)]
+            ),
+            Late: buildPhaseData(
+                ["open dust flats", "cracked hardpan", "baked ground", "wind-stripped ground"],
+                [entry("Hot", 2), entry("Heat Wave", 3), entry("Harsh Dry Heat", 3), entry("Dry Heat", 2)],
+                [entry("clear/fair", 3), entry("dry wind", 3), entry("blowing dust", 2), entry("sand-lifting gusts", 2), entry("heat haze", 3), entry("furnace still air", 2), entry("thunderstorm", 1), entry("dust wall", 1)]
+            )
+        }
+    }
+});
+
+const TUNDRA = profile({
+    seasonType: "temperate",
+    seasons: {
+        Spring: {
+            Early: buildPhaseData(
+                ["patchy snow", "hard frozen ground", "dark damp ground", "exposed stone and gravel"],
+                [entry("Cold", 3), entry("Deep Cold", 3), entry("Thaw / Mild Thaw / Warm Break", 1), entry("Cold Snap", 2)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("hard wind", 3), entry("freezing fog", 1), entry("sleet", 1), entry("light snow", 2), entry("steady snow", 1)]
+            ),
+            Mid: buildPhaseData(
+                ["patchy snow", "dark damp ground", "runoff-softened earth", "fresh undergrowth", "hard frozen ground"],
+                [entry("Cold", 3), entry("Chill", 2), entry("Thaw / Mild Thaw / Warm Break", 1), entry("Cold Snap", 2)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("hard wind", 3), entry("mist/fog", 1), entry("sleet", 1), entry("light snow", 1), entry("steady snow", 1)]
+            ),
+            Late: buildPhaseData(
+                ["fresh undergrowth", "runoff-softened earth", "dark damp ground", "dry open ground"],
+                [entry("Chill", 3), entry("Mild", 2), entry("Cold", 2), entry("Cool Break", 1)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("wind", 3), entry("mist/fog", 1), entry("drizzle", 1), entry("light rain", 1), entry("light snow", 1), entry("heat haze", 1)]
+            )
+        },
+        Summer: {
+            Early: buildPhaseData(
+                ["fresh undergrowth", "dark damp ground", "dry open ground", "runoff-softened earth"],
+                [entry("Chill", 3), entry("Mild", 3), entry("Warm", 1), entry("Cool Break", 1)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("wind", 3), entry("mist/fog", 1), entry("light rain", 2), entry("steady rain", 1), entry("brief hard rain", 1), entry("freezing fog", 1)]
+            ),
+            Mid: buildPhaseData(
+                ["fresh undergrowth", "dry open ground", "dark damp ground"],
+                [entry("Mild", 3), entry("Chill", 2), entry("Warm", 1), entry("Cold Snap", 1)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("wind", 3), entry("mist/fog", 1), entry("light rain", 2), entry("steady rain", 1), entry("heat haze", 1)]
+            ),
+            Late: buildPhaseData(
+                ["dry open ground", "fresh undergrowth", "exposed stone and gravel", "dark damp ground"],
+                [entry("Chill", 2), entry("Mild", 2), entry("Cold", 1), entry("Cool Break", 1)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("wind", 3), entry("mist/fog", 1), entry("cold rain", 1), entry("heat haze", 1), entry("sleet", 1)]
+            )
+        },
+        Autumn: {
+            Early: buildPhaseData(
+                ["dark damp ground", "fresh undergrowth", "frost-stiffened grass", "runoff-softened earth"],
+                [entry("Cold", 2), entry("Hard Cold", 2), entry("Thaw / Mild Thaw / Warm Break", 1), entry("Cold Snap", 1)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("hard wind", 3), entry("mist/fog", 1), entry("cold rain", 1), entry("sleet", 1), entry("first snow", 1), entry("freezing fog", 1)]
+            ),
+            Mid: buildPhaseData(
+                ["frost-stiffened grass", "bare cold ground", "patchy snow", "hard frozen ground"],
+                [entry("Hard Cold", 3), entry("Deep Cold", 2), entry("Cold Snap", 1), entry("Thaw / Mild Thaw / Warm Break", 1)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("hard wind", 3), entry("sleet", 2), entry("light snow", 2), entry("steady snow", 1), entry("freezing fog", 1)]
+            ),
+            Late: buildPhaseData(
+                ["patchy snow", "hard frozen ground", "bare cold ground", "crusted snow"],
+                [entry("Deep Cold", 3), entry("Bitter Freeze", 2), entry("Severe Cold", 2), entry("Thaw / Mild Thaw / Warm Break", 1)],
+                [entry("clear/fair", 1), entry("cloud cover", 2), entry("hard wind", 3), entry("light snow", 2), entry("steady snow", 2), entry("blowing snow", 1), entry("freezing fog", 1)]
+            )
+        },
+        Winter: {
+            Early: buildPhaseData(
+                ["patchy snow", "hard frozen ground", "crusted snow", "drifted snow"],
+                [entry("Deep Cold", 3), entry("Severe Cold", 2), entry("Bitter Freeze", 2), entry("Thaw / Mild Thaw / Warm Break", 1)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("hard wind", 3), entry("light snow", 2), entry("steady snow", 2), entry("blowing snow", 2), entry("freezing fog", 1), entry("ice-crystal drift", 1)]
+            ),
+            Mid: buildPhaseData(
+                ["deep snow cover", "drifted snow", "crusted snow", "hard frozen ground"],
+                [entry("Severe Cold", 3), entry("Bitter Freeze", 3), entry("Deep Cold", 2), entry("Thaw / Mild Thaw / Warm Break", 1)],
+                [entry("clear/fair", 1), entry("cloud cover", 2), entry("hard wind", 3), entry("steady snow", 2), entry("blowing snow", 2), entry("blizzard", 2), entry("freezing fog", 1), entry("ice-crystal drift", 1)]
+            ),
+            Late: buildPhaseData(
+                ["crusted snow", "drifted snow", "patchy snow", "hard frozen ground"],
+                [entry("Deep Cold", 3), entry("Severe Cold", 2), entry("Bitter Freeze", 2), entry("Thaw / Mild Thaw / Warm Break", 1)],
+                [entry("clear/fair", 1), entry("cloud cover", 2), entry("hard wind", 3), entry("light snow", 2), entry("steady snow", 2), entry("blowing snow", 2), entry("blizzard", 1), entry("freezing fog", 1)]
+            )
+        }
+    }
+});
+
+const TEMPERATE_COAST = profile({
+    seasonType: "temperate",
+    seasons: {
+        Spring: {
+            Early: buildPhaseData(
+                ["wet sand", "slick tidal rock", "salt grass and dune growth", "dark damp ground"],
+                [entry("Chill", 4), entry("Mild", 3), entry("Cold Snap", 2), entry("Thaw / Mild Thaw / Warm Break", 1)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("sea mist", 2), entry("drizzle", 2), entry("rain", 2), entry("hard wind", 2), entry("sleet", 1), entry("cold squall", 1)]
+            ),
+            Mid: buildPhaseData(
+                ["wet sand", "kelp-strewn strand", "salt grass and dune growth", "slick tidal rock"],
+                [entry("Chill", 3), entry("Mild", 4), entry("Warm", 2), entry("Cold Snap", 1)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("sea mist", 2), entry("drizzle", 2), entry("rain", 2), entry("hard wind", 2), entry("thunderstorm", 1), entry("sleet", 1)]
+            ),
+            Late: buildPhaseData(
+                ["wet sand", "salt grass and dune growth", "slick tidal rock", "shell-strewn shore"],
+                [entry("Mild", 4), entry("Warm", 3), entry("Hot", 1), entry("Cool Break", 1)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("sea mist", 2), entry("drizzle", 1), entry("rain", 2), entry("wind", 2), entry("thunderstorm", 1), entry("warm still air", 1)]
+            )
+        },
+        Summer: {
+            Early: buildPhaseData(
+                ["wet sand", "salt grass and dune growth", "shell-strewn shore", "slick tidal rock"],
+                [entry("Mild", 2), entry("Warm", 4), entry("Hot", 2), entry("Cool Break", 1)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("sea mist", 1), entry("light rain", 1), entry("steady rain", 1), entry("sea breeze", 3), entry("thunderstorm", 1), entry("humid haze", 1)]
+            ),
+            Mid: buildPhaseData(
+                ["dry open ground", "salt grass and dune growth", "slick tidal rock", "wet sand"],
+                [entry("Warm", 3), entry("Hot", 3), entry("Humid Heat", 2), entry("Cool Break", 2)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("sea breeze", 3), entry("humid haze", 2), entry("warm still air", 1), entry("brief hard rain", 1), entry("thunderstorm", 1), entry("heat haze", 1)]
+            ),
+            Late: buildPhaseData(
+                ["dry open ground", "salt grass and dune growth", "slick tidal rock", "wet sand"],
+                [entry("Warm", 3), entry("Hot", 3), entry("Humid Heat", 2), entry("Dry Heat", 1)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("sea breeze", 3), entry("humid haze", 2), entry("hot still air", 1), entry("brief hard rain", 1), entry("thunderstorm", 1), entry("hard wind", 1)]
+            )
+        },
+        Autumn: {
+            Early: buildPhaseData(
+                ["wet sand", "kelp-strewn strand", "salt grass and dune growth", "slick tidal rock"],
+                [entry("Mild", 3), entry("Chill", 3), entry("Thaw / Mild Thaw / Warm Break", 1), entry("Cool Break", 1)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("sea mist", 2), entry("drizzle", 2), entry("steady rain", 2), entry("hard wind", 2), entry("thunderstorm", 1), entry("humid haze", 1)]
+            ),
+            Mid: buildPhaseData(
+                ["wet sand", "shell-strewn shore", "kelp-strewn strand", "slick tidal rock"],
+                [entry("Chill", 3), entry("Cold", 3), entry("Mild", 1), entry("Hard Cold", 1)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("sea mist", 2), entry("drizzle", 2), entry("steady rain", 2), entry("hard wind", 2), entry("sleet", 1), entry("cold squall", 1)]
+            ),
+            Late: buildPhaseData(
+                ["wet sand", "kelp-strewn strand", "slick tidal rock", "bare cold ground"],
+                [entry("Cold", 3), entry("Hard Cold", 3), entry("Thaw / Mild Thaw / Warm Break", 1), entry("Cold Snap", 1)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("sea mist", 2), entry("drizzle", 2), entry("steady rain", 2), entry("hard wind", 2), entry("sleet", 1), entry("cold squall", 1)]
+            )
+        },
+        Winter: {
+            Early: buildPhaseData(
+                ["wet sand", "hard frozen ground", "slick tidal rock", "patchy snow"],
+                [entry("Cold", 3), entry("Deep Cold", 3), entry("Thaw / Mild Thaw / Warm Break", 1), entry("Bitter Freeze", 1)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("freezing fog", 2), entry("sleet", 2), entry("cold rain", 2), entry("hard wind", 2), entry("light snow", 1), entry("cold squall", 1)]
+            ),
+            Mid: buildPhaseData(
+                ["hard frozen ground", "slick tidal rock", "patchy snow", "crusted snow"],
+                [entry("Deep Cold", 3), entry("Severe Cold", 3), entry("Bitter Freeze", 2), entry("Thaw / Mild Thaw / Warm Break", 1)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("freezing fog", 2), entry("sleet", 2), entry("steady snow", 1), entry("hard wind", 2), entry("cold squall", 1), entry("light snow", 1)]
+            ),
+            Late: buildPhaseData(
+                ["wet sand", "slush-softened ground", "patchy snow", "slick tidal rock"],
+                [entry("Cold", 3), entry("Deep Cold", 3), entry("Thaw / Mild Thaw / Warm Break", 2), entry("Bitter Freeze", 1)],
+                [entry("clear/fair", 2), entry("cloud cover", 2), entry("freezing fog", 2), entry("sleet", 2), entry("cold rain", 2), entry("light snow", 1), entry("hard wind", 2), entry("thaw mist", 1)]
+            )
+        }
+    }
+});
+
+const TROPICAL_COAST = profile({
+    seasonType: "tropical",
+    seasons: {
+        "Wet Season": {
+            Early: buildPhaseData(
+                ["wet sand", "salt grass and dune growth", "dark standing water", "kelp-strewn strand"],
+                [entry("Warm", 3), entry("Humid Heat", 3), entry("Hot", 2), entry("Heat Wave", 1)],
+                [entry("clear/fair", 1), entry("cloud cover", 2), entry("sea mist", 1), entry("brief rain", 2), entry("steady rain", 2), entry("hard wind", 1), entry("thunderstorm", 2), entry("humid haze", 2)]
+            ),
+            Mid: buildPhaseData(
+                ["wet sand", "dark standing water", "salt grass and dune growth", "slick tidal rock"],
+                [entry("Warm", 2), entry("Humid Heat", 3), entry("Hot", 2), entry("Heat Wave", 1)],
+                [entry("clear/fair", 1), entry("cloud cover", 2), entry("sea mist", 1), entry("steady rain", 2), entry("brief hard rain", 2), entry("thunderstorm", 2), entry("storm squall", 1), entry("humid haze", 2)]
+            ),
+            Late: buildPhaseData(
+                ["wet sand", "dark standing water", "slick tidal rock", "fresh undergrowth"],
+                [entry("Warm", 2), entry("Humid Heat", 3), entry("Heat Wave", 2), entry("Hot", 2)],
+                [entry("clear/fair", 1), entry("cloud cover", 2), entry("sea mist", 1), entry("brief hard rain", 2), entry("thunderstorm", 2), entry("storm squall", 1), entry("humid haze", 2), entry("hot still air", 1)]
+            )
+        },
+        "Dry Season": {
+            Early: buildPhaseData(
+                ["wet sand", "salt grass and dune growth", "fresh undergrowth", "slick tidal rock"],
+                [entry("Warm", 3), entry("Hot", 2), entry("Cool Break", 1), entry("Dry Heat", 1)],
+                [entry("clear/fair", 2), entry("cloud cover", 1), entry("sea breeze", 3), entry("brief rain", 1), entry("thunderstorm", 1), entry("humid haze", 1), entry("warm still air", 1), entry("heat haze", 1)]
+            ),
+            Mid: buildPhaseData(
+                ["dry open ground", "salt grass and dune growth", "slick tidal rock", "wet sand"],
+                [entry("Hot", 3), entry("Humid Heat", 2), entry("Heat Wave", 2), entry("Dry Heat", 1)],
+                [entry("clear/fair", 2), entry("cloud cover", 1), entry("sea breeze", 3), entry("hot still air", 1), entry("thunderstorm", 1), entry("humid haze", 1), entry("heat haze", 2), entry("brief hard rain", 1)]
+            ),
+            Late: buildPhaseData(
+                ["dry open ground", "salt grass and dune growth", "dark standing water", "wet sand"],
+                [entry("Hot", 3), entry("Heat Wave", 2), entry("Dry Heat", 1), entry("Humid Heat", 2)],
+                [entry("clear/fair", 2), entry("cloud cover", 1), entry("sea breeze", 3), entry("hot still air", 1), entry("heat haze", 2), entry("hard wind", 1), entry("thunderstorm", 1), entry("brief hard rain", 1)]
+            )
+        }
+    }
+});
+
+const TEMPERATE_SWAMP = profile({
+    seasonType: "temperate",
+    seasons: {
+        Spring: {
+            Early: buildPhaseData(
+                ["soft black mud", "flooded low ground", "dark standing water", "root tangles and reeds", "hard frozen ground"],
+                [entry("Chill", 4), entry("Mild", 3), entry("Cold Snap", 2), entry("Thaw / Mild Thaw / Warm Break", 1)],
+                [entry("clear/fair", 1), entry("cloud cover", 2), entry("mist/fog", 3), entry("drizzle", 2), entry("rain", 2), entry("wind", 1), entry("sleet", 1), entry("cold rain", 1)]
+            ),
+            Mid: buildPhaseData(
+                ["soft black mud", "flooded low ground", "dark standing water", "root tangles and reeds", "fresh undergrowth"],
+                [entry("Chill", 3), entry("Mild", 4), entry("Warm", 2), entry("Cold Snap", 1)],
+                [entry("clear/fair", 1), entry("cloud cover", 2), entry("mist/fog", 3), entry("drizzle", 2), entry("rain", 2), entry("thunderstorm", 1), entry("wind", 1), entry("sleet", 1)]
+            ),
+            Late: buildPhaseData(
+                ["soft black mud", "shallow water", "dark standing water", "root tangles and reeds", "fresh undergrowth"],
+                [entry("Mild", 4), entry("Warm", 3), entry("Hot", 1), entry("Cool Break", 1)],
+                [entry("clear/fair", 1), entry("cloud cover", 2), entry("mist/fog", 3), entry("drizzle", 2), entry("rain", 2), entry("thunderstorm", 2), entry("warm still air", 1), entry("heat haze", 1)]
+            )
+        },
+        Summer: {
+            Early: buildPhaseData(
+                ["soft black mud", "dark standing water", "root tangles and reeds", "fresh undergrowth"],
+                [entry("Warm", 3), entry("Humid Heat", 2), entry("Hot", 2), entry("Cool Break", 1)],
+                [entry("clear/fair", 1), entry("cloud cover", 2), entry("mist/fog", 2), entry("light rain", 2), entry("steady rain", 2), entry("thunderstorm", 2), entry("warm still air", 1), entry("humid haze", 1)]
+            ),
+            Mid: buildPhaseData(
+                ["soft black mud", "stagnant pools", "dark standing water", "root tangles and reeds"],
+                [entry("Warm", 2), entry("Humid Heat", 3), entry("Heat Wave", 2), entry("Hot", 2)],
+                [entry("clear/fair", 1), entry("cloud cover", 2), entry("mist/fog", 2), entry("steady rain", 2), entry("thunderstorm", 2), entry("humid haze", 2), entry("stagnant still air", 1), entry("brief hard rain", 1)]
+            ),
+            Late: buildPhaseData(
+                ["soft black mud", "stagnant pools", "dark standing water", "root tangles and reeds"],
+                [entry("Warm", 2), entry("Humid Heat", 3), entry("Heat Wave", 2), entry("Hot", 2)],
+                [entry("clear/fair", 1), entry("cloud cover", 2), entry("mist/fog", 2), entry("thunderstorm", 2), entry("stagnant still air", 2), entry("humid haze", 2), entry("brief hard rain", 1), entry("hot still air", 1)]
+            )
+        },
+        Autumn: {
+            Early: buildPhaseData(
+                ["soft black mud", "dark standing water", "root tangles and reeds", "fresh undergrowth"],
+                [entry("Mild", 3), entry("Chill", 3), entry("Thaw / Mild Thaw / Warm Break", 1), entry("Cool Break", 1)],
+                [entry("clear/fair", 1), entry("cloud cover", 2), entry("mist/fog", 3), entry("drizzle", 2), entry("steady rain", 2), entry("thunderstorm", 1), entry("humid haze", 1), entry("wind", 1)]
+            ),
+            Mid: buildPhaseData(
+                ["soft black mud", "dark standing water", "root tangles and reeds", "wet leaf litter"],
+                [entry("Chill", 3), entry("Cold", 3), entry("Mild", 1), entry("Hard Cold", 1)],
+                [entry("clear/fair", 1), entry("cloud cover", 2), entry("mist/fog", 2), entry("drizzle", 2), entry("steady rain", 2), entry("wind", 1), entry("sleet", 1), entry("cold rain", 1)]
+            ),
+            Late: buildPhaseData(
+                ["soft black mud", "dark standing water", "root tangles and reeds", "hard frozen ground"],
+                [entry("Cold", 3), entry("Hard Cold", 3), entry("Thaw / Mild Thaw / Warm Break", 1), entry("Cold Snap", 1)],
+                [entry("clear/fair", 1), entry("cloud cover", 2), entry("fog", 3), entry("drizzle", 2), entry("steady rain", 2), entry("sleet", 1), entry("cold rain", 1), entry("hard wind", 1)]
+            )
+        },
+        Winter: {
+            Early: buildPhaseData(
+                ["soft black mud", "dark standing water", "hard frozen ground", "patchy snow"],
+                [entry("Cold", 3), entry("Deep Cold", 3), entry("Thaw / Mild Thaw / Warm Break", 1), entry("Bitter Freeze", 1)],
+                [entry("clear/fair", 1), entry("cloud cover", 2), entry("freezing fog", 3), entry("sleet", 1), entry("cold rain", 2), entry("light snow", 1), entry("hard wind", 1)]
+            ),
+            Mid: buildPhaseData(
+                ["hard frozen ground", "dark standing water", "patchy snow", "crusted snow"],
+                [entry("Deep Cold", 3), entry("Severe Cold", 3), entry("Bitter Freeze", 2), entry("Thaw / Mild Thaw / Warm Break", 1)],
+                [entry("clear/fair", 1), entry("cloud cover", 2), entry("freezing fog", 3), entry("light snow", 2), entry("steady snow", 1), entry("sleet", 1), entry("hard wind", 1), entry("stagnant still air", 1)]
+            ),
+            Late: buildPhaseData(
+                ["soft black mud", "dark standing water", "slush-softened ground", "patchy snow"],
+                [entry("Cold", 3), entry("Deep Cold", 3), entry("Thaw / Mild Thaw / Warm Break", 2), entry("Bitter Freeze", 1)],
+                [entry("clear/fair", 1), entry("cloud cover", 2), entry("freezing fog", 3), entry("sleet", 1), entry("light snow", 1), entry("cold rain", 2), entry("thaw mist", 1), entry("hard wind", 1)]
+            )
+        }
+    }
+});
+
+const TROPICAL_SWAMP = profile({
+    seasonType: "tropical",
+    seasons: {
+        "Wet Season": {
+            Early: buildPhaseData(
+                ["soft black mud", "flooded low ground", "dark standing water", "root tangles and reeds"],
+                [entry("Warm", 3), entry("Humid Heat", 3), entry("Hot", 2), entry("Heat Wave", 1)],
+                [entry("cloud cover", 2), entry("mist/fog", 2), entry("brief rain", 1), entry("steady rain", 2), entry("brief hard rain", 2), entry("thunderstorm", 2), entry("storm squall", 1), entry("humid haze", 2)]
+            ),
+            Mid: buildPhaseData(
+                ["soft black mud", "flooded low ground", "dark standing water", "root tangles and reeds"],
+                [entry("Warm", 2), entry("Humid Heat", 3), entry("Hot", 2), entry("Heat Wave", 1)],
+                [entry("cloud cover", 2), entry("mist/fog", 2), entry("steady rain", 2), entry("brief hard rain", 2), entry("thunderstorm", 2), entry("storm squall", 1), entry("humid haze", 2), entry("hot still air", 1)]
+            ),
+            Late: buildPhaseData(
+                ["soft black mud", "stagnant pools", "dark standing water", "root tangles and reeds"],
+                [entry("Warm", 2), entry("Humid Heat", 3), entry("Heat Wave", 2), entry("Hot", 2)],
+                [entry("cloud cover", 2), entry("mist/fog", 2), entry("brief hard rain", 2), entry("thunderstorm", 2), entry("storm squall", 1), entry("humid haze", 2), entry("hot still air", 1), entry("clear/fair", 1)]
+            )
+        },
+        "Dry Season": {
+            Early: buildPhaseData(
+                ["soft black mud", "dark standing water", "root tangles and reeds", "fresh undergrowth"],
+                [entry("Warm", 3), entry("Humid Heat", 2), entry("Hot", 2), entry("Cool Break", 1)],
+                [entry("clear/fair", 1), entry("cloud cover", 2), entry("mist/fog", 2), entry("brief rain", 1), entry("thunderstorm", 2), entry("humid haze", 2), entry("warm still air", 1), entry("stagnant still air", 1)]
+            ),
+            Mid: buildPhaseData(
+                ["soft black mud", "stagnant pools", "dark standing water", "root tangles and reeds"],
+                [entry("Warm", 2), entry("Humid Heat", 3), entry("Hot", 2), entry("Heat Wave", 1)],
+                [entry("clear/fair", 1), entry("cloud cover", 2), entry("mist/fog", 1), entry("stagnant still air", 2), entry("humid haze", 2), entry("thunderstorm", 2), entry("brief hard rain", 1), entry("heat haze", 1)]
+            ),
+            Late: buildPhaseData(
+                ["soft black mud", "stagnant pools", "dark standing water", "root tangles and reeds"],
+                [entry("Hot", 2), entry("Humid Heat", 3), entry("Heat Wave", 2), entry("Harsh Dry Heat", 1)],
+                [entry("clear/fair", 1), entry("mist/fog", 1), entry("stagnant still air", 2), entry("humid haze", 2), entry("hot still air", 1), entry("thunderstorm", 2), entry("brief hard rain", 1), entry("heat haze", 1)]
+            )
+        }
+    }
+});
+
+export const WEATHER_BIOMES = {
+    Forest: FOREST,
+    Plains: PLAINS,
+    Hills: HILLS,
+    Mountains: MOUNTAINS,
+    Desert: DESERT,
+    Tundra: TUNDRA,
+    "Urban Fringe": URBAN_FRINGE,
+    "Temperate Coast": TEMPERATE_COAST,
+    "Tropical Coast": TROPICAL_COAST,
+    "Temperate Swamp": TEMPERATE_SWAMP,
+    "Tropical Swamp": TROPICAL_SWAMP
+};
+
+export function getBiomeProfile(biome) {
+    return WEATHER_BIOMES[biome] ?? WEATHER_BIOMES.Forest;
+}
+
+export function getPhaseData(biome, season, phase) {
+    const profileData = getBiomeProfile(biome);
+    const seasonData = profileData.seasons[season];
+    if (!seasonData) return null;
+    return seasonData[phase] ?? null;
+}
+
+export function getAvailableSeasonsForBiome(biome) {
+    return Object.keys(getBiomeProfile(biome).seasons);
+}
+
+export function getLockRange(biome, kind, state) {
+    const profileData = getBiomeProfile(biome);
+    const bucket = profileData.locks[kind] ?? {};
+    return bucket[state] ?? bucket.default ?? [1, 1];
+}
+
+export function getInitialGroundState(biome, season, phase) {
+    const phaseData = getPhaseData(biome, season, phase);
+    return phaseData?.groundStates?.[0] ?? "dry open ground";
+}
+
+export function biomeSupportsSeason(biome, season) {
+    return !!getBiomeProfile(biome).seasons[season];
+}
+
+export function getSeasonTypeForBiome(biome) {
+    return getBiomeProfile(biome).seasonType;
+}
+
+export function makePhaseKey(season, phase) {
+    return toKey(season, phase);
+}
+
+
+========================================================================================================================
+FILE: .\scripts\data\weather-compatibility.js
+========================================================================================================================
+export const TEMPERATURE_OPENERS = {
+    mild: "The air is",
+    warm: "The air is",
+    hot: "The heat is",
+    humid: "The heat is",
+    dry: "The heat is",
+    cold: "The cold is",
+    thaw: "The air has begun",
+    shift: "The air has turned"
+};
+
+export const TEMPERATURE_FEELS = {
+    "Mild": ["mild and damp", "mild with a soft edge", "gentle and easy on the skin"],
+    "Warm": ["warm and open", "warm without turning harsh", "settled into a steady warmth"],
+    "Hot": ["hot and pressing", "firmly hot without much relief", "strong heat across the day"],
+    "Heat Wave": ["relentless and hard", "brutally hot without relief", "locked in a lasting heat"],
+    "Humid Heat": ["heavy, wet, and close", "thick with heat and moisture", "damp heat that does not lift"],
+    "Dry Heat": ["hot, dry, and relentless", "sharp with hard, dry heat", "hot and emptied of moisture"],
+    "Harsh Dry Heat": ["hard, dry, and punishing", "brutal with no softness in the air", "burning and dry across the day"],
+    "Chill": ["cool with a lingering edge", "still touched by cold", "marked by a lingering chill"],
+    "Cold": ["cold and steady", "plain cold without easing much", "set in a lasting cold"],
+    "Cold Snap": ["hard and suddenly colder", "snapped into a harder cold", "caught in a brief hard freeze"],
+    "Hard Cold": ["hard and biting", "cold with a sharper edge", "cold that grips the open ground"],
+    "Deep Cold": ["deep and settled", "cold that feels fixed in the land", "held in a solid cold"],
+    "Bitter Freeze": ["bitter and cutting", "set in a bitter freeze", "frozen into a bitter stillness"],
+    "Severe Cold": ["severe and unyielding", "locked in a severe freeze", "cold with no easy break in it"],
+    "Thaw / Mild Thaw / Warm Break": ["softening after the cold", "eased by a brief thaw", "beginning to soften after the freeze"],
+    "Cool Break": ["cooler than the days around it", "eased by a brief cooler spell", "broken by a short cool turn"]
+};
+
+export const TEMPERATURE_TONES = {
+    "Mild": "mild",
+    "Warm": "warm",
+    "Hot": "hot",
+    "Heat Wave": "hot",
+    "Humid Heat": "humid",
+    "Dry Heat": "dry",
+    "Harsh Dry Heat": "dry",
+    "Chill": "cold",
+    "Cold": "cold",
+    "Cold Snap": "cold",
+    "Hard Cold": "cold",
+    "Deep Cold": "cold",
+    "Bitter Freeze": "cold",
+    "Severe Cold": "cold",
+    "Thaw / Mild Thaw / Warm Break": "thaw",
+    "Cool Break": "shift"
+};
+
+export const WEATHER_COMPATIBILITY = {
+    "Heat Wave": {
+        favor: ["clear/fair", "heat haze", "humid haze", "warm still air", "hot still air", "stagnant still air", "hot wet calm", "furnace still air"],
+        suppress: ["freezing fog", "late snow", "light snow", "steady snow", "blizzard", "sleet", "first snow", "first sleet"]
+    },
+    "Humid Heat": {
+        favor: ["humid haze", "warm still air", "morning mist", "mist/fog", "brief hard rain", "thunderstorm", "steady rain"],
+        suppress: ["freezing fog", "light snow", "steady snow", "sleet"]
+    },
+    "Dry Heat": {
+        favor: ["clear/fair", "heat haze", "dry wind", "blowing dust", "dust-lifting gusts", "sand-lifting gusts"],
+        suppress: ["freezing fog", "sea mist", "steady snow", "light snow", "sleet"]
+    },
+    "Harsh Dry Heat": {
+        favor: ["clear/fair", "heat haze", "dry wind", "blowing dust", "dust-lifting gusts", "sand-lifting gusts", "dust wall"],
+        suppress: ["freezing fog", "mist/fog", "steady rain", "steady snow", "light snow", "sleet"]
+    },
+    "Chill": {
+        favor: ["cloud cover", "mist/fog", "drizzle", "rain", "wind", "fog", "cold rain"],
+        suppress: ["heat haze", "hot still air", "furnace still air"]
+    },
+    "Cold": {
+        favor: ["cloud cover", "mist/fog", "fog", "freezing fog", "light snow", "steady snow", "hard wind", "cold rain"],
+        suppress: ["heat haze", "humid haze", "hot still air"]
+    },
+    "Cold Snap": {
+        favor: ["freezing fog", "light snow", "steady snow", "sleet", "hard wind", "cold squall", "blowing snow"],
+        suppress: ["heat haze", "humid haze", "warm still air", "hot still air", "brief rain"]
+    },
+    "Hard Cold": {
+        favor: ["freezing fog", "light snow", "steady snow", "sleet", "hard wind", "blowing snow"],
+        suppress: ["warm still air", "humid haze", "heat haze"]
+    },
+    "Deep Cold": {
+        favor: ["freezing fog", "light snow", "steady snow", "blowing snow", "hard wind"],
+        suppress: ["brief rain", "warm still air", "humid haze", "heat haze"]
+    },
+    "Bitter Freeze": {
+        favor: ["freezing fog", "steady snow", "blowing snow", "blizzard", "hard wind", "ice-crystal drift"],
+        suppress: ["brief rain", "warm still air", "humid haze", "heat haze", "drizzle"]
+    },
+    "Severe Cold": {
+        favor: ["freezing fog", "steady snow", "blowing snow", "blizzard", "hard wind", "ice-crystal drift"],
+        suppress: ["brief rain", "warm still air", "humid haze", "heat haze", "drizzle"]
+    },
+    "Thaw / Mild Thaw / Warm Break": {
+        favor: ["mist/fog", "thaw mist", "cold rain", "drizzle", "rain", "cloud cover"],
+        suppress: ["blizzard", "ice-crystal drift", "dust wall"]
+    },
+    "Cool Break": {
+        favor: ["cloud cover", "mist/fog", "wind", "sea breeze", "drizzle"],
+        suppress: ["heat haze", "furnace still air"]
+    }
+};
+
+
+========================================================================================================================
+FILE: .\scripts\data\weather-ground-openers.js
+========================================================================================================================
+export const GROUND_OPENERS = {
+    "light snow cover": ["Light snow lies over", "Thin snow rests on", "A light cover of snow lies across"],
+    "deep snow cover": ["Deep snow lies over", "Heavy snow sits on", "Thick snow covers"],
+    "crusted snow": ["Crusted snow lies over", "Hard snow crusts", "Old snow has hardened across"],
+    "patchy snow": ["Patchy snow lies over", "Scattered snow still lies over", "The last snow lingers across"],
+    "drifted snow": ["Drifted snow gathers in", "Snow has drifted across", "Wind-pushed snow lies over"],
+    "wet leaf litter": ["Wet leaves darken", "Soaked leaves lie over", "Damp leaf litter covers"],
+    "damp forest floor": ["The forest floor lies damp beneath", "Damp earth settles under", "Dark damp ground spreads under"],
+    "runoff-softened earth": ["Runoff has softened", "The ground has gone soft across", "Water-softened earth lies through"],
+    "soft black mud": ["Soft black mud lies beneath", "Dark mud spreads through", "Black mud slicks"],
+    "flooded low ground": ["Low ground lies flooded beneath", "Water stands over", "Flooded ground spreads through"],
+    "slush-softened ground": ["Slush softens", "Wet thawed ground lies across", "Slushy melt lies over"],
+    "dry open ground": ["Dry ground lies across", "Firm dry earth spreads across", "The land lies dry beneath"],
+    "loose dust": ["Loose dust skims over", "Dust lies across", "A thin layer of dust covers"],
+    "open dust flats": ["Dust lies open across", "Dry dust flats spread through", "The flats lie pale with dust across"],
+    "baked ground": ["The ground lies baked across", "Heat-baked earth spreads over", "The land lies sun-baked across"],
+    "cracked hardpan": ["Cracked hardpan splits", "The hard ground lies cracked across", "Hard-baked earth lies split over"],
+    "fresh undergrowth": ["Fresh growth thickens beneath", "New green spreads under", "Young growth rises across"],
+    "dense green undergrowth": ["Dense green growth fills", "Thick undergrowth spreads beneath", "Green growth crowds"],
+    "fern-thick ground": ["Ferns thicken over", "Fern growth lies dense across", "Ferns crowd"],
+    "thick grass": ["Thick grass covers", "Heavy grass lies across", "Dense grass spreads through"],
+    "tall grass": ["Tall grass stands across", "Long grass rises over", "High grass fills"],
+    "bare root and stone": ["Bare root and stone show through", "Roots and stone stand exposed through", "Exposed root and stone break through"],
+    "exposed stone and gravel": ["Stone and gravel lie exposed across", "Bare stone shows through", "Exposed gravel spreads over"],
+    "bare cold ground": ["Bare cold ground lies across", "Cold bare earth spreads over", "The ground has gone bare and hard over"],
+    "wind-stripped ground": ["Wind-stripped ground lies bare across", "The surface has been stripped open across", "Wind has stripped the surface back across"],
+    "hard frozen ground": ["Hard frozen ground lies under", "The earth has frozen hard across", "The ground lies fixed and frozen beneath"],
+    "frost-stiffened grass": ["Frost-stiffened grass lies across", "The grass stands hard with frost over", "Grass lies rigid with frost over"],
+    "dark standing water": ["Dark water stands among", "Still dark water lies through", "Standing water fills"],
+    "stagnant pools": ["Stagnant pools lie among", "Still pools gather through", "Warm stagnant pools spread through"],
+    "shallow water": ["Shallow water lies across", "Water stands in a thin spread over", "Low water spreads across"],
+    "root tangles and reeds": ["Roots and reeds tangle across", "Reeds and roots crowd", "Dense root tangles spread through"],
+    "wet sand": ["Wet sand darkens", "The sand lies dark and wet along", "Water-dark sand spreads over"],
+    "shell-strewn shore": ["Shells lie scattered across", "Broken shell covers", "Shell beds spread over"],
+    "kelp-strewn strand": ["Kelp lies strewn along", "Dark kelp lines", "Wet kelp lies across"],
+    "slick tidal rock": ["Slick rock lies dark along", "Tidal rock glistens across", "Salt-dark rock lies wet across"],
+    "salt grass and dune growth": ["Salt grass thickens along", "Dune growth spreads over", "Coastal growth fills"]
+};
+
+
+========================================================================================================================
+FILE: .\scripts\data\weather-language-foundation.js
+========================================================================================================================
+export const GROUND_ANCHORS = {
+    "Forest": ["the roots and stone beneath the trees", "the leaf-dark forest floor", "the ground beneath the canopy"],
+    "Plains": ["the open plain", "the grass and open earth", "the broad grassland"],
+    "Hills": ["the slopes and hollows", "the ridges and folds", "the grassy rises"],
+    "Mountains": ["the ridgelines and cuts", "the scree and exposed rock", "the heights and gullies"],
+    "Desert": ["the flats and loose sand", "the dunes and hardpan", "the exposed stone and dust"],
+    "Tundra": ["the flats and frozen ground", "the moss and open stone", "the hard earth between the snow patches"],
+    "Urban Fringe": ["the broken verge ground", "the lots and rough grass", "the open edges and broken stone"],
+    "Temperate Coast": ["the strand and upper sand", "the tide line and wet rock", "the shore and shell beds"],
+    "Tropical Coast": ["the warm strand and shallows", "the tidal flats and coastal growth", "the wet sand and salt-dark rock"],
+    "Temperate Swamp": ["the reeds and roots", "the muck and shallow water", "the marsh ground and reed beds"],
+    "Tropical Swamp": ["the flooded roots and black water", "the soft mud and dense growth", "the root tangles and warm pools"]
+};
+
+export const WEATHER_OPENERS = {
+    "clear/fair": ["Clear skies", "Fair weather", "A clear sky", "Open sky"],
+    "cloud cover": ["Cloud cover", "A gray sky", "Low cloud", "A blanketed sky"],
+    "mist/fog": ["Mist", "Fog", "A low mist", "Thin fog"],
+    "fog": ["Fog", "A pale fog", "A low fog", "Cold fog"],
+    "freezing fog": ["Freezing fog", "A hard white fog", "Cold fog", "A brittle white fog"],
+    "sea mist": ["Sea mist", "A low sea mist", "Salt mist", "A pale sea fog"],
+    "thaw mist": ["Thaw mist", "A wet thaw mist", "A soft thaw fog", "A low thaw mist"],
+    "drizzle": ["Fine rain", "A thin drizzle", "Light drizzle", "Thin rain"],
+    "rain": ["Rain", "A cold rain", "Open rain", "Falling rain"],
+    "steady rain": ["Steady rain", "A plain rain", "Open rain", "Falling rain"],
+    "light rain": ["Light rain", "Fine rain", "A light rain", "A soft rain"],
+    "brief rain": ["A brief rain", "A quick rain", "A short rain burst", "A passing rain"],
+    "brief hard rain": ["A hard rain burst", "A hard rain", "A sudden hard rain", "A sharp rain burst"],
+    "cold rain": ["A cold rain", "Cold rain", "A chill rain", "A cold wet rain"],
+    "wind": ["Wind", "A steady wind", "Open wind", "A crosswind"],
+    "hard wind": ["Hard wind", "A hard-running wind", "A cutting wind", "A strong wind"],
+    "dry wind": ["A dry wind", "Dry wind", "A hard dry wind", "A stripping wind"],
+    "sea breeze": ["A sea breeze", "Salt wind", "Sea air", "A coastal breeze"],
+    "light snow": ["Light snow", "Thin snow", "Fine flakes", "A soft snow"],
+    "steady snow": ["Steady snow", "A full fall of snow", "Snowfall", "A steady snowfall"],
+    "blowing snow": ["Blowing snow", "Driven snow", "Snow on the wind", "Hard-driven snow"],
+    "blizzard": ["A blizzard", "White-driving snow", "A hard white storm", "A heavy blizzard"],
+    "sleet": ["Sleet", "Freezing mix", "A sharp sleet", "Hard sleet"],
+    "late snow": ["Late snow", "A late fall of snow", "A spring snow", "Cold late flakes"],
+    "first snow": ["First snow", "The first snow", "An early snow", "Thin first flakes"],
+    "thunderstorm": ["A thunderstorm", "A hard storm", "Rolling thunder", "A dark storm front"],
+    "storm squall": ["A hard squall", "A storm squall", "A sudden squall", "A sharp coastal squall"],
+    "cold squall": ["A cold squall", "A hard squall", "A sudden cold squall", "A sharp squall"],
+    "humid haze": ["Humid haze", "A wet haze", "Heavy haze", "Damp haze"],
+    "heat haze": ["Heat haze", "Shimmering heat", "Air shimmer", "A wavering heat haze"],
+    "hot still air": ["Hot still air", "Still hot air", "A hot calm", "A breathless heat"],
+    "warm still air": ["Warm still air", "Still warm air", "A warm calm", "Quiet warm air"],
+    "stagnant still air": ["Stagnant still air", "A stagnant calm", "Still foul air", "A dead calm"],
+    "furnace still air": ["Furnace still air", "A furnace calm", "A scorching stillness", "Still furnace heat"],
+    "blowing dust": ["Blowing dust", "Dust", "Wind-borne dust", "A sweep of dust"],
+    "dust wall": ["A wall of dust", "A rising dust wall", "A hard dust front", "A driving dust wall"],
+    "sand-lifting gusts": ["Sand-lifting gusts", "Hard sand gusts", "Lifting sand", "A sweep of sand gusts"],
+    "ice-crystal drift": ["Ice-crystal drift", "Fine ice drift", "Crystal frost on the wind", "A drift of ice crystals"]
+};
+
+export const WEATHER_ACTIONS = {
+    soft: ["falls through", "falls across", "drifts over", "settles over", "lies over"],
+    low: ["hangs low across", "lies over", "gathers in", "settles over", "presses in from"],
+    move: ["moves through", "runs across", "sweeps over", "drives across", "skims over", "rolls across"],
+    violent: ["lashes", "drives across", "breaks over", "sweeps over", "presses in from"],
+    calm: ["lies over", "holds over", "settles over"]
+};
+
+export const WEATHER_ACTION_BY_EVENT = {
+    "clear/fair": "calm",
+    "cloud cover": "calm",
+    "mist/fog": "low",
+    "fog": "low",
+    "freezing fog": "low",
+    "sea mist": "low",
+    "thaw mist": "low",
+    "drizzle": "soft",
+    "rain": "soft",
+    "steady rain": "soft",
+    "light rain": "soft",
+    "brief rain": "soft",
+    "brief hard rain": "violent",
+    "cold rain": "soft",
+    "wind": "move",
+    "hard wind": "violent",
+    "dry wind": "move",
+    "sea breeze": "move",
+    "light snow": "soft",
+    "steady snow": "soft",
+    "blowing snow": "move",
+    "blizzard": "violent",
+    "sleet": "violent",
+    "late snow": "soft",
+    "first snow": "soft",
+    "thunderstorm": "violent",
+    "storm squall": "violent",
+    "cold squall": "violent",
+    "humid haze": "low",
+    "heat haze": "calm",
+    "hot still air": "calm",
+    "warm still air": "calm",
+    "stagnant still air": "calm",
+    "furnace still air": "calm",
+    "blowing dust": "move",
+    "dust wall": "violent",
+    "sand-lifting gusts": "move",
+    "ice-crystal drift": "move"
+};
+
+export const TERRAIN_INTERACTIONS = {
+    "Forest": ["the branches", "the trunks", "the canopy", "the brush and roots"],
+    "Plains": ["the open ground", "the grasses", "the field", "the broad plain"],
+    "Hills": ["the slopes", "the ridges", "the hollows", "the upper ground"],
+    "Mountains": ["the ridgelines", "the gullies", "the stone faces", "the scree slopes"],
+    "Desert": ["the dunes", "the flats", "the wash beds", "the hardpan"],
+    "Tundra": ["the flats", "the pale ground", "the frozen hollows", "the open tundra"],
+    "Urban Fringe": ["the open lots", "the verge ground", "the broken stone", "the rubble edges"],
+    "Temperate Coast": ["the strand", "the shore", "the dunes", "the upper beach"],
+    "Tropical Coast": ["the shore", "the shallows", "the warm strand", "the tidal flats"],
+    "Temperate Swamp": ["the reeds", "the roots", "the sedge beds", "the marsh ground"],
+    "Tropical Swamp": ["the flooded roots", "the black water", "the reed beds", "the warm pools"]
+};
+
+export const WEATHER_INTENSITY = {
+    "clear/fair": "quiet",
+    "cloud cover": "quiet",
+    "mist/fog": "quiet",
+    "fog": "quiet",
+    "freezing fog": "active",
+    "sea mist": "quiet",
+    "thaw mist": "quiet",
+    "drizzle": "active",
+    "rain": "active",
+    "steady rain": "active",
+    "light rain": "active",
+    "brief rain": "active",
+    "brief hard rain": "dramatic",
+    "cold rain": "active",
+    "wind": "active",
+    "hard wind": "dramatic",
+    "dry wind": "active",
+    "sea breeze": "active",
+    "light snow": "active",
+    "steady snow": "active",
+    "blowing snow": "dramatic",
+    "blizzard": "dramatic",
+    "sleet": "active",
+    "late snow": "active",
+    "first snow": "active",
+    "thunderstorm": "dramatic",
+    "storm squall": "dramatic",
+    "cold squall": "dramatic",
+    "humid haze": "quiet",
+    "heat haze": "quiet",
+    "hot still air": "quiet",
+    "warm still air": "quiet",
+    "stagnant still air": "quiet",
+    "furnace still air": "quiet",
+    "blowing dust": "active",
+    "dust wall": "dramatic",
+    "sand-lifting gusts": "active",
+    "ice-crystal drift": "active"
+};
+
+
+========================================================================================================================
+FILE: .\scripts\data\weather-ruins-data.js
+========================================================================================================================
+export const RUIN_MODIFIERS = ["none", "faint traces", "light ruins", "exposed remnants"];
+
+export const RUIN_FREQUENCY_WEIGHTS = {
+    faint: {
+        none: 70,
+        "faint traces": 20,
+        "light ruins": 8,
+        "exposed remnants": 2
+    },
+    light: {
+        none: 45,
+        "faint traces": 28,
+        "light ruins": 20,
+        "exposed remnants": 7
+    },
+    mixed: {
+        none: 35,
+        "faint traces": 30,
+        "light ruins": 23,
+        "exposed remnants": 12
+    }
+};
+
+export const RUIN_FAMILIES = {
+    "English / Northern Stone Keep": [
+        "low mossed wall lines",
+        "squared stone blocks",
+        "collapsed tower stumps",
+        "shattered gatehouse remains"
+    ],
+    "Mayan / Tropical Coastal Stone Town": [
+        "carved stone fragments",
+        "broken plaza edges",
+        "fallen cut blocks",
+        "vine-covered platforms"
+    ],
+    "Roman / Imperial Fortified Works": [
+        "straight foundation lines",
+        "dressed stone courses",
+        "broken arches",
+        "roadbed fragments"
+    ],
+    "Desert Mudbrick / Adobe Settlement": [
+        "melted wall mounds",
+        "low room outlines",
+        "collapsed courtyards",
+        "eroded parapet lines"
+    ],
+    "Norse / Timber / Turf Settlement": [
+        "stone footings",
+        "sunken wall lines",
+        "charcoal-dark post remains",
+        "turf mounds"
+    ],
+    "Steppe / Nomad Camp Remnants": [
+        "fire-blackened stone rings",
+        "post pits",
+        "wagon-rut traces",
+        "collapsed earthworks"
+    ],
+    "Jungle Temple Complex": [
+        "half-buried cut stone",
+        "root-split stairways",
+        "vine-choked terraces",
+        "broken causeway traces"
+    ],
+    "Coastal Fishing Village / Stilt Settlement": [
+        "rotted pilings",
+        "collapsed dock lines",
+        "drowned walkway posts",
+        "tide-worn retaining stones"
+    ],
+    "Dwarven / Mountain-Cut Masonry": [
+        "fitted blockwork",
+        "collapsed arch tunnels",
+        "carved stairs",
+        "rune-cut fragments"
+    ],
+    "Ancient Earthen Hillfort / Tribal Enclosure": [
+        "low embankments",
+        "ditch rings",
+        "palisade post lines",
+        "broken ritual stones"
+    ]
+};
+
+export const BIOME_DEFAULT_RUIN_FAMILIES = {
+    "Forest": [
+        "English / Northern Stone Keep",
+        "Ancient Earthen Hillfort / Tribal Enclosure",
+        "Jungle Temple Complex",
+        "Dwarven / Mountain-Cut Masonry"
+    ],
+    "Plains": [
+        "Ancient Earthen Hillfort / Tribal Enclosure",
+        "Roman / Imperial Fortified Works",
+        "Steppe / Nomad Camp Remnants",
+        "Desert Mudbrick / Adobe Settlement"
+    ],
+    "Hills": [
+        "English / Northern Stone Keep",
+        "Ancient Earthen Hillfort / Tribal Enclosure",
+        "Dwarven / Mountain-Cut Masonry",
+        "Roman / Imperial Fortified Works"
+    ],
+    "Mountains": [
+        "Dwarven / Mountain-Cut Masonry",
+        "English / Northern Stone Keep",
+        "Roman / Imperial Fortified Works",
+        "Jungle Temple Complex"
+    ],
+    "Desert": [
+        "Desert Mudbrick / Adobe Settlement",
+        "Roman / Imperial Fortified Works",
+        "Steppe / Nomad Camp Remnants",
+        "English / Northern Stone Keep"
+    ],
+    "Tundra": [
+        "Norse / Timber / Turf Settlement",
+        "Ancient Earthen Hillfort / Tribal Enclosure",
+        "Steppe / Nomad Camp Remnants",
+        "Coastal Fishing Village / Stilt Settlement"
+    ],
+    "Urban Fringe": [
+        "English / Northern Stone Keep",
+        "Roman / Imperial Fortified Works",
+        "Desert Mudbrick / Adobe Settlement",
+        "Ancient Earthen Hillfort / Tribal Enclosure"
+    ],
+    "Temperate Coast": [
+        "Coastal Fishing Village / Stilt Settlement",
+        "English / Northern Stone Keep",
+        "Roman / Imperial Fortified Works",
+        "Ancient Earthen Hillfort / Tribal Enclosure"
+    ],
+    "Tropical Coast": [
+        "Mayan / Tropical Coastal Stone Town",
+        "Coastal Fishing Village / Stilt Settlement",
+        "Roman / Imperial Fortified Works",
+        "English / Northern Stone Keep"
+    ],
+    "Temperate Swamp": [
+        "Coastal Fishing Village / Stilt Settlement",
+        "Ancient Earthen Hillfort / Tribal Enclosure",
+        "Roman / Imperial Fortified Works",
+        "Jungle Temple Complex"
+    ],
+    "Tropical Swamp": [
+        "Jungle Temple Complex",
+        "Coastal Fishing Village / Stilt Settlement",
+        "Mayan / Tropical Coastal Stone Town",
+        "Roman / Imperial Fortified Works"
+    ]
+};
+
+
+========================================================================================================================
+FILE: .\scripts\dispatcher.js
+========================================================================================================================
+function rollDie(sides) {
+    return Math.floor(Math.random() * sides) + 1;
+}
+
+function rollWeighted(items) {
+    const total = items.reduce((sum, item) => sum + item.weight, 0);
+    let roll = Math.random() * total;
+
+    for (const item of items) {
+        roll -= item.weight;
+        if (roll <= 0) return item;
+    }
+
+    return items[items.length - 1];
+}
+
+function normalizeNumber(value, fallback) {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : fallback;
+}
+
+function getTemperatureBand(season, biome) {
+    const table = {
+        spring: {
+            forest: "Cool",
+            plains: "Mild",
+            hills: "Cool",
+            mountains: "Cold",
+            desert: "Warm",
+            swamp: "Mild",
+            coast: "Cool",
+            tundra: "Cold",
+            urban: "Mild",
+            ruins: "Cool"
+        },
+        summer: {
+            forest: "Mild",
+            plains: "Warm",
+            hills: "Mild",
+            mountains: "Cool",
+            desert: "Hot",
+            swamp: "Warm",
+            coast: "Mild",
+            tundra: "Cool",
+            urban: "Warm",
+            ruins: "Warm"
+        },
+        autumn: {
+            forest: "Cool",
+            plains: "Cool",
+            hills: "Cool",
+            mountains: "Cold",
+            desert: "Warm",
+            swamp: "Mild",
+            coast: "Cool",
+            tundra: "Cold",
+            urban: "Cool",
+            ruins: "Cool"
+        },
+        winter: {
+            forest: "Cold",
+            plains: "Cold",
+            hills: "Cold",
+            mountains: "Severe Cold",
+            desert: "Cool",
+            swamp: "Cold",
+            coast: "Cold",
+            tundra: "Severe Cold",
+            urban: "Cold",
+            ruins: "Cold"
+        }
+    };
+
+    return table[season]?.[biome] ?? "Mild";
+}
+
+function buildWeatherTable(season, biome) {
+    const clear = { key: "clear", label: "Clear Skies", weight: 30 };
+    const cloudy = { key: "cloudy", label: "Cloudy", weight: 20 };
+    const fog = { key: "fog", label: "Fog", weight: 8 };
+    const rain = { key: "rain", label: "Rain", weight: 18 };
+    const storm = { key: "storm", label: "Storm", weight: 7 };
+    const wind = { key: "wind", label: "Strong Winds", weight: 10 };
+    const heat = { key: "heat", label: "Heat Wave", weight: 4 };
+    const cold = { key: "cold", label: "Cold Snap", weight: 4 };
+    const snow = { key: "snow", label: "Snow", weight: 16 };
+    const blizzard = { key: "blizzard", label: "Blizzard", weight: 5 };
+    const sand = { key: "sand", label: "Sandstorm", weight: 10 };
+    const humidity = { key: "humidity", label: "Heavy Humidity", weight: 10 };
+
+    const seasonal = {
+        spring: [clear, cloudy, rain, rain, wind, fog, storm],
+        summer: [clear, clear, cloudy, rain, wind, heat, storm],
+        autumn: [clear, cloudy, rain, wind, fog, storm, cold],
+        winter: [clear, cloudy, wind, cold, snow, snow, blizzard]
+    };
+
+    const biomeOverrides = {
+        forest: {
+            spring: [clear, cloudy, rain, rain, fog, wind, storm],
+            summer: [clear, cloudy, rain, fog, wind, heat, storm],
+            autumn: [clear, cloudy, rain, fog, wind, storm, cold],
+            winter: [clear, cloudy, wind, snow, snow, fog, cold]
+        },
+        plains: {
+            spring: [clear, clear, cloudy, rain, wind, wind, storm],
+            summer: [clear, clear, clear, cloudy, wind, heat, storm],
+            autumn: [clear, cloudy, cloudy, wind, wind, rain, cold],
+            winter: [clear, cloudy, wind, wind, snow, cold, blizzard]
+        },
+        hills: {
+            spring: [clear, cloudy, rain, wind, wind, fog, storm],
+            summer: [clear, cloudy, wind, wind, rain, heat, storm],
+            autumn: [clear, cloudy, wind, rain, fog, cold, storm],
+            winter: [clear, cloudy, wind, snow, cold, blizzard, storm]
+        },
+        mountains: {
+            spring: [clear, cloudy, wind, rain, fog, cold, snow],
+            summer: [clear, cloudy, wind, wind, rain, storm, cold],
+            autumn: [clear, cloudy, wind, fog, cold, snow, storm],
+            winter: [clear, wind, wind, cold, snow, snow, blizzard]
+        },
+        desert: {
+            spring: [clear, clear, clear, wind, sand, heat, cloudy],
+            summer: [clear, clear, clear, heat, heat, wind, sand],
+            autumn: [clear, clear, wind, cloudy, sand, heat, cold],
+            winter: [clear, clear, cloudy, wind, sand, cold, cold]
+        },
+        swamp: {
+            spring: [cloudy, rain, rain, fog, fog, storm, humidity],
+            summer: [cloudy, rain, rain, fog, humidity, humidity, storm],
+            autumn: [cloudy, rain, fog, fog, humidity, storm, wind],
+            winter: [cloudy, rain, fog, cold, humidity, wind, clear]
+        },
+        coast: {
+            spring: [clear, cloudy, rain, fog, wind, wind, storm],
+            summer: [clear, cloudy, fog, wind, wind, rain, storm],
+            autumn: [cloudy, rain, fog, wind, wind, storm, cold],
+            winter: [cloudy, wind, rain, cold, snow, storm, fog]
+        },
+        tundra: {
+            spring: [clear, cloudy, wind, cold, snow, snow, blizzard],
+            summer: [clear, cloudy, wind, fog, rain, cold, snow],
+            autumn: [clear, cloudy, wind, cold, snow, blizzard, storm],
+            winter: [clear, wind, cold, cold, snow, snow, blizzard]
+        },
+        urban: {
+            spring: [clear, cloudy, rain, wind, fog, storm, cloudy],
+            summer: [clear, clear, cloudy, heat, rain, wind, storm],
+            autumn: [clear, cloudy, rain, fog, wind, cold, storm],
+            winter: [clear, cloudy, wind, cold, snow, fog, storm]
+        },
+        ruins: {
+            spring: [clear, cloudy, fog, rain, wind, storm, cold],
+            summer: [clear, cloudy, fog, wind, heat, storm, rain],
+            autumn: [cloudy, fog, rain, wind, cold, storm, clear],
+            winter: [cloudy, fog, wind, cold, snow, blizzard, clear]
+        }
+    };
+
+    return biomeOverrides[biome]?.[season] ?? seasonal[season] ?? seasonal.spring;
+}
+
+function describeWeather(result, season, biome) {
+    const temperature = getTemperatureBand(season, biome);
+
+    const descriptions = {
+        clear: `Visibility is good. Temperature is ${temperature.toLowerCase()}.`,
+        cloudy: `Gray cover hangs overhead. Temperature is ${temperature.toLowerCase()}.`,
+        fog: `Visibility is reduced by lingering fog. Temperature is ${temperature.toLowerCase()}.`,
+        rain: `Steady precipitation and wet ground complicate travel. Temperature is ${temperature.toLowerCase()}.`,
+        storm: `Harsh weather, thunder, or violent rain pushes conditions toward dangerous travel.`,
+        wind: `Strong gusts interfere with hearing, ranged attacks, or exposed travel.`,
+        heat: `Oppressive heat strains travel and rest in exposed areas.`,
+        cold: `A biting chill settles in and makes exposure more dangerous.`,
+        snow: `Snowfall reduces visibility and slows open-ground travel.`,
+        blizzard: `Severe snow and wind create near-whiteout conditions.`,
+        sand: `Blowing grit cuts visibility and punishes exposed movement.`,
+        humidity: `Air is heavy, wet, and exhausting; the ground feels slick and clinging.`
+    };
+
+    return descriptions[result.key] ?? `Conditions are unsettled. Temperature is ${temperature.toLowerCase()}.`;
+}
+
+function rollWeather(data) {
+    const season = String(data.season || "spring").toLowerCase();
+    const biome = String(data.biome || "forest").toLowerCase();
+
+    const table = buildWeatherTable(season, biome);
+    const result = rollWeighted(table);
+    const shiftRoll = rollDie(6) + rollDie(6);
+    const intensityRoll = rollDie(20);
+
+    let intensity = "Normal";
+    if (intensityRoll >= 18) intensity = "Severe";
+    else if (intensityRoll <= 4) intensity = "Light";
+
+    return {
+        label: result.label,
+        temperature: getTemperatureBand(season, biome),
+        intensity,
+        shiftRoll,
+        details: describeWeather(result, season, biome)
+    };
+}
+
+function formatPartyBand(data) {
+    const partySize = normalizeNumber(data.partySize, 5);
+    const levelMin = normalizeNumber(data.levelMin, 1);
+    const levelMax = normalizeNumber(data.levelMax, 1);
+    const difficulty = String(data.difficulty || "easy");
+
+    return `${partySize} PCs · Levels ${levelMin}-${levelMax} · ${difficulty[0].toUpperCase()}${difficulty.slice(1)}`;
+}
+
+export async function dispatchEncounterRoll(data) {
+    const weather = rollWeather(data);
+    const season = String(data.season || "spring");
+    const biome = String(data.biome || "forest");
+
+    const msg = `
+    <div class="terr-encounters-card">
+      <h2>Weather</h2>
+      <p><strong>${weather.label}</strong> (${weather.intensity})</p>
+      <p>${weather.details}</p>
+      <p><strong>Season:</strong> ${season} | <strong>Biome:</strong> ${biome} | <strong>Temperature:</strong> ${weather.temperature} | <strong>Shift Roll:</strong> ${weather.shiftRoll}</p>
+
+      <h2>World Checks</h2>
+      <p>Stub: Something happens.</p>
+
+      <h2>Main Event</h2>
+      <p>Stub main event.</p>
+
+      <h2>Add-On A</h2>
+      <p>Stub add-on A.</p>
+
+      <h2>Add-On B</h2>
+      <p>Stub add-on B.</p>
+
+      <hr>
+      <p><strong>Encounter Band:</strong> ${formatPartyBand(data)}</p>
+    </div>
+  `;
+
+    await ChatMessage.create({
+        speaker: { alias: "Terr's Encounter System" },
+        content: msg
+    });
+}
+
+
+========================================================================================================================
+FILE: .\scripts\main.js
+========================================================================================================================
+import { openWeatherPanel } from "./weather/weather-ui.js";
+
+const MODULE_ID = "terr-encounters";
+const TOOL_NAME = `${MODULE_ID}-open-weather`;
+
+function registerSceneControl(controls) {
+    if (!game.user?.isGM) return;
+    if (!Array.isArray(controls)) return;
+
+    let tokenControls = controls.find(control => control.name === "token");
+    if (!tokenControls) {
+        tokenControls = {
+            name: "token",
+            title: "Token Controls",
+            tools: [],
+            activeTool: "select"
+        };
+        controls.push(tokenControls);
+    }
+
+    tokenControls.tools ??= [];
+
+    const tool = {
+        name: TOOL_NAME,
+        title: "Terr Encounters",
+        icon: "fas fa-cloud-sun",
+        button: true,
+        visible: true,
+        onClick: async () => {
+            await openWeatherPanel();
+        }
+    };
+
+    const existingIndex = tokenControls.tools.findIndex(entry => entry.name === TOOL_NAME);
+    if (existingIndex >= 0) {
+        tokenControls.tools[existingIndex] = tool;
+    } else {
+        tokenControls.tools.push(tool);
+    }
+}
+
+Hooks.once("init", () => {
+    console.log(`${MODULE_ID} | Main init`);
+});
+
+Hooks.once("ready", () => {
+    game.terrEncounters ??= {};
+    game.terrEncounters.openWeather = () => openWeatherPanel();
+});
+
+Hooks.on("getSceneControlButtons", (controls) => {
+    registerSceneControl(controls);
+});
+
+
+========================================================================================================================
+FILE: .\scripts\settings.js
+========================================================================================================================
+const MODULE_ID = "terr-encounters";
+
+Hooks.once("init", () => {
+    console.log(`${MODULE_ID} | Legacy encounter popup pipeline disabled`);
+});
+
+
+========================================================================================================================
+FILE: .\scripts\ui-popup.js
+========================================================================================================================
+import { dispatchEncounterRoll } from "./dispatcher.js";
+
+export async function openEncounterPopup() {
+  const last = (key, fallback = "") => game.settings.get("terr-encounters", key) || fallback;
+
+  const content = `
+    <form class="terr-encounters-form">
+      <div class="form-group">
+        <label>Season</label>
+        <select name="season">
+          <option value="spring" ${last("season") === "spring" ? "selected" : ""}>Spring</option>
+          <option value="summer" ${last("season") === "summer" ? "selected" : ""}>Summer</option>
+          <option value="autumn" ${last("season") === "autumn" ? "selected" : ""}>Autumn</option>
+          <option value="winter" ${last("season") === "winter" ? "selected" : ""}>Winter</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Biome</label>
+        <select name="biome">
+          <option value="forest" ${last("biome") === "forest" ? "selected" : ""}>Forest</option>
+          <option value="plains" ${last("biome") === "plains" ? "selected" : ""}>Plains</option>
+          <option value="hills" ${last("biome") === "hills" ? "selected" : ""}>Hills</option>
+          <option value="mountains" ${last("biome") === "mountains" ? "selected" : ""}>Mountains</option>
+          <option value="desert" ${last("biome") === "desert" ? "selected" : ""}>Desert</option>
+          <option value="swamp" ${last("biome") === "swamp" ? "selected" : ""}>Swamp</option>
+          <option value="coast" ${last("biome") === "coast" ? "selected" : ""}>Coast</option>
+          <option value="tundra" ${last("biome") === "tundra" ? "selected" : ""}>Tundra</option>
+          <option value="urban" ${last("biome") === "urban" ? "selected" : ""}>Urban Fringe</option>
+          <option value="ruins" ${last("biome") === "ruins" ? "selected" : ""}>Ruins</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Party Size</label>
+        <input type="number" name="partySize" value="${last("partySize", "5")}" min="1" max="12">
+      </div>
+
+      <div class="form-group">
+        <label>Min Level</label>
+        <input type="number" name="levelMin" value="${last("levelMin", "1")}" min="-1" max="25">
+      </div>
+
+      <div class="form-group">
+        <label>Max Level</label>
+        <input type="number" name="levelMax" value="${last("levelMax", "1")}" min="-1" max="25">
+      </div>
+
+      <div class="form-group">
+        <label>Difficulty</label>
+        <select name="difficulty">
+          <option value="easy" ${last("difficulty") === "easy" ? "selected" : ""}>Easy</option>
+          <option value="moderate" ${last("difficulty") === "moderate" ? "selected" : ""}>Moderate</option>
+          <option value="severe" ${last("difficulty") === "severe" ? "selected" : ""}>Severe</option>
+          <option value="extreme" ${last("difficulty") === "extreme" ? "selected" : ""}>Extreme</option>
+        </select>
+      </div>
+    </form>
+  `;
+
+  await foundry.applications.api.DialogV2.prompt({
+    window: { title: "Terr's Encounter System" },
+    content,
+    ok: {
+      label: "Roll Encounter",
+      callback: async (event, button, dialog) => {
+        const form = button.form;
+        const data = Object.fromEntries(new FormData(form));
+
+        if (Number(data.levelMin) > Number(data.levelMax)) {
+          const temp = data.levelMin;
+          data.levelMin = data.levelMax;
+          data.levelMax = temp;
+        }
+
+        for (const [k, v] of Object.entries(data)) {
+          await game.settings.set("terr-encounters", k, String(v));
+        }
+
+        dispatchEncounterRoll(data);
+        return data;
+      }
+    },
+    rejectClose: false,
+    modal: true
+  });
+}
+
+
+========================================================================================================================
+FILE: .\scripts\weather\weather-combiner.js
+========================================================================================================================
+import { chooseOne, sentenceCase } from "./weather-utils.js";
+import { GROUND_ANCHORS, TERRAIN_INTERACTIONS, WEATHER_ACTION_BY_EVENT, WEATHER_ACTIONS, WEATHER_INTENSITY, WEATHER_OPENERS } from "../data/weather-language-foundation.js";
+import { GROUND_OPENERS } from "../data/weather-ground-openers.js";
+import { TEMPERATURE_FEELS, TEMPERATURE_OPENERS, TEMPERATURE_TONES } from "../data/weather-compatibility.js";
+
+const BIOME_TAILS = {
+    "Forest": ["beneath the canopy", "under the trees", "in the shaded woods"],
+    "Plains": ["across the open ground", "over the plain", "through the field"],
+    "Hills": ["along the slopes", "over the open rises", "across the ridgelines"],
+    "Mountains": ["on the exposed heights", "along the ridges", "over the upper stone"],
+    "Desert": ["across the exposed flats", "over the dunes", "across the open sand"],
+    "Tundra": ["across the open tundra", "over the frozen flats", "across the pale ground"],
+    "Urban Fringe": ["across the open lots", "through the verge ground", "over the broken edges"],
+    "Temperate Coast": ["along the shore", "off the water", "through the salt air"],
+    "Tropical Coast": ["along the warm shore", "off the water", "through the coastal heat"],
+    "Temperate Swamp": ["through the marsh air", "over the wet ground", "among the reeds"],
+    "Tropical Swamp": ["through the swamp growth", "over the black water", "among the flooded roots"]
+};
+
+function buildGroundLine({ biome, groundState, ruinModifier, ruinFamily, ruinDetail }) {
+    const opener = chooseOne(GROUND_OPENERS[groundState] ?? ["The ground lies across"]);
+    const anchor = chooseOne(GROUND_ANCHORS[biome] ?? ["the ground"]);
+    let line = `${opener} ${anchor}.`;
+
+    if (ruinModifier && ruinFamily && ruinDetail) {
+        line += ` ${sentenceCase(ruinDetail)} show through the ground in ${ruinModifier}.`;
+    }
+
+    return line;
+}
+
+function buildTemperatureLine({ biome, temperatureState }) {
+    const tone = TEMPERATURE_TONES[temperatureState] ?? "mild";
+    const opener = TEMPERATURE_OPENERS[tone] ?? "The air is";
+    const feelKey = TEMPERATURE_FEELS[temperatureState]
+        ? temperatureState
+        : ["Thaw / Mild Thaw / Warm Break", "Cool Break"].includes(temperatureState)
+            ? temperatureState
+            : "Mild";
+
+    const feel = chooseOne(TEMPERATURE_FEELS[feelKey] ?? TEMPERATURE_FEELS.Mild);
+    const tail = chooseOne(BIOME_TAILS[biome] ?? []);
+    return `${opener} ${feel}${tail ? ` ${tail}` : ""}.`;
+}
+
+function buildWeatherLine({ biome, weatherEvent }) {
+    const opener = chooseOne(WEATHER_OPENERS[weatherEvent] ?? [sentenceCase(weatherEvent)]);
+    const actionGroup = WEATHER_ACTION_BY_EVENT[weatherEvent] ?? "move";
+    const action = chooseOne(WEATHER_ACTIONS[actionGroup] ?? WEATHER_ACTIONS.move);
+    const terrain = chooseOne(TERRAIN_INTERACTIONS[biome] ?? ["the ground"]);
+    return `${opener} ${action} ${terrain}.`;
+}
+
+function getOutputOrder(weatherEvent) {
+    const intensity = WEATHER_INTENSITY[weatherEvent] ?? "quiet";
+    if (intensity === "dramatic") return ["weather", "temperature", "ground"];
+    return ["ground", "temperature", "weather"];
+}
+
+export class WeatherCombiner {
+    static build(record) {
+        const ground = buildGroundLine(record);
+        const temperature = buildTemperatureLine(record);
+        const weather = buildWeatherLine(record);
+        const outputOrder = getOutputOrder(record.weatherEvent);
+
+        return {
+            outputOrder,
+            outputGroundLine: ground,
+            outputTemperatureLine: temperature,
+            outputWeatherLine: weather
+        };
+    }
+}
+
+
+========================================================================================================================
+FILE: .\scripts\weather\weather-controller.js
+========================================================================================================================
+import { getWeatherEnvironment } from "./weather-settings.js";
+import { WeatherState } from "./weather-state.js";
+import { WeatherRolls } from "./weather-rolls.js";
+import { WeatherGround } from "./weather-ground.js";
+import { WeatherRuins } from "./weather-ruins.js";
+import { WeatherCombiner } from "./weather-combiner.js";
+import { currentDayLabel, isoNow } from "./weather-utils.js";
+
+function pushHistory(history, next, max = 3) {
+    const copy = Array.isArray(history) ? [...history] : [];
+    if (next) copy.push(next);
+    while (copy.length > max) copy.shift();
+    return copy;
+}
+
+export class WeatherController {
+    static async getCurrentDay() {
+        const record = await WeatherState.ensureCurrentDayRecord();
+        return record;
+    }
+
+    static async rebuildCurrentDay() {
+        const current = WeatherState.getCurrentDayRecord();
+        const environment = WeatherState.normalizeEnvironment(getWeatherEnvironment());
+
+        const ruins = WeatherRuins.resolve(environment);
+        const rebuilt = {
+            ...current,
+            biome: environment.biome,
+            season: environment.season,
+            phase: environment.phase,
+            ruinModifier: ruins.ruinModifier,
+            ruinFamily: ruins.ruinFamily
+        };
+
+        const output = WeatherCombiner.build({
+            ...rebuilt,
+            ruinDetail: ruins.ruinDetail
+        });
+
+        const next = {
+            ...rebuilt,
+            ...output,
+            generatedAt: isoNow()
+        };
+
+        await WeatherState.setCurrentDayRecord(next);
+        return next;
+    }
+
+    static async advanceDay() {
+        const current = WeatherState.getCurrentDayRecord();
+        const environment = WeatherState.normalizeEnvironment(getWeatherEnvironment());
+
+        let nextTemperatureState = current.temperatureState;
+        let nextTemperatureDaysRemaining = Math.max(0, (current.temperatureDaysRemaining ?? 0) - 1);
+
+        let nextWeatherEvent = current.weatherEvent;
+        let nextWeatherDaysRemaining = Math.max(0, (current.weatherDaysRemaining ?? 0) - 1);
+
+        if (!nextTemperatureState || nextTemperatureDaysRemaining <= 0) {
+            const rolled = WeatherRolls.rollTemperature({
+                biome: environment.biome,
+                season: environment.season,
+                phase: environment.phase,
+                currentTemperatureState: current.temperatureState
+            });
+
+            nextTemperatureState = rolled.temperatureState;
+            nextTemperatureDaysRemaining = rolled.temperatureDaysRemaining;
+        }
+
+        if (!nextWeatherEvent || nextWeatherDaysRemaining <= 0) {
+            const rolled = WeatherRolls.rollWeather({
+                biome: environment.biome,
+                season: environment.season,
+                phase: environment.phase,
+                currentWeatherEvent: current.weatherEvent,
+                temperatureState: nextTemperatureState
+            });
+
+            nextWeatherEvent = rolled.weatherEvent;
+            nextWeatherDaysRemaining = rolled.weatherDaysRemaining;
+        }
+
+        const intermediate = {
+            ...current,
+            dayLabel: currentDayLabel(),
+            biome: environment.biome,
+            season: environment.season,
+            phase: environment.phase,
+            lastTemperatureState: current.temperatureState ?? null,
+            lastWeatherEvent: current.weatherEvent ?? null,
+            temperatureState: nextTemperatureState,
+            temperatureDaysRemaining: nextTemperatureDaysRemaining,
+            weatherEvent: nextWeatherEvent,
+            weatherDaysRemaining: nextWeatherDaysRemaining,
+            recentTemperatureStates: pushHistory(current.recentTemperatureStates, nextTemperatureState),
+            recentWeatherEvents: pushHistory(current.recentWeatherEvents, nextWeatherEvent)
+        };
+
+        const groundState = WeatherGround.updateGroundState(intermediate, environment);
+        const ruins = WeatherRuins.resolve(environment);
+
+        const combined = WeatherCombiner.build({
+            ...intermediate,
+            groundState,
+            ruinModifier: ruins.ruinModifier,
+            ruinFamily: ruins.ruinFamily,
+            ruinDetail: ruins.ruinDetail
+        });
+
+        const finalRecord = {
+            ...intermediate,
+            groundState,
+            ruinModifier: ruins.ruinModifier,
+            ruinFamily: ruins.ruinFamily,
+            ...combined,
+            generatedAt: isoNow()
+        };
+
+        await WeatherState.setCurrentDayRecord(finalRecord);
+        return finalRecord;
+    }
+}
+
+
+========================================================================================================================
+FILE: .\scripts\weather\weather-ground.js
+========================================================================================================================
+import { getPhaseData, getInitialGroundState } from "../data/weather-biomes.js";
+import { chooseOne } from "./weather-utils.js";
+
+const GROUND_TRIGGER_RULES = {
+    wet: {
+        weather: ["drizzle", "rain", "steady rain", "light rain", "brief rain", "brief hard rain", "hard rain", "cold rain"],
+        grounds: ["wet leaf litter", "damp forest floor", "runoff-softened earth", "soft black mud", "flooded low ground", "dark standing water", "wet sand", "slick tidal rock", "shallow water"]
+    },
+    snow: {
+        weather: ["light snow", "steady snow", "blowing snow", "blizzard", "late snow", "first snow"],
+        grounds: ["light snow cover", "deep snow cover", "crusted snow", "patchy snow", "drifted snow"]
+    },
+    thaw: {
+        temperature: ["Thaw / Mild Thaw / Warm Break"],
+        grounds: ["slush-softened ground", "runoff-softened earth", "dark damp ground", "wet sand", "soft black mud"]
+    },
+    hardCold: {
+        temperature: ["Cold Snap", "Hard Cold", "Deep Cold", "Bitter Freeze", "Severe Cold"],
+        grounds: ["hard frozen ground", "bare cold ground", "crusted snow", "frost-stiffened grass"]
+    },
+    heat: {
+        temperature: ["Hot", "Heat Wave", "Dry Heat", "Harsh Dry Heat"],
+        grounds: ["dry open ground", "baked ground", "cracked hardpan", "loose dust", "open dust flats"]
+    },
+    growth: {
+        temperature: ["Mild", "Warm", "Humid Heat"],
+        grounds: ["fresh undergrowth", "dense green undergrowth", "fern-thick ground", "thick grass", "tall grass", "salt grass and dune growth", "root tangles and reeds"]
+    }
+};
+
+function hasRecentMatch(record, field, values) {
+    const history = field === "temperature"
+        ? record.recentTemperatureStates ?? []
+        : record.recentWeatherEvents ?? [];
+
+    return history.some(v => values.includes(v));
+}
+
+function filterToAvailable(availableStates, desiredStates) {
+    return availableStates.filter(state => desiredStates.includes(state));
+}
+
+export class WeatherGround {
+    static updateGroundState(record, environment) {
+        const phaseData = getPhaseData(environment.biome, environment.season, environment.phase);
+        if (!phaseData?.groundStates?.length) {
+            return getInitialGroundState(environment.biome, environment.season, environment.phase);
+        }
+
+        const available = phaseData.groundStates;
+        const current = record.groundState;
+
+        const wetCandidates = filterToAvailable(available, GROUND_TRIGGER_RULES.wet.grounds);
+        const snowCandidates = filterToAvailable(available, GROUND_TRIGGER_RULES.snow.grounds);
+        const thawCandidates = filterToAvailable(available, GROUND_TRIGGER_RULES.thaw.grounds);
+        const coldCandidates = filterToAvailable(available, GROUND_TRIGGER_RULES.hardCold.grounds);
+        const heatCandidates = filterToAvailable(available, GROUND_TRIGGER_RULES.heat.grounds);
+        const growthCandidates = filterToAvailable(available, GROUND_TRIGGER_RULES.growth.grounds);
+
+        if (
+            GROUND_TRIGGER_RULES.wet.weather.includes(record.weatherEvent) ||
+            hasRecentMatch(record, "weather", GROUND_TRIGGER_RULES.wet.weather)
+        ) {
+            const next = chooseOne(wetCandidates);
+            if (next) return next;
+        }
+
+        if (
+            GROUND_TRIGGER_RULES.snow.weather.includes(record.weatherEvent) ||
+            hasRecentMatch(record, "weather", GROUND_TRIGGER_RULES.snow.weather)
+        ) {
+            const next = chooseOne(snowCandidates);
+            if (next) return next;
+        }
+
+        if (GROUND_TRIGGER_RULES.thaw.temperature.includes(record.temperatureState)) {
+            const next = chooseOne(thawCandidates);
+            if (next) return next;
+        }
+
+        if (GROUND_TRIGGER_RULES.hardCold.temperature.includes(record.temperatureState)) {
+            const next = chooseOne(coldCandidates);
+            if (next) return next;
+        }
+
+        if (GROUND_TRIGGER_RULES.heat.temperature.includes(record.temperatureState)) {
+            const next = chooseOne(heatCandidates);
+            if (next) return next;
+        }
+
+        if (GROUND_TRIGGER_RULES.growth.temperature.includes(record.temperatureState)) {
+            const next = chooseOne(growthCandidates);
+            if (next) return next;
+        }
+
+        if (current && available.includes(current) && Math.random() < 0.7) {
+            return current;
+        }
+
+        return chooseOne(available) ?? current ?? getInitialGroundState(environment.biome, environment.season, environment.phase);
+    }
+}
+
+
+========================================================================================================================
+FILE: .\scripts\weather\weather-init.js
+========================================================================================================================
+import { MODULE_ID, registerWeatherSettings } from "./weather-settings.js";
+import { WeatherState } from "./weather-state.js";
+import { WeatherController } from "./weather-controller.js";
+import { WeatherPanelApp, openWeatherPanel } from "./weather-ui.js";
+
+Hooks.once("init", () => {
+    Handlebars.registerHelper("eq", (a, b) => a === b);
+    registerWeatherSettings();
+});
+
+Hooks.once("ready", async () => {
+    if (!game.user?.isGM) return;
+
+    await WeatherState.ensureCurrentDayRecord();
+
+    globalThis[MODULE_ID] ??= {};
+    globalThis[MODULE_ID].weather = {
+        controller: WeatherController,
+        panelClass: WeatherPanelApp,
+        openPanel: () => openWeatherPanel(),
+        getCurrentDay: () => WeatherController.getCurrentDay(),
+        advanceDay: () => WeatherController.advanceDay(),
+        rebuildCurrentDay: () => WeatherController.rebuildCurrentDay()
+    };
+
+    console.log(`${MODULE_ID} | Weather system ready`);
+});
+
+
+========================================================================================================================
+FILE: .\scripts\weather\weather-render.js
+========================================================================================================================
+import { BIOME_DEFAULT_RUIN_FAMILIES } from "../data/weather-ruins-data.js";
+import { getAvailableSeasonsForBiome, WEATHER_BIOMES } from "../data/weather-biomes.js";
+
+export class WeatherRender {
+    static buildTemplateData(record, environment) {
+        const orderedOutput = this.getOrderedOutput(record);
+        const biomeChoices = Object.keys(WEATHER_BIOMES).map(value => ({ value, label: value }));
+        const seasonChoices = getAvailableSeasonsForBiome(environment.biome).map(value => ({ value, label: value }));
+        const phaseChoices = ["Early", "Mid", "Late"].map(value => ({ value, label: value }));
+        const manualRuinFamilyChoices = (BIOME_DEFAULT_RUIN_FAMILIES[environment.biome] ?? []).map(value => ({ value, label: value }));
+
+        return {
+            moduleId: "terr-encounters",
+            dayLabel: record.dayLabel || "",
+            biome: record.biome || environment.biome || "",
+            season: record.season || environment.season || "",
+            phase: record.phase || environment.phase || "",
+            groundState: record.groundState || "",
+            temperatureState: record.temperatureState || "",
+            temperatureDaysRemaining: Number.isFinite(record.temperatureDaysRemaining) ? record.temperatureDaysRemaining : 0,
+            weatherEvent: record.weatherEvent || "",
+            weatherDaysRemaining: Number.isFinite(record.weatherDaysRemaining) ? record.weatherDaysRemaining : 0,
+            ruinModifier: record.ruinModifier || "",
+            ruinFamily: record.ruinFamily || "",
+            outputGroundLine: record.outputGroundLine || "",
+            outputTemperatureLine: record.outputTemperatureLine || "",
+            outputWeatherLine: record.outputWeatherLine || "",
+            orderedOutput,
+            controls: {
+                biome: environment.biome,
+                season: environment.season,
+                phase: environment.phase,
+                addRuins: !!environment.addRuins,
+                ruinFrequency: environment.ruinFrequency,
+                ruinStyleMode: environment.ruinStyleMode,
+                manualRuinFamily: environment.manualRuinFamily
+            },
+            showRuins: !!environment.addRuins,
+            showManualRuinFamily: !!environment.addRuins && environment.ruinStyleMode === "manual",
+            hasRuinsApplied: !!record.ruinModifier && !!record.ruinFamily,
+            biomeChoices,
+            seasonChoices,
+            phaseChoices,
+            ruinFrequencyChoices: [
+                { value: "faint", label: "Faint" },
+                { value: "light", label: "Light" },
+                { value: "mixed", label: "Mixed" }
+            ],
+            ruinStyleModeChoices: [
+                { value: "auto", label: "Auto by Biome" },
+                { value: "manual", label: "Manual" }
+            ],
+            manualRuinFamilyChoices
+        };
+    }
+
+    static getOrderedOutput(record) {
+        const map = {
+            ground: record.outputGroundLine || "",
+            temperature: record.outputTemperatureLine || "",
+            weather: record.outputWeatherLine || ""
+        };
+
+        const order = Array.isArray(record.outputOrder) && record.outputOrder.length === 3
+            ? record.outputOrder
+            : ["ground", "temperature", "weather"];
+
+        return order
+            .map(key => ({
+                key,
+                label: this.labelForKey(key),
+                text: map[key] || ""
+            }))
+            .filter(entry => !!entry.text);
+    }
+
+    static labelForKey(key) {
+        switch (key) {
+            case "ground":
+                return "Ground";
+            case "temperature":
+                return "Temperature";
+            case "weather":
+                return "Weather";
+            default:
+                return key;
+        }
+    }
+}
+
+
+========================================================================================================================
+FILE: .\scripts\weather\weather-rolls.js
+========================================================================================================================
+import { getPhaseData, getLockRange } from "../data/weather-biomes.js";
+import { WEATHER_COMPATIBILITY } from "../data/weather-compatibility.js";
+import { buildWeightedArrayFromMap, normalizeWeights, randomInt, upsertWeight, weightedPick } from "./weather-utils.js";
+
+function applyTransitionBias(weightMap, currentState) {
+    if (!currentState || !weightMap.has(currentState)) return;
+    upsertWeight(weightMap, currentState, 2);
+}
+
+function applyCompatibility(weightMap, temperatureState) {
+    if (!temperatureState) return;
+
+    const rules = WEATHER_COMPATIBILITY[temperatureState];
+    if (!rules) return;
+
+    for (const state of rules.favor ?? []) {
+        if (weightMap.has(state)) upsertWeight(weightMap, state, 2);
+    }
+
+    for (const state of rules.suppress ?? []) {
+        if (weightMap.has(state)) {
+            const current = weightMap.get(state) ?? 0;
+            weightMap.set(state, Math.max(0, current - 2));
+        }
+    }
+}
+
+function asWeightMap(entries) {
+    const map = new Map();
+    for (const entry of normalizeWeights(entries)) {
+        map.set(entry.value, (map.get(entry.value) ?? 0) + entry.weight);
+    }
+    return map;
+}
+
+export class WeatherRolls {
+    static rollTemperature({ biome, season, phase, currentTemperatureState }) {
+        const phaseData = getPhaseData(biome, season, phase);
+        if (!phaseData) throw new Error(`No temperature pool for ${biome} / ${season} / ${phase}`);
+
+        const weights = asWeightMap(phaseData.temperatureStates);
+        applyTransitionBias(weights, currentTemperatureState);
+
+        const temperatureState = weightedPick(buildWeightedArrayFromMap(weights)) ?? phaseData.temperatureStates[0]?.value;
+        const [minDays, maxDays] = getLockRange(biome, "temperature", temperatureState);
+        const temperatureDaysRemaining = randomInt(minDays, maxDays);
+
+        return { temperatureState, temperatureDaysRemaining };
+    }
+
+    static rollWeather({ biome, season, phase, currentWeatherEvent, temperatureState }) {
+        const phaseData = getPhaseData(biome, season, phase);
+        if (!phaseData) throw new Error(`No weather pool for ${biome} / ${season} / ${phase}`);
+
+        const weights = asWeightMap(phaseData.weatherEvents);
+        applyTransitionBias(weights, currentWeatherEvent);
+        applyCompatibility(weights, temperatureState);
+
+        const weatherEvent = weightedPick(buildWeightedArrayFromMap(weights)) ?? phaseData.weatherEvents[0]?.value;
+        const [minDays, maxDays] = getLockRange(biome, "weather", weatherEvent);
+        const weatherDaysRemaining = randomInt(minDays, maxDays);
+
+        return { weatherEvent, weatherDaysRemaining };
+    }
+}
+
+
+========================================================================================================================
+FILE: .\scripts\weather\weather-ruins.js
+========================================================================================================================
+import { BIOME_DEFAULT_RUIN_FAMILIES, RUIN_FAMILIES, RUIN_FREQUENCY_WEIGHTS } from "../data/weather-ruins-data.js";
+import { buildWeightedArrayFromMap, chooseOne, weightedPick } from "./weather-utils.js";
+
+export class WeatherRuins {
+    static resolve(environment) {
+        if (!environment.addRuins) {
+            return { ruinModifier: null, ruinFamily: null, ruinDetail: null };
+        }
+
+        const weights = RUIN_FREQUENCY_WEIGHTS[environment.ruinFrequency] ?? RUIN_FREQUENCY_WEIGHTS.mixed;
+        const ruinModifier = weightedPick(
+            Object.entries(weights).map(([value, weight]) => ({ value, weight }))
+        );
+
+        if (!ruinModifier || ruinModifier === "none") {
+            return { ruinModifier: null, ruinFamily: null, ruinDetail: null };
+        }
+
+        let ruinFamily = null;
+        if (environment.ruinStyleMode === "manual" && environment.manualRuinFamily && RUIN_FAMILIES[environment.manualRuinFamily]) {
+            ruinFamily = environment.manualRuinFamily;
+        } else {
+            const allowed = BIOME_DEFAULT_RUIN_FAMILIES[environment.biome] ?? [];
+            ruinFamily = chooseOne(allowed) ?? null;
+        }
+
+        const ruinDetail = ruinFamily ? chooseOne(RUIN_FAMILIES[ruinFamily] ?? []) : null;
+
+        return {
+            ruinModifier,
+            ruinFamily,
+            ruinDetail
+        };
+    }
+}
+
+
+========================================================================================================================
+FILE: .\scripts\weather\weather-settings.js
+========================================================================================================================
+export const MODULE_ID = "terr-encounters";
+
+export const SETTING_KEYS = {
+    season: "season",
+    seasonPhase: "seasonPhase",
+    biome: "biome",
+    addRuins: "addRuins",
+    ruinFrequency: "ruinFrequency",
+    ruinStyleMode: "ruinStyleMode",
+    manualRuinFamily: "manualRuinFamily",
+    currentDayRecord: "currentDayRecord"
+};
+
+export const DEFAULT_SETTINGS = {
+    season: "Spring",
+    seasonPhase: "Early",
+    biome: "Forest",
+    addRuins: false,
+    ruinFrequency: "mixed",
+    ruinStyleMode: "auto",
+    manualRuinFamily: ""
+};
+
+function registerWorldSetting(key, config) {
+    game.settings.register(MODULE_ID, key, {
+        scope: "world",
+        config: true,
+        ...config
+    });
+}
+
+export function registerWeatherSettings() {
+    registerWorldSetting(SETTING_KEYS.season, {
+        name: "Weather Season",
+        hint: "Controls the active season used by the weather engine.",
+        type: String,
+        choices: {
+            Spring: "Spring",
+            Summer: "Summer",
+            Autumn: "Autumn",
+            Winter: "Winter",
+            "Cool Season": "Cool Season",
+            "Hot Season": "Hot Season",
+            "Wet Season": "Wet Season",
+            "Dry Season": "Dry Season"
+        },
+        default: DEFAULT_SETTINGS.season
+    });
+
+    registerWorldSetting(SETTING_KEYS.seasonPhase, {
+        name: "Weather Season Phase",
+        hint: "Controls the active phase within the season.",
+        type: String,
+        choices: {
+            Early: "Early",
+            Mid: "Mid",
+            Late: "Late"
+        },
+        default: DEFAULT_SETTINGS.seasonPhase
+    });
+
+    registerWorldSetting(SETTING_KEYS.biome, {
+        name: "Weather Biome",
+        hint: "Controls the active biome for weather generation.",
+        type: String,
+        choices: {
+            Forest: "Forest",
+            Plains: "Plains",
+            Hills: "Hills",
+            Mountains: "Mountains",
+            Desert: "Desert",
+            Tundra: "Tundra",
+            "Urban Fringe": "Urban Fringe",
+            "Temperate Coast": "Temperate Coast",
+            "Tropical Coast": "Tropical Coast",
+            "Temperate Swamp": "Temperate Swamp",
+            "Tropical Swamp": "Tropical Swamp"
+        },
+        default: DEFAULT_SETTINGS.biome
+    });
+
+    registerWorldSetting(SETTING_KEYS.addRuins, {
+        name: "Add Ruins",
+        hint: "Enable optional ruin overlay on the Ground line.",
+        type: Boolean,
+        default: DEFAULT_SETTINGS.addRuins
+    });
+
+    registerWorldSetting(SETTING_KEYS.ruinFrequency, {
+        name: "Ruin Frequency",
+        hint: "Controls how often ruin modifiers appear when ruins are enabled.",
+        type: String,
+        choices: {
+            faint: "Faint",
+            light: "Light",
+            mixed: "Mixed"
+        },
+        default: DEFAULT_SETTINGS.ruinFrequency
+    });
+
+    registerWorldSetting(SETTING_KEYS.ruinStyleMode, {
+        name: "Ruin Style Mode",
+        hint: "Auto by biome or choose a manual ruin family.",
+        type: String,
+        choices: {
+            auto: "Auto by Biome",
+            manual: "Manual"
+        },
+        default: DEFAULT_SETTINGS.ruinStyleMode
+    });
+
+    registerWorldSetting(SETTING_KEYS.manualRuinFamily, {
+        name: "Manual Ruin Family",
+        hint: "Used only when Ruin Style Mode is Manual.",
+        type: String,
+        default: DEFAULT_SETTINGS.manualRuinFamily
+    });
+
+    game.settings.register(MODULE_ID, SETTING_KEYS.currentDayRecord, {
+        scope: "world",
+        config: false,
+        type: Object,
+        default: {}
+    });
+}
+
+export function getWeatherSetting(key) {
+    return game.settings.get(MODULE_ID, key);
+}
+
+export async function setWeatherSetting(key, value) {
+    return game.settings.set(MODULE_ID, key, value);
+}
+
+export function getWeatherEnvironment() {
+    return {
+        season: getWeatherSetting(SETTING_KEYS.season),
+        phase: getWeatherSetting(SETTING_KEYS.seasonPhase),
+        biome: getWeatherSetting(SETTING_KEYS.biome),
+        addRuins: getWeatherSetting(SETTING_KEYS.addRuins),
+        ruinFrequency: getWeatherSetting(SETTING_KEYS.ruinFrequency),
+        ruinStyleMode: getWeatherSetting(SETTING_KEYS.ruinStyleMode),
+        manualRuinFamily: getWeatherSetting(SETTING_KEYS.manualRuinFamily)
+    };
+}
+
+
+========================================================================================================================
+FILE: .\scripts\weather\weather-state.js
+========================================================================================================================
+import { MODULE_ID, SETTING_KEYS, getWeatherEnvironment, setWeatherSetting } from "./weather-settings.js";
+import { currentDayLabel, deepClone, isoNow } from "./weather-utils.js";
+import { biomeSupportsSeason, getAvailableSeasonsForBiome, getInitialGroundState } from "../data/weather-biomes.js";
+
+export const DEFAULT_CURRENT_DAY = {
+    dayLabel: "",
+    biome: "",
+    season: "",
+    phase: "",
+    groundState: "",
+    temperatureState: "",
+    temperatureDaysRemaining: 0,
+    weatherEvent: "",
+    weatherDaysRemaining: 0,
+    ruinModifier: null,
+    ruinFamily: null,
+    outputOrder: ["ground", "temperature", "weather"],
+    outputGroundLine: "",
+    outputTemperatureLine: "",
+    outputWeatherLine: "",
+    generatedAt: "",
+    lastTemperatureState: null,
+    lastWeatherEvent: null,
+    recentTemperatureStates: [],
+    recentWeatherEvents: []
+};
+
+export class WeatherState {
+    static getCurrentDayRecord() {
+        const raw = game.settings.get(MODULE_ID, SETTING_KEYS.currentDayRecord) ?? {};
+        return this.normalizeRecord(raw);
+    }
+
+    static async setCurrentDayRecord(record) {
+        const normalized = this.normalizeRecord(record);
+        await setWeatherSetting(SETTING_KEYS.currentDayRecord, normalized);
+        return normalized;
+    }
+
+    static normalizeEnvironment(environment) {
+        const env = deepClone(environment);
+        if (!biomeSupportsSeason(env.biome, env.season)) {
+            const validSeasons = getAvailableSeasonsForBiome(env.biome);
+            env.season = validSeasons[0];
+        }
+
+        if (!["Early", "Mid", "Late"].includes(env.phase)) {
+            env.phase = "Early";
+        }
+
+        return env;
+    }
+
+    static normalizeRecord(record) {
+        const merged = foundry.utils.mergeObject(
+            deepClone(DEFAULT_CURRENT_DAY),
+            deepClone(record ?? {}),
+            { inplace: false, insertKeys: true, overwrite: true }
+        );
+
+        const env = this.normalizeEnvironment({
+            biome: merged.biome || getWeatherEnvironment().biome,
+            season: merged.season || getWeatherEnvironment().season,
+            phase: merged.phase || getWeatherEnvironment().phase
+        });
+
+        merged.biome = env.biome;
+        merged.season = env.season;
+        merged.phase = env.phase;
+
+        if (!merged.dayLabel) merged.dayLabel = currentDayLabel();
+        if (!merged.generatedAt) merged.generatedAt = isoNow();
+        if (!merged.groundState) merged.groundState = getInitialGroundState(env.biome, env.season, env.phase);
+        if (!Array.isArray(merged.outputOrder) || merged.outputOrder.length !== 3) {
+            merged.outputOrder = ["ground", "temperature", "weather"];
+        }
+        if (!Array.isArray(merged.recentTemperatureStates)) merged.recentTemperatureStates = [];
+        if (!Array.isArray(merged.recentWeatherEvents)) merged.recentWeatherEvents = [];
+
+        return merged;
+    }
+
+    static async ensureCurrentDayRecord() {
+        const current = this.getCurrentDayRecord();
+        const isEmpty =
+            !current.temperatureState &&
+            !current.weatherEvent &&
+            !current.outputGroundLine &&
+            !current.outputTemperatureLine &&
+            !current.outputWeatherLine;
+
+        if (!isEmpty) return current;
+
+        const env = this.normalizeEnvironment(getWeatherEnvironment());
+
+        const initial = this.normalizeRecord({
+            biome: env.biome,
+            season: env.season,
+            phase: env.phase,
+            groundState: getInitialGroundState(env.biome, env.season, env.phase)
+        });
+
+        await this.setCurrentDayRecord(initial);
+        return initial;
+    }
+}
+
+
+========================================================================================================================
+FILE: .\scripts\weather\weather-ui.js
+========================================================================================================================
+import { MODULE_ID, getWeatherEnvironment, getWeatherSetting, setWeatherSetting, SETTING_KEYS } from "./weather-settings.js";
+import { WeatherController } from "./weather-controller.js";
+import { WeatherRender } from "./weather-render.js";
+import { WeatherState } from "./weather-state.js";
+import { BIOME_DEFAULT_RUIN_FAMILIES } from "../data/weather-ruins-data.js";
+import { getAvailableSeasonsForBiome } from "../data/weather-biomes.js";
+
+let weatherPanelInstance = null;
+
+function readFormData(form) {
+    const fd = new FormData(form);
+
+    return {
+        biome: String(fd.get("biome") ?? ""),
+        season: String(fd.get("season") ?? ""),
+        phase: String(fd.get("phase") ?? ""),
+        addRuins: form.querySelector('input[name="addRuins"]')?.checked ?? false,
+        ruinFrequency: String(fd.get("ruinFrequency") ?? "mixed"),
+        ruinStyleMode: String(fd.get("ruinStyleMode") ?? "auto"),
+        manualRuinFamily: String(fd.get("manualRuinFamily") ?? "")
+    };
+}
+
+async function saveEnvironmentFromForm(formData) {
+    const biome = formData.biome || getWeatherSetting(SETTING_KEYS.biome);
+    const validSeasons = getAvailableSeasonsForBiome(biome);
+    let season = formData.season || getWeatherSetting(SETTING_KEYS.season);
+    if (!validSeasons.includes(season)) season = validSeasons[0];
+
+    const phase = ["Early", "Mid", "Late"].includes(formData.phase) ? formData.phase : "Early";
+    const addRuins = !!formData.addRuins;
+    const ruinFrequency = ["faint", "light", "mixed"].includes(formData.ruinFrequency) ? formData.ruinFrequency : "mixed";
+    const ruinStyleMode = ["auto", "manual"].includes(formData.ruinStyleMode) ? formData.ruinStyleMode : "auto";
+
+    const availableFamilies = BIOME_DEFAULT_RUIN_FAMILIES[biome] ?? [];
+    let manualRuinFamily = formData.manualRuinFamily || "";
+    if (!availableFamilies.includes(manualRuinFamily)) {
+        manualRuinFamily = availableFamilies[0] ?? "";
+    }
+
+    await setWeatherSetting(SETTING_KEYS.biome, biome);
+    await setWeatherSetting(SETTING_KEYS.season, season);
+    await setWeatherSetting(SETTING_KEYS.seasonPhase, phase);
+    await setWeatherSetting(SETTING_KEYS.addRuins, addRuins);
+    await setWeatherSetting(SETTING_KEYS.ruinFrequency, ruinFrequency);
+    await setWeatherSetting(SETTING_KEYS.ruinStyleMode, ruinStyleMode);
+    await setWeatherSetting(SETTING_KEYS.manualRuinFamily, manualRuinFamily);
+}
+
+export class WeatherPanelApp extends foundry.applications.api.ApplicationV2 {
+    static DEFAULT_OPTIONS = {
+        id: `${MODULE_ID}-weather-panel`,
+        tag: "section",
+        classes: [MODULE_ID, "weather-panel-app"],
+        window: {
+            title: "Terr's Encounter System",
+            icon: "fas fa-cloud-sun",
+            resizable: true
+        },
+        position: {
+            width: 680,
+            height: "auto"
+        }
+    };
+
+    constructor(options = {}) {
+        super(options);
+        this._record = null;
+        this._environment = null;
+    }
+
+    get template() {
+        return `modules/${MODULE_ID}/templates/weather-panel.hbs`;
+    }
+
+    async _prepareContext() {
+        const record = this._record ?? await WeatherState.ensureCurrentDayRecord();
+        const environment = WeatherState.normalizeEnvironment(this._environment ?? getWeatherEnvironment());
+        this._record = record;
+        this._environment = environment;
+        return WeatherRender.buildTemplateData(record, environment);
+    }
+
+    async _renderHTML(context) {
+        return foundry.applications.handlebars.renderTemplate(this.template, context);
+    }
+
+    async _replaceHTML(result, content) {
+        content.innerHTML = result;
+    }
+
+    async refreshFromState() {
+        this._record = await WeatherController.getCurrentDay();
+        this._environment = WeatherState.normalizeEnvironment(getWeatherEnvironment());
+        await this.render(true);
+    }
+
+    async doAdvanceDay(form) {
+        const formData = readFormData(form);
+        await saveEnvironmentFromForm(formData);
+        this._environment = WeatherState.normalizeEnvironment(getWeatherEnvironment());
+        this._record = await WeatherController.advanceDay();
+        await this.render(true);
+    }
+
+    async doRebuild(form) {
+        const formData = readFormData(form);
+        await saveEnvironmentFromForm(formData);
+        this._environment = WeatherState.normalizeEnvironment(getWeatherEnvironment());
+        this._record = await WeatherController.rebuildCurrentDay();
+        await this.render(true);
+    }
+
+    async _onRender(context, options) {
+        await super._onRender(context, options);
+
+        const root = this.element;
+        if (!root) return;
+
+        const form = root.querySelector("form");
+        if (!form) return;
+
+        const rerenderFromControls = async () => {
+            const formData = readFormData(form);
+            await saveEnvironmentFromForm(formData);
+            this._environment = WeatherState.normalizeEnvironment(getWeatherEnvironment());
+            if (!this._record) {
+                this._record = await WeatherController.getCurrentDay();
+            }
+            await this.render(true);
+        };
+
+        form.querySelector('select[name="biome"]')?.addEventListener("change", async () => {
+            const biome = form.querySelector('select[name="biome"]')?.value || getWeatherSetting(SETTING_KEYS.biome);
+            const seasonSelect = form.querySelector('select[name="season"]');
+            const validSeasons = getAvailableSeasonsForBiome(biome);
+            if (seasonSelect && !validSeasons.includes(seasonSelect.value)) {
+                seasonSelect.value = validSeasons[0];
+            }
+            await rerenderFromControls();
+        });
+
+        form.querySelector('select[name="season"]')?.addEventListener("change", rerenderFromControls);
+        form.querySelector('select[name="phase"]')?.addEventListener("change", rerenderFromControls);
+        form.querySelector('input[name="addRuins"]')?.addEventListener("change", rerenderFromControls);
+        form.querySelector('select[name="ruinFrequency"]')?.addEventListener("change", rerenderFromControls);
+        form.querySelector('select[name="ruinStyleMode"]')?.addEventListener("change", rerenderFromControls);
+        form.querySelector('select[name="manualRuinFamily"]')?.addEventListener("change", rerenderFromControls);
+
+        form.querySelector('[data-action="refresh-current"]')?.addEventListener("click", async (event) => {
+            event.preventDefault();
+            await this.refreshFromState();
+        });
+
+        form.querySelector('[data-action="rebuild-current"]')?.addEventListener("click", async (event) => {
+            event.preventDefault();
+            await this.doRebuild(form);
+        });
+
+        form.querySelector('[data-action="advance-day"]')?.addEventListener("click", async (event) => {
+            event.preventDefault();
+            await this.doAdvanceDay(form);
+        });
+    }
+}
+
+export async function openWeatherPanel() {
+    if (!game.user?.isGM) {
+        ui.notifications?.warn("Only the GM can use Terr Encounters.");
+        return null;
+    }
+
+    if (!weatherPanelInstance) {
+        weatherPanelInstance = new WeatherPanelApp();
+    }
+
+    await weatherPanelInstance.refreshFromState();
+    weatherPanelInstance.render(true);
+    return weatherPanelInstance;
+}
+
+
+========================================================================================================================
+FILE: .\scripts\weather\weather-utils.js
+========================================================================================================================
+import { MODULE_ID, SETTING_KEYS, getWeatherEnvironment, setWeatherSetting } from "./weather-settings.js";
+import { currentDayLabel, deepClone, isoNow } from "./weather-utils.js";
+import { biomeSupportsSeason, getAvailableSeasonsForBiome, getInitialGroundState } from "../data/weather-biomes.js";
+
+export const DEFAULT_CURRENT_DAY = {
+    dayLabel: "",
+    biome: "",
+    season: "",
+    phase: "",
+    groundState: "",
+    temperatureState: "",
+    temperatureDaysRemaining: 0,
+    weatherEvent: "",
+    weatherDaysRemaining: 0,
+    ruinModifier: null,
+    ruinFamily: null,
+    outputOrder: ["ground", "temperature", "weather"],
+    outputGroundLine: "",
+    outputTemperatureLine: "",
+    outputWeatherLine: "",
+    generatedAt: "",
+    lastTemperatureState: null,
+    lastWeatherEvent: null,
+    recentTemperatureStates: [],
+    recentWeatherEvents: []
+};
+
+export class WeatherState {
+    static getCurrentDayRecord() {
+        const raw = game.settings.get(MODULE_ID, SETTING_KEYS.currentDayRecord) ?? {};
+        return this.normalizeRecord(raw);
+    }
+
+    static async setCurrentDayRecord(record) {
+        const normalized = this.normalizeRecord(record);
+        await setWeatherSetting(SETTING_KEYS.currentDayRecord, normalized);
+        return normalized;
+    }
+
+    static normalizeEnvironment(environment) {
+        const env = deepClone(environment);
+        if (!biomeSupportsSeason(env.biome, env.season)) {
+            const validSeasons = getAvailableSeasonsForBiome(env.biome);
+            env.season = validSeasons[0];
+        }
+
+        if (!["Early", "Mid", "Late"].includes(env.phase)) {
+            env.phase = "Early";
+        }
+
+        return env;
+    }
+
+    static normalizeRecord(record) {
+        const merged = foundry.utils.mergeObject(
+            deepClone(DEFAULT_CURRENT_DAY),
+            deepClone(record ?? {}),
+            { inplace: false, insertKeys: true, overwrite: true }
+        );
+
+        const env = this.normalizeEnvironment({
+            biome: merged.biome || getWeatherEnvironment().biome,
+            season: merged.season || getWeatherEnvironment().season,
+            phase: merged.phase || getWeatherEnvironment().phase
+        });
+
+        merged.biome = env.biome;
+        merged.season = env.season;
+        merged.phase = env.phase;
+
+        if (!merged.dayLabel) merged.dayLabel = currentDayLabel();
+        if (!merged.generatedAt) merged.generatedAt = isoNow();
+        if (!merged.groundState) merged.groundState = getInitialGroundState(env.biome, env.season, env.phase);
+        if (!Array.isArray(merged.outputOrder) || merged.outputOrder.length !== 3) {
+            merged.outputOrder = ["ground", "temperature", "weather"];
+        }
+        if (!Array.isArray(merged.recentTemperatureStates)) merged.recentTemperatureStates = [];
+        if (!Array.isArray(merged.recentWeatherEvents)) merged.recentWeatherEvents = [];
+
+        return merged;
+    }
+
+    static async ensureCurrentDayRecord() {
+        const current = this.getCurrentDayRecord();
+        const isEmpty =
+            !current.temperatureState &&
+            !current.weatherEvent &&
+            !current.outputGroundLine &&
+            !current.outputTemperatureLine &&
+            !current.outputWeatherLine;
+
+        if (!isEmpty) return current;
+
+        const env = this.normalizeEnvironment(getWeatherEnvironment());
+
+        const initial = this.normalizeRecord({
+            biome: env.biome,
+            season: env.season,
+            phase: env.phase,
+            groundState: getInitialGroundState(env.biome, env.season, env.phase)
+        });
+
+        await this.setCurrentDayRecord(initial);
+        return initial;
+    }
+}
+
+
+========================================================================================================================
+FILE: .\styles\styles.css
+========================================================================================================================
+form .form-group {
+  margin-bottom: 10px;
+}
+
+
+========================================================================================================================
+FILE: .\styles\weather-panel.css
+========================================================================================================================
+form .form-group {
+  margin-bottom: 10px;
+}
+.terrs-encounter-system.weather-panel-app .window-content {
+    padding: 0.75rem;
+}
+
+.terrs-encounter-system .weather-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.terrs-encounter-system .weather-block {
+    border: 1px solid var(--color-border-light-primary);
+    border-radius: 6px;
+    padding: 0.75rem;
+    background: color-mix(in srgb, var(--color-bg) 92%, black 8%);
+}
+
+.terrs-encounter-system .weather-block-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+    .terrs-encounter-system .weather-block-header h2 {
+        margin: 0;
+        font-size: 1rem;
+    }
+
+.terrs-encounter-system .weather-header-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.terrs-encounter-system .weather-advance-button {
+    font-weight: 700;
+}
+
+.terrs-encounter-system .weather-summary-grid,
+.terrs-encounter-system .weather-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.terrs-encounter-system .weather-summary-item,
+.terrs-encounter-system .weather-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+    .terrs-encounter-system .weather-summary-item label,
+    .terrs-encounter-system .weather-field label {
+        font-weight: 700;
+        font-size: 0.85rem;
+    }
+
+.terrs-encounter-system .weather-summary-item-wide {
+    grid-column: 1 / -1;
+}
+
+.terrs-encounter-system .weather-checkbox-field {
+    justify-content: end;
+}
+
+.terrs-encounter-system .weather-checkbox-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 700;
+}
+
+.terrs-encounter-system .weather-output-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.terrs-encounter-system .weather-output-line {
+    border: 1px solid var(--color-border-light-tertiary);
+    border-radius: 4px;
+    padding: 0.5rem 0.625rem;
+    background: color-mix(in srgb, var(--color-bg) 95%, black 5%);
+}
+
+    .terrs-encounter-system .weather-output-line label {
+        display: block;
+        font-weight: 700;
+        font-size: 0.85rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .terrs-encounter-system .weather-output-line p {
+        margin: 0;
+    }
+
+@media (max-width: 600px) {
+    .terrs-encounter-system .weather-summary-grid,
+    .terrs-encounter-system .weather-form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+========================================================================================================================
+FILE: .\templates\weather-panel.hbs
+========================================================================================================================
+<form class="weather-panel">
+  <section class="weather-block weather-current-day">
+    <header class="weather-block-header">
+      <h2>Current Day</h2>
+      <div class="weather-header-actions">
+        <button type="button" data-action="refresh-current">Refresh</button>
+        <button type="button" data-action="rebuild-current">Rebuild Current</button>
+        <button type="button" data-action="advance-day" class="weather-advance-button">Advance Day</button>
+      </div>
+    </header>
+
+    <div class="weather-summary-grid">
+      <div class="weather-summary-item">
+        <label>Day</label>
+        <div>{{dayLabel}}</div>
+      </div>
+      <div class="weather-summary-item">
+        <label>Biome</label>
+        <div>{{biome}}</div>
+      </div>
+      <div class="weather-summary-item">
+        <label>Season</label>
+        <div>{{season}}</div>
+      </div>
+      <div class="weather-summary-item">
+        <label>Phase</label>
+        <div>{{phase}}</div>
+      </div>
+      <div class="weather-summary-item weather-summary-item-wide">
+        <label>Ground State</label>
+        <div>{{groundState}}</div>
+      </div>
+      <div class="weather-summary-item">
+        <label>Temperature</label>
+        <div>{{temperatureState}} ({{temperatureDaysRemaining}} day{{#unless (eq temperatureDaysRemaining 1)}}s{{/unless}} remaining)</div>
+      </div>
+      <div class="weather-summary-item">
+        <label>Weather</label>
+        <div>{{weatherEvent}} ({{weatherDaysRemaining}} day{{#unless (eq weatherDaysRemaining 1)}}s{{/unless}} remaining)</div>
+      </div>
+
+      {{#if hasRuinsApplied}}
+      <div class="weather-summary-item">
+        <label>Ruin Modifier</label>
+        <div>{{ruinModifier}}</div>
+      </div>
+      <div class="weather-summary-item weather-summary-item-wide">
+        <label>Ruin Family</label>
+        <div>{{ruinFamily}}</div>
+      </div>
+      {{/if}}
+    </div>
+  </section>
+
+  <section class="weather-block weather-controls">
+    <header class="weather-block-header">
+      <h2>Controls</h2>
+    </header>
+
+    <div class="weather-form-grid">
+      <div class="weather-field">
+        <label for="weather-biome">Biome</label>
+        <select id="weather-biome" name="biome">
+          {{#each biomeChoices}}
+          <option value="{{this.value}}" {{#if (eq ../controls.biome this.value)}}selected{{/if}}>{{this.label}}</option>
+          {{/each}}
+        </select>
+      </div>
+
+      <div class="weather-field">
+        <label for="weather-season">Season</label>
+        <select id="weather-season" name="season">
+          {{#each seasonChoices}}
+          <option value="{{this.value}}" {{#if (eq ../controls.season this.value)}}selected{{/if}}>{{this.label}}</option>
+          {{/each}}
+        </select>
+      </div>
+
+      <div class="weather-field">
+        <label for="weather-phase">Phase</label>
+        <select id="weather-phase" name="phase">
+          {{#each phaseChoices}}
+          <option value="{{this.value}}" {{#if (eq ../controls.phase this.value)}}selected{{/if}}>{{this.label}}</option>
+          {{/each}}
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <section class="weather-block weather-ruins">
+    <header class="weather-block-header">
+      <h2>Ruins</h2>
+    </header>
+
+    <div class="weather-form-grid">
+      <div class="weather-field weather-checkbox-field">
+        <label class="weather-checkbox-label">
+          <input type="checkbox" name="addRuins" {{#if controls.addRuins}}checked{{/if}}>
+          <span>Add Ruins</span>
+        </label>
+      </div>
+
+      <div class="weather-field">
+        <label for="weather-ruin-frequency">Ruin Frequency</label>
+        <select id="weather-ruin-frequency" name="ruinFrequency" {{#unless controls.addRuins}}disabled{{/unless}}>
+          {{#each ruinFrequencyChoices}}
+          <option value="{{this.value}}" {{#if (eq ../controls.ruinFrequency this.value)}}selected{{/if}}>{{this.label}}</option>
+          {{/each}}
+        </select>
+      </div>
+
+      <div class="weather-field">
+        <label for="weather-ruin-style-mode">Ruin Style Mode</label>
+        <select id="weather-ruin-style-mode" name="ruinStyleMode" {{#unless controls.addRuins}}disabled{{/unless}}>
+          {{#each ruinStyleModeChoices}}
+          <option value="{{this.value}}" {{#if (eq ../controls.ruinStyleMode this.value)}}selected{{/if}}>{{this.label}}</option>
+          {{/each}}
+        </select>
+      </div>
+
+      <div class="weather-field">
+        <label for="weather-manual-ruin-family">Ruin Family</label>
+        <select id="weather-manual-ruin-family" name="manualRuinFamily" {{#unless showManualRuinFamily}}disabled{{/unless}}>
+          {{#each manualRuinFamilyChoices}}
+          <option value="{{this.value}}" {{#if (eq ../controls.manualRuinFamily this.value)}}selected{{/if}}>{{this.label}}</option>
+          {{/each}}
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <section class="weather-block weather-output">
+    <header class="weather-block-header">
+      <h2>Narrative Output</h2>
+    </header>
+
+    <div class="weather-output-lines">
+      {{#each orderedOutput}}
+      <div class="weather-output-line weather-output-line-{{this.key}}">
+        <label>{{this.label}}</label>
+        <p>{{this.text}}</p>
+      </div>
+      {{/each}}
+    </div>
+  </section>
+</form>
+
+
+========================================================================================================================
+FILE: .\ui\popup.html
+========================================================================================================================
+<!-- empty -->
+
+
