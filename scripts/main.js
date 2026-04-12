@@ -14,11 +14,10 @@ function createLauncher() {
         return;
     }
 
-    const uiLeft = document.getElementById("ui-left");
-    if (!uiLeft) return;
+    if (!document.body) return;
 
     let launcher = document.getElementById(LAUNCHER_ID);
-    if (launcher) return;
+    if (launcher) return launcher;
 
     launcher = document.createElement("button");
     launcher.id = LAUNCHER_ID;
@@ -33,7 +32,8 @@ function createLauncher() {
         await openWeatherPanel();
     });
 
-    uiLeft.appendChild(launcher);
+    document.body.appendChild(launcher);
+    return launcher;
 }
 
 function refreshLauncher() {
@@ -49,16 +49,13 @@ Hooks.once("ready", () => {
     game.terrEncounters ??= {};
     game.terrEncounters.openWeather = openWeatherPanel;
     refreshLauncher();
+
+    window.setTimeout(refreshLauncher, 250);
+    window.setTimeout(refreshLauncher, 1000);
 });
 
-Hooks.on("canvasReady", () => {
-    createLauncher();
-});
-
-Hooks.on("renderSceneNavigation", () => {
-    createLauncher();
-});
-
-Hooks.on("renderSidebar", () => {
-    createLauncher();
-});
+Hooks.on("canvasReady", refreshLauncher);
+Hooks.on("renderSceneNavigation", refreshLauncher);
+Hooks.on("renderSidebar", refreshLauncher);
+Hooks.on("renderPlayerList", refreshLauncher);
+Hooks.on("renderHotbar", refreshLauncher);
