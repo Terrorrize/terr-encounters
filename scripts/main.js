@@ -10,8 +10,8 @@ function registerSceneControl(controls) {
     controls.tokens.tools[TOOL_NAME] = {
         name: TOOL_NAME,
         title: "Terr Encounters",
-        icon: "fa-solid fa-cloud-sun",
-        order: Object.keys(controls.tokens.tools).length,
+        icon: "fas fa-square",
+        order: 999,
         button: true,
         visible: true,
         onChange: async () => {
