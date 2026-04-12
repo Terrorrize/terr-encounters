@@ -1,0 +1,146 @@
+<form class="weather-panel">
+  <section class="weather-block weather-current-day">
+    <header class="weather-block-header">
+      <h2>Current Day</h2>
+      <div class="weather-header-actions">
+        <button type="button" data-action="refresh-current">Refresh</button>
+        <button type="button" data-action="rebuild-current">Rebuild Current</button>
+        <button type="button" data-action="advance-day" class="weather-advance-button">Advance Day</button>
+      </div>
+    </header>
+
+    <div class="weather-summary-grid">
+      <div class="weather-summary-item">
+        <label>Day</label>
+        <div>{{dayLabel}}</div>
+      </div>
+      <div class="weather-summary-item">
+        <label>Biome</label>
+        <div>{{biome}}</div>
+      </div>
+      <div class="weather-summary-item">
+        <label>Season</label>
+        <div>{{season}}</div>
+      </div>
+      <div class="weather-summary-item">
+        <label>Phase</label>
+        <div>{{phase}}</div>
+      </div>
+      <div class="weather-summary-item weather-summary-item-wide">
+        <label>Ground State</label>
+        <div>{{groundState}}</div>
+      </div>
+      <div class="weather-summary-item">
+        <label>Temperature</label>
+        <div>{{temperatureState}} ({{temperatureDaysRemaining}} day{{#unless (eq temperatureDaysRemaining 1)}}s{{/unless}} remaining)</div>
+      </div>
+      <div class="weather-summary-item">
+        <label>Weather</label>
+        <div>{{weatherEvent}} ({{weatherDaysRemaining}} day{{#unless (eq weatherDaysRemaining 1)}}s{{/unless}} remaining)</div>
+      </div>
+
+      {{#if hasRuinsApplied}}
+      <div class="weather-summary-item">
+        <label>Ruin Modifier</label>
+        <div>{{ruinModifier}}</div>
+      </div>
+      <div class="weather-summary-item weather-summary-item-wide">
+        <label>Ruin Family</label>
+        <div>{{ruinFamily}}</div>
+      </div>
+      {{/if}}
+    </div>
+  </section>
+
+  <section class="weather-block weather-controls">
+    <header class="weather-block-header">
+      <h2>Controls</h2>
+    </header>
+
+    <div class="weather-form-grid">
+      <div class="weather-field">
+        <label for="weather-biome">Biome</label>
+        <select id="weather-biome" name="biome">
+          {{#each biomeChoices}}
+          <option value="{{this.value}}" {{#if (eq ../controls.biome this.value)}}selected{{/if}}>{{this.label}}</option>
+          {{/each}}
+        </select>
+      </div>
+
+      <div class="weather-field">
+        <label for="weather-season">Season</label>
+        <select id="weather-season" name="season">
+          {{#each seasonChoices}}
+          <option value="{{this.value}}" {{#if (eq ../controls.season this.value)}}selected{{/if}}>{{this.label}}</option>
+          {{/each}}
+        </select>
+      </div>
+
+      <div class="weather-field">
+        <label for="weather-phase">Phase</label>
+        <select id="weather-phase" name="phase">
+          {{#each phaseChoices}}
+          <option value="{{this.value}}" {{#if (eq ../controls.phase this.value)}}selected{{/if}}>{{this.label}}</option>
+          {{/each}}
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <section class="weather-block weather-ruins">
+    <header class="weather-block-header">
+      <h2>Ruins</h2>
+    </header>
+
+    <div class="weather-form-grid">
+      <div class="weather-field weather-checkbox-field">
+        <label class="weather-checkbox-label">
+          <input type="checkbox" name="addRuins" {{#if controls.addRuins}}checked{{/if}}>
+          <span>Add Ruins</span>
+        </label>
+      </div>
+
+      <div class="weather-field">
+        <label for="weather-ruin-frequency">Ruin Frequency</label>
+        <select id="weather-ruin-frequency" name="ruinFrequency" {{#unless controls.addRuins}}disabled{{/unless}}>
+          {{#each ruinFrequencyChoices}}
+          <option value="{{this.value}}" {{#if (eq ../controls.ruinFrequency this.value)}}selected{{/if}}>{{this.label}}</option>
+          {{/each}}
+        </select>
+      </div>
+
+      <div class="weather-field">
+        <label for="weather-ruin-style-mode">Ruin Style Mode</label>
+        <select id="weather-ruin-style-mode" name="ruinStyleMode" {{#unless controls.addRuins}}disabled{{/unless}}>
+          {{#each ruinStyleModeChoices}}
+          <option value="{{this.value}}" {{#if (eq ../controls.ruinStyleMode this.value)}}selected{{/if}}>{{this.label}}</option>
+          {{/each}}
+        </select>
+      </div>
+
+      <div class="weather-field">
+        <label for="weather-manual-ruin-family">Ruin Family</label>
+        <select id="weather-manual-ruin-family" name="manualRuinFamily" {{#unless showManualRuinFamily}}disabled{{/unless}}>
+          {{#each manualRuinFamilyChoices}}
+          <option value="{{this.value}}" {{#if (eq ../controls.manualRuinFamily this.value)}}selected{{/if}}>{{this.label}}</option>
+          {{/each}}
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <section class="weather-block weather-output">
+    <header class="weather-block-header">
+      <h2>Narrative Output</h2>
+    </header>
+
+    <div class="weather-output-lines">
+      {{#each orderedOutput}}
+      <div class="weather-output-line weather-output-line-{{this.key}}">
+        <label>{{this.label}}</label>
+        <p>{{this.text}}</p>
+      </div>
+      {{/each}}
+    </div>
+  </section>
+</form>

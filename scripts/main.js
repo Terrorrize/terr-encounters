@@ -1,27 +1,29 @@
 import { openEncounterPopup } from "./ui-popup.js";
 import { registerEncounterSettings } from "./settings.js";
 
-function addSettingsSidebarButton(app, html) {
-    if (app.tabName !== "settings") return;
-    if (html.find(".terr-encounters-launch").length) return;
+function registerSceneControl(controls) {
+    if (!game.user?.isGM) return;
+    if (!controls || typeof controls !== "object") return;
+    if (controls.terrEncounters) return;
 
-    const button = $(`
-    <button type="button" class="terr-encounters-launch">
-      <i class="fas fa-cloud-sun"></i> Terr Encounters
-    </button>
-  `);
-
-    button.on("click", () => {
-        openEncounterPopup();
-    });
-
-    const settingsList = html.find("#client-settings, .settings-list, [data-tab='settings']");
-    if (settingsList.length) {
-        settingsList.first().append(button);
-        return;
-    }
-
-    html.append(button);
+    controls.terrEncounters = {
+        name: "terrEncounters",
+        title: "Terr Encounters",
+        icon: "fas fa-t",
+        layer: "tokens",
+        visible: true,
+        tools: {
+            open: {
+                name: "open",
+                title: "Open Terr Encounters",
+                icon: "fas fa-t",
+                button: true,
+                visible: true,
+                onClick: () => openEncounterPopup()
+            }
+        },
+        activeTool: "open"
+    };
 }
 
 Hooks.once("init", () => {
@@ -35,6 +37,6 @@ Hooks.once("ready", () => {
     };
 });
 
-Hooks.on("renderSidebarTab", (app, html) => {
-    addSettingsSidebarButton(app, html);
+Hooks.on("getSceneControlButtons", (controls) => {
+    registerSceneControl(controls);
 });

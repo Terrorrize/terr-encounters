@@ -1,0 +1,108 @@
+form .form-group {
+  margin-bottom: 10px;
+}
+.terrs-encounter-system.weather-panel-app .window-content {
+    padding: 0.75rem;
+}
+
+.terrs-encounter-system .weather-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.terrs-encounter-system .weather-block {
+    border: 1px solid var(--color-border-light-primary);
+    border-radius: 6px;
+    padding: 0.75rem;
+    background: color-mix(in srgb, var(--color-bg) 92%, black 8%);
+}
+
+.terrs-encounter-system .weather-block-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+    .terrs-encounter-system .weather-block-header h2 {
+        margin: 0;
+        font-size: 1rem;
+    }
+
+.terrs-encounter-system .weather-header-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.terrs-encounter-system .weather-advance-button {
+    font-weight: 700;
+}
+
+.terrs-encounter-system .weather-summary-grid,
+.terrs-encounter-system .weather-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.terrs-encounter-system .weather-summary-item,
+.terrs-encounter-system .weather-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+    .terrs-encounter-system .weather-summary-item label,
+    .terrs-encounter-system .weather-field label {
+        font-weight: 700;
+        font-size: 0.85rem;
+    }
+
+.terrs-encounter-system .weather-summary-item-wide {
+    grid-column: 1 / -1;
+}
+
+.terrs-encounter-system .weather-checkbox-field {
+    justify-content: end;
+}
+
+.terrs-encounter-system .weather-checkbox-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 700;
+}
+
+.terrs-encounter-system .weather-output-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.terrs-encounter-system .weather-output-line {
+    border: 1px solid var(--color-border-light-tertiary);
+    border-radius: 4px;
+    padding: 0.5rem 0.625rem;
+    background: color-mix(in srgb, var(--color-bg) 95%, black 5%);
+}
+
+    .terrs-encounter-system .weather-output-line label {
+        display: block;
+        font-weight: 700;
+        font-size: 0.85rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .terrs-encounter-system .weather-output-line p {
+        margin: 0;
+    }
+
+@media (max-width: 600px) {
+    .terrs-encounter-system .weather-summary-grid,
+    .terrs-encounter-system .weather-form-grid {
+        grid-template-columns: 1fr;
+    }
+}
