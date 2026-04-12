@@ -1,6 +1,7 @@
 ========================================================================================================================
 FILE: .\module.json
 ========================================================================================================================
+
 {
   "id": "terr-encounters",
   "title": "Terr Encounters",
@@ -28,7 +29,6 @@ FILE: .\module.json
   },
   "esmodules": [
     "scripts/main.js",
-    "scripts/settings.js",
     "scripts/weather/weather-init.js"
   ],
   "styles": [
@@ -42,6 +42,7 @@ FILE: .\module.json
 ========================================================================================================================
 FILE: .\README.md
 ========================================================================================================================
+
 # Terr Encounters
 
 PF2e biome, weather, and encounter generation module.
@@ -56,6 +57,7 @@ PF2e biome, weather, and encounter generation module.
 ========================================================================================================================
 FILE: .\scripts\data\weather-biomes.js
 ========================================================================================================================
+
 import { toKey } from "../weather/weather-utils.js";
 
 const SHARED_LOCKS = {
@@ -747,6 +749,7 @@ export function makePhaseKey(season, phase) {
 ========================================================================================================================
 FILE: .\scripts\data\weather-compatibility.js
 ========================================================================================================================
+
 export const TEMPERATURE_OPENERS = {
     mild: "The air is",
     warm: "The air is",
@@ -855,6 +858,7 @@ export const WEATHER_COMPATIBILITY = {
 ========================================================================================================================
 FILE: .\scripts\data\weather-ground-openers.js
 ========================================================================================================================
+
 export const GROUND_OPENERS = {
     "light snow cover": ["Light snow lies over", "Thin snow rests on", "A light cover of snow lies across"],
     "deep snow cover": ["Deep snow lies over", "Heavy snow sits on", "Thick snow covers"],
@@ -898,6 +902,7 @@ export const GROUND_OPENERS = {
 ========================================================================================================================
 FILE: .\scripts\data\weather-language-foundation.js
 ========================================================================================================================
+
 export const GROUND_ANCHORS = {
     "Forest": ["the roots and stone beneath the trees", "the leaf-dark forest floor", "the ground beneath the canopy"],
     "Plains": ["the open plain", "the grass and open earth", "the broad grassland"],
@@ -1061,6 +1066,7 @@ export const WEATHER_INTENSITY = {
 ========================================================================================================================
 FILE: .\scripts\data\weather-ruins-data.js
 ========================================================================================================================
+
 export const RUIN_MODIFIERS = ["none", "faint traces", "light ruins", "exposed remnants"];
 
 export const RUIN_FREQUENCY_WEIGHTS = {
@@ -1218,262 +1224,9 @@ export const BIOME_DEFAULT_RUIN_FAMILIES = {
 
 
 ========================================================================================================================
-FILE: .\scripts\dispatcher.js
-========================================================================================================================
-function rollDie(sides) {
-    return Math.floor(Math.random() * sides) + 1;
-}
-
-function rollWeighted(items) {
-    const total = items.reduce((sum, item) => sum + item.weight, 0);
-    let roll = Math.random() * total;
-
-    for (const item of items) {
-        roll -= item.weight;
-        if (roll <= 0) return item;
-    }
-
-    return items[items.length - 1];
-}
-
-function normalizeNumber(value, fallback) {
-    const n = Number(value);
-    return Number.isFinite(n) ? n : fallback;
-}
-
-function getTemperatureBand(season, biome) {
-    const table = {
-        spring: {
-            forest: "Cool",
-            plains: "Mild",
-            hills: "Cool",
-            mountains: "Cold",
-            desert: "Warm",
-            swamp: "Mild",
-            coast: "Cool",
-            tundra: "Cold",
-            urban: "Mild",
-            ruins: "Cool"
-        },
-        summer: {
-            forest: "Mild",
-            plains: "Warm",
-            hills: "Mild",
-            mountains: "Cool",
-            desert: "Hot",
-            swamp: "Warm",
-            coast: "Mild",
-            tundra: "Cool",
-            urban: "Warm",
-            ruins: "Warm"
-        },
-        autumn: {
-            forest: "Cool",
-            plains: "Cool",
-            hills: "Cool",
-            mountains: "Cold",
-            desert: "Warm",
-            swamp: "Mild",
-            coast: "Cool",
-            tundra: "Cold",
-            urban: "Cool",
-            ruins: "Cool"
-        },
-        winter: {
-            forest: "Cold",
-            plains: "Cold",
-            hills: "Cold",
-            mountains: "Severe Cold",
-            desert: "Cool",
-            swamp: "Cold",
-            coast: "Cold",
-            tundra: "Severe Cold",
-            urban: "Cold",
-            ruins: "Cold"
-        }
-    };
-
-    return table[season]?.[biome] ?? "Mild";
-}
-
-function buildWeatherTable(season, biome) {
-    const clear = { key: "clear", label: "Clear Skies", weight: 30 };
-    const cloudy = { key: "cloudy", label: "Cloudy", weight: 20 };
-    const fog = { key: "fog", label: "Fog", weight: 8 };
-    const rain = { key: "rain", label: "Rain", weight: 18 };
-    const storm = { key: "storm", label: "Storm", weight: 7 };
-    const wind = { key: "wind", label: "Strong Winds", weight: 10 };
-    const heat = { key: "heat", label: "Heat Wave", weight: 4 };
-    const cold = { key: "cold", label: "Cold Snap", weight: 4 };
-    const snow = { key: "snow", label: "Snow", weight: 16 };
-    const blizzard = { key: "blizzard", label: "Blizzard", weight: 5 };
-    const sand = { key: "sand", label: "Sandstorm", weight: 10 };
-    const humidity = { key: "humidity", label: "Heavy Humidity", weight: 10 };
-
-    const seasonal = {
-        spring: [clear, cloudy, rain, rain, wind, fog, storm],
-        summer: [clear, clear, cloudy, rain, wind, heat, storm],
-        autumn: [clear, cloudy, rain, wind, fog, storm, cold],
-        winter: [clear, cloudy, wind, cold, snow, snow, blizzard]
-    };
-
-    const biomeOverrides = {
-        forest: {
-            spring: [clear, cloudy, rain, rain, fog, wind, storm],
-            summer: [clear, cloudy, rain, fog, wind, heat, storm],
-            autumn: [clear, cloudy, rain, fog, wind, storm, cold],
-            winter: [clear, cloudy, wind, snow, snow, fog, cold]
-        },
-        plains: {
-            spring: [clear, clear, cloudy, rain, wind, wind, storm],
-            summer: [clear, clear, clear, cloudy, wind, heat, storm],
-            autumn: [clear, cloudy, cloudy, wind, wind, rain, cold],
-            winter: [clear, cloudy, wind, wind, snow, cold, blizzard]
-        },
-        hills: {
-            spring: [clear, cloudy, rain, wind, wind, fog, storm],
-            summer: [clear, cloudy, wind, wind, rain, heat, storm],
-            autumn: [clear, cloudy, wind, rain, fog, cold, storm],
-            winter: [clear, cloudy, wind, snow, cold, blizzard, storm]
-        },
-        mountains: {
-            spring: [clear, cloudy, wind, rain, fog, cold, snow],
-            summer: [clear, cloudy, wind, wind, rain, storm, cold],
-            autumn: [clear, cloudy, wind, fog, cold, snow, storm],
-            winter: [clear, wind, wind, cold, snow, snow, blizzard]
-        },
-        desert: {
-            spring: [clear, clear, clear, wind, sand, heat, cloudy],
-            summer: [clear, clear, clear, heat, heat, wind, sand],
-            autumn: [clear, clear, wind, cloudy, sand, heat, cold],
-            winter: [clear, clear, cloudy, wind, sand, cold, cold]
-        },
-        swamp: {
-            spring: [cloudy, rain, rain, fog, fog, storm, humidity],
-            summer: [cloudy, rain, rain, fog, humidity, humidity, storm],
-            autumn: [cloudy, rain, fog, fog, humidity, storm, wind],
-            winter: [cloudy, rain, fog, cold, humidity, wind, clear]
-        },
-        coast: {
-            spring: [clear, cloudy, rain, fog, wind, wind, storm],
-            summer: [clear, cloudy, fog, wind, wind, rain, storm],
-            autumn: [cloudy, rain, fog, wind, wind, storm, cold],
-            winter: [cloudy, wind, rain, cold, snow, storm, fog]
-        },
-        tundra: {
-            spring: [clear, cloudy, wind, cold, snow, snow, blizzard],
-            summer: [clear, cloudy, wind, fog, rain, cold, snow],
-            autumn: [clear, cloudy, wind, cold, snow, blizzard, storm],
-            winter: [clear, wind, cold, cold, snow, snow, blizzard]
-        },
-        urban: {
-            spring: [clear, cloudy, rain, wind, fog, storm, cloudy],
-            summer: [clear, clear, cloudy, heat, rain, wind, storm],
-            autumn: [clear, cloudy, rain, fog, wind, cold, storm],
-            winter: [clear, cloudy, wind, cold, snow, fog, storm]
-        },
-        ruins: {
-            spring: [clear, cloudy, fog, rain, wind, storm, cold],
-            summer: [clear, cloudy, fog, wind, heat, storm, rain],
-            autumn: [cloudy, fog, rain, wind, cold, storm, clear],
-            winter: [cloudy, fog, wind, cold, snow, blizzard, clear]
-        }
-    };
-
-    return biomeOverrides[biome]?.[season] ?? seasonal[season] ?? seasonal.spring;
-}
-
-function describeWeather(result, season, biome) {
-    const temperature = getTemperatureBand(season, biome);
-
-    const descriptions = {
-        clear: `Visibility is good. Temperature is ${temperature.toLowerCase()}.`,
-        cloudy: `Gray cover hangs overhead. Temperature is ${temperature.toLowerCase()}.`,
-        fog: `Visibility is reduced by lingering fog. Temperature is ${temperature.toLowerCase()}.`,
-        rain: `Steady precipitation and wet ground complicate travel. Temperature is ${temperature.toLowerCase()}.`,
-        storm: `Harsh weather, thunder, or violent rain pushes conditions toward dangerous travel.`,
-        wind: `Strong gusts interfere with hearing, ranged attacks, or exposed travel.`,
-        heat: `Oppressive heat strains travel and rest in exposed areas.`,
-        cold: `A biting chill settles in and makes exposure more dangerous.`,
-        snow: `Snowfall reduces visibility and slows open-ground travel.`,
-        blizzard: `Severe snow and wind create near-whiteout conditions.`,
-        sand: `Blowing grit cuts visibility and punishes exposed movement.`,
-        humidity: `Air is heavy, wet, and exhausting; the ground feels slick and clinging.`
-    };
-
-    return descriptions[result.key] ?? `Conditions are unsettled. Temperature is ${temperature.toLowerCase()}.`;
-}
-
-function rollWeather(data) {
-    const season = String(data.season || "spring").toLowerCase();
-    const biome = String(data.biome || "forest").toLowerCase();
-
-    const table = buildWeatherTable(season, biome);
-    const result = rollWeighted(table);
-    const shiftRoll = rollDie(6) + rollDie(6);
-    const intensityRoll = rollDie(20);
-
-    let intensity = "Normal";
-    if (intensityRoll >= 18) intensity = "Severe";
-    else if (intensityRoll <= 4) intensity = "Light";
-
-    return {
-        label: result.label,
-        temperature: getTemperatureBand(season, biome),
-        intensity,
-        shiftRoll,
-        details: describeWeather(result, season, biome)
-    };
-}
-
-function formatPartyBand(data) {
-    const partySize = normalizeNumber(data.partySize, 5);
-    const levelMin = normalizeNumber(data.levelMin, 1);
-    const levelMax = normalizeNumber(data.levelMax, 1);
-    const difficulty = String(data.difficulty || "easy");
-
-    return `${partySize} PCs · Levels ${levelMin}-${levelMax} · ${difficulty[0].toUpperCase()}${difficulty.slice(1)}`;
-}
-
-export async function dispatchEncounterRoll(data) {
-    const weather = rollWeather(data);
-    const season = String(data.season || "spring");
-    const biome = String(data.biome || "forest");
-
-    const msg = `
-    <div class="terr-encounters-card">
-      <h2>Weather</h2>
-      <p><strong>${weather.label}</strong> (${weather.intensity})</p>
-      <p>${weather.details}</p>
-      <p><strong>Season:</strong> ${season} | <strong>Biome:</strong> ${biome} | <strong>Temperature:</strong> ${weather.temperature} | <strong>Shift Roll:</strong> ${weather.shiftRoll}</p>
-
-      <h2>World Checks</h2>
-      <p>Stub: Something happens.</p>
-
-      <h2>Main Event</h2>
-      <p>Stub main event.</p>
-
-      <h2>Add-On A</h2>
-      <p>Stub add-on A.</p>
-
-      <h2>Add-On B</h2>
-      <p>Stub add-on B.</p>
-
-      <hr>
-      <p><strong>Encounter Band:</strong> ${formatPartyBand(data)}</p>
-    </div>
-  `;
-
-    await ChatMessage.create({
-        speaker: { alias: "Terr's Encounter System" },
-        content: msg
-    });
-}
-
-
-========================================================================================================================
 FILE: .\scripts\main.js
 ========================================================================================================================
+
 import { openWeatherPanel } from "./weather/weather-ui.js";
 
 const MODULE_ID = "terr-encounters";
@@ -1530,110 +1283,9 @@ Hooks.on("getSceneControlButtons", (controls) => {
 
 
 ========================================================================================================================
-FILE: .\scripts\settings.js
-========================================================================================================================
-const MODULE_ID = "terr-encounters";
-
-Hooks.once("init", () => {
-    console.log(`${MODULE_ID} | Legacy encounter popup pipeline disabled`);
-});
-
-
-========================================================================================================================
-FILE: .\scripts\ui-popup.js
-========================================================================================================================
-import { dispatchEncounterRoll } from "./dispatcher.js";
-
-export async function openEncounterPopup() {
-  const last = (key, fallback = "") => game.settings.get("terr-encounters", key) || fallback;
-
-  const content = `
-    <form class="terr-encounters-form">
-      <div class="form-group">
-        <label>Season</label>
-        <select name="season">
-          <option value="spring" ${last("season") === "spring" ? "selected" : ""}>Spring</option>
-          <option value="summer" ${last("season") === "summer" ? "selected" : ""}>Summer</option>
-          <option value="autumn" ${last("season") === "autumn" ? "selected" : ""}>Autumn</option>
-          <option value="winter" ${last("season") === "winter" ? "selected" : ""}>Winter</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>Biome</label>
-        <select name="biome">
-          <option value="forest" ${last("biome") === "forest" ? "selected" : ""}>Forest</option>
-          <option value="plains" ${last("biome") === "plains" ? "selected" : ""}>Plains</option>
-          <option value="hills" ${last("biome") === "hills" ? "selected" : ""}>Hills</option>
-          <option value="mountains" ${last("biome") === "mountains" ? "selected" : ""}>Mountains</option>
-          <option value="desert" ${last("biome") === "desert" ? "selected" : ""}>Desert</option>
-          <option value="swamp" ${last("biome") === "swamp" ? "selected" : ""}>Swamp</option>
-          <option value="coast" ${last("biome") === "coast" ? "selected" : ""}>Coast</option>
-          <option value="tundra" ${last("biome") === "tundra" ? "selected" : ""}>Tundra</option>
-          <option value="urban" ${last("biome") === "urban" ? "selected" : ""}>Urban Fringe</option>
-          <option value="ruins" ${last("biome") === "ruins" ? "selected" : ""}>Ruins</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>Party Size</label>
-        <input type="number" name="partySize" value="${last("partySize", "5")}" min="1" max="12">
-      </div>
-
-      <div class="form-group">
-        <label>Min Level</label>
-        <input type="number" name="levelMin" value="${last("levelMin", "1")}" min="-1" max="25">
-      </div>
-
-      <div class="form-group">
-        <label>Max Level</label>
-        <input type="number" name="levelMax" value="${last("levelMax", "1")}" min="-1" max="25">
-      </div>
-
-      <div class="form-group">
-        <label>Difficulty</label>
-        <select name="difficulty">
-          <option value="easy" ${last("difficulty") === "easy" ? "selected" : ""}>Easy</option>
-          <option value="moderate" ${last("difficulty") === "moderate" ? "selected" : ""}>Moderate</option>
-          <option value="severe" ${last("difficulty") === "severe" ? "selected" : ""}>Severe</option>
-          <option value="extreme" ${last("difficulty") === "extreme" ? "selected" : ""}>Extreme</option>
-        </select>
-      </div>
-    </form>
-  `;
-
-  await foundry.applications.api.DialogV2.prompt({
-    window: { title: "Terr's Encounter System" },
-    content,
-    ok: {
-      label: "Roll Encounter",
-      callback: async (event, button, dialog) => {
-        const form = button.form;
-        const data = Object.fromEntries(new FormData(form));
-
-        if (Number(data.levelMin) > Number(data.levelMax)) {
-          const temp = data.levelMin;
-          data.levelMin = data.levelMax;
-          data.levelMax = temp;
-        }
-
-        for (const [k, v] of Object.entries(data)) {
-          await game.settings.set("terr-encounters", k, String(v));
-        }
-
-        dispatchEncounterRoll(data);
-        return data;
-      }
-    },
-    rejectClose: false,
-    modal: true
-  });
-}
-
-
-========================================================================================================================
 FILE: .\scripts\weather\weather-combiner.js
 ========================================================================================================================
+
 import { chooseOne, sentenceCase } from "./weather-utils.js";
 import { GROUND_ANCHORS, TERRAIN_INTERACTIONS, WEATHER_ACTION_BY_EVENT, WEATHER_ACTIONS, WEATHER_INTENSITY, WEATHER_OPENERS } from "../data/weather-language-foundation.js";
 import { GROUND_OPENERS } from "../data/weather-ground-openers.js";
@@ -1713,6 +1365,7 @@ export class WeatherCombiner {
 ========================================================================================================================
 FILE: .\scripts\weather\weather-controller.js
 ========================================================================================================================
+
 import { getWeatherEnvironment } from "./weather-settings.js";
 import { WeatherState } from "./weather-state.js";
 import { WeatherRolls } from "./weather-rolls.js";
@@ -1843,6 +1496,7 @@ export class WeatherController {
 ========================================================================================================================
 FILE: .\scripts\weather\weather-ground.js
 ========================================================================================================================
+
 import { getPhaseData, getInitialGroundState } from "../data/weather-biomes.js";
 import { chooseOne } from "./weather-utils.js";
 
@@ -1950,6 +1604,7 @@ export class WeatherGround {
 ========================================================================================================================
 FILE: .\scripts\weather\weather-init.js
 ========================================================================================================================
+
 import { MODULE_ID, registerWeatherSettings } from "./weather-settings.js";
 import { WeatherState } from "./weather-state.js";
 import { WeatherController } from "./weather-controller.js";
@@ -1982,6 +1637,7 @@ Hooks.once("ready", async () => {
 ========================================================================================================================
 FILE: .\scripts\weather\weather-render.js
 ========================================================================================================================
+
 import { BIOME_DEFAULT_RUIN_FAMILIES } from "../data/weather-ruins-data.js";
 import { getAvailableSeasonsForBiome, WEATHER_BIOMES } from "../data/weather-biomes.js";
 
@@ -2076,6 +1732,7 @@ export class WeatherRender {
 ========================================================================================================================
 FILE: .\scripts\weather\weather-rolls.js
 ========================================================================================================================
+
 import { getPhaseData, getLockRange } from "../data/weather-biomes.js";
 import { WEATHER_COMPATIBILITY } from "../data/weather-compatibility.js";
 import { buildWeightedArrayFromMap, normalizeWeights, randomInt, upsertWeight, weightedPick } from "./weather-utils.js";
@@ -2146,6 +1803,7 @@ export class WeatherRolls {
 ========================================================================================================================
 FILE: .\scripts\weather\weather-ruins.js
 ========================================================================================================================
+
 import { BIOME_DEFAULT_RUIN_FAMILIES, RUIN_FAMILIES, RUIN_FREQUENCY_WEIGHTS } from "../data/weather-ruins-data.js";
 import { buildWeightedArrayFromMap, chooseOne, weightedPick } from "./weather-utils.js";
 
@@ -2186,6 +1844,7 @@ export class WeatherRuins {
 ========================================================================================================================
 FILE: .\scripts\weather\weather-settings.js
 ========================================================================================================================
+
 export const MODULE_ID = "terr-encounters";
 
 export const SETTING_KEYS = {
@@ -2336,6 +1995,7 @@ export function getWeatherEnvironment() {
 ========================================================================================================================
 FILE: .\scripts\weather\weather-state.js
 ========================================================================================================================
+
 import { MODULE_ID, SETTING_KEYS, getWeatherEnvironment, setWeatherSetting } from "./weather-settings.js";
 import { currentDayLabel, deepClone, isoNow } from "./weather-utils.js";
 import { biomeSupportsSeason, getAvailableSeasonsForBiome, getInitialGroundState } from "../data/weather-biomes.js";
@@ -2447,6 +2107,7 @@ export class WeatherState {
 ========================================================================================================================
 FILE: .\scripts\weather\weather-ui.js
 ========================================================================================================================
+
 import { MODULE_ID, getWeatherEnvironment, getWeatherSetting, setWeatherSetting, SETTING_KEYS } from "./weather-settings.js";
 import { WeatherController } from "./weather-controller.js";
 import { WeatherRender } from "./weather-render.js";
@@ -2632,117 +2293,77 @@ export async function openWeatherPanel() {
 ========================================================================================================================
 FILE: .\scripts\weather\weather-utils.js
 ========================================================================================================================
-import { MODULE_ID, SETTING_KEYS, getWeatherEnvironment, setWeatherSetting } from "./weather-settings.js";
-import { currentDayLabel, deepClone, isoNow } from "./weather-utils.js";
-import { biomeSupportsSeason, getAvailableSeasonsForBiome, getInitialGroundState } from "../data/weather-biomes.js";
 
-export const DEFAULT_CURRENT_DAY = {
-    dayLabel: "",
-    biome: "",
-    season: "",
-    phase: "",
-    groundState: "",
-    temperatureState: "",
-    temperatureDaysRemaining: 0,
-    weatherEvent: "",
-    weatherDaysRemaining: 0,
-    ruinModifier: null,
-    ruinFamily: null,
-    outputOrder: ["ground", "temperature", "weather"],
-    outputGroundLine: "",
-    outputTemperatureLine: "",
-    outputWeatherLine: "",
-    generatedAt: "",
-    lastTemperatureState: null,
-    lastWeatherEvent: null,
-    recentTemperatureStates: [],
-    recentWeatherEvents: []
-};
+export function deepClone(value) {
+    if (value === null || value === undefined) return value;
+    return foundry.utils.deepClone(value);
+}
 
-export class WeatherState {
-    static getCurrentDayRecord() {
-        const raw = game.settings.get(MODULE_ID, SETTING_KEYS.currentDayRecord) ?? {};
-        return this.normalizeRecord(raw);
+export function isoNow() {
+    return new Date().toISOString();
+}
+
+export function currentDayLabel() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+}
+
+export function toKey(...parts) {
+    return parts
+        .filter(part => part !== null && part !== undefined)
+        .map(part => String(part).trim().toLowerCase())
+        .join("::");
+}
+
+export function randomInt(min, max) {
+    const low = Math.ceil(Math.min(min, max));
+    const high = Math.floor(Math.max(min, max));
+    return Math.floor(Math.random() * (high - low + 1)) + low;
+}
+
+export function pickOne(items) {
+    if (!Array.isArray(items) || items.length === 0) return null;
+    return items[randomInt(0, items.length - 1)];
+}
+
+export function clamp(value, min, max) {
+    return Math.min(Math.max(value, min), max);
+}
+
+export function weightedPick(entries) {
+    if (!Array.isArray(entries) || entries.length === 0) return null;
+
+    let total = 0;
+    for (const entry of entries) {
+        total += Math.max(0, Number(entry?.weight) || 0);
     }
 
-    static async setCurrentDayRecord(record) {
-        const normalized = this.normalizeRecord(record);
-        await setWeatherSetting(SETTING_KEYS.currentDayRecord, normalized);
-        return normalized;
+    if (total <= 0) {
+        return entries[entries.length - 1] ?? null;
     }
 
-    static normalizeEnvironment(environment) {
-        const env = deepClone(environment);
-        if (!biomeSupportsSeason(env.biome, env.season)) {
-            const validSeasons = getAvailableSeasonsForBiome(env.biome);
-            env.season = validSeasons[0];
-        }
-
-        if (!["Early", "Mid", "Late"].includes(env.phase)) {
-            env.phase = "Early";
-        }
-
-        return env;
+    let roll = Math.random() * total;
+    for (const entry of entries) {
+        roll -= Math.max(0, Number(entry?.weight) || 0);
+        if (roll <= 0) return entry;
     }
 
-    static normalizeRecord(record) {
-        const merged = foundry.utils.mergeObject(
-            deepClone(DEFAULT_CURRENT_DAY),
-            deepClone(record ?? {}),
-            { inplace: false, insertKeys: true, overwrite: true }
-        );
+    return entries[entries.length - 1] ?? null;
+}
 
-        const env = this.normalizeEnvironment({
-            biome: merged.biome || getWeatherEnvironment().biome,
-            season: merged.season || getWeatherEnvironment().season,
-            phase: merged.phase || getWeatherEnvironment().phase
-        });
-
-        merged.biome = env.biome;
-        merged.season = env.season;
-        merged.phase = env.phase;
-
-        if (!merged.dayLabel) merged.dayLabel = currentDayLabel();
-        if (!merged.generatedAt) merged.generatedAt = isoNow();
-        if (!merged.groundState) merged.groundState = getInitialGroundState(env.biome, env.season, env.phase);
-        if (!Array.isArray(merged.outputOrder) || merged.outputOrder.length !== 3) {
-            merged.outputOrder = ["ground", "temperature", "weather"];
-        }
-        if (!Array.isArray(merged.recentTemperatureStates)) merged.recentTemperatureStates = [];
-        if (!Array.isArray(merged.recentWeatherEvents)) merged.recentWeatherEvents = [];
-
-        return merged;
-    }
-
-    static async ensureCurrentDayRecord() {
-        const current = this.getCurrentDayRecord();
-        const isEmpty =
-            !current.temperatureState &&
-            !current.weatherEvent &&
-            !current.outputGroundLine &&
-            !current.outputTemperatureLine &&
-            !current.outputWeatherLine;
-
-        if (!isEmpty) return current;
-
-        const env = this.normalizeEnvironment(getWeatherEnvironment());
-
-        const initial = this.normalizeRecord({
-            biome: env.biome,
-            season: env.season,
-            phase: env.phase,
-            groundState: getInitialGroundState(env.biome, env.season, env.phase)
-        });
-
-        await this.setCurrentDayRecord(initial);
-        return initial;
-    }
+export function weightedValue(entries) {
+    const picked = weightedPick(entries);
+    return picked?.value ?? null;
 }
 
 
 ========================================================================================================================
 FILE: .\styles\styles.css
 ========================================================================================================================
+
 form .form-group {
   margin-bottom: 10px;
 }
@@ -2751,6 +2372,7 @@ form .form-group {
 ========================================================================================================================
 FILE: .\styles\weather-panel.css
 ========================================================================================================================
+
 form .form-group {
   margin-bottom: 10px;
 }
@@ -2864,6 +2486,7 @@ form .form-group {
 ========================================================================================================================
 FILE: .\templates\weather-panel.hbs
 ========================================================================================================================
+
 <form class="weather-panel">
   <section class="weather-block weather-current-day">
     <header class="weather-block-header">
@@ -3010,11 +2633,5 @@ FILE: .\templates\weather-panel.hbs
     </div>
   </section>
 </form>
-
-
-========================================================================================================================
-FILE: .\ui\popup.html
-========================================================================================================================
-<!-- empty -->
 
 

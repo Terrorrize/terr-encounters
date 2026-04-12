@@ -1,3 +1,9 @@
+// terr-encounters
+// File: scripts/weather/weather-utils.js
+// Version: 0.0.4
+// Build: cleanup-pass-02
+// Purpose: shared helpers for weather state, rolls, ruins, and combiner
+
 export function deepClone(value) {
     if (value === null || value === undefined) return value;
     return foundry.utils.deepClone(value);
