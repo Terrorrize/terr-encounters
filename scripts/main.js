@@ -5,30 +5,19 @@ const TOOL_NAME = `${MODULE_ID}-open-weather`;
 
 function registerSceneControl(controls) {
     if (!game.user?.isGM) return;
-    if (!Array.isArray(controls)) return;
+    if (!controls?.tokens?.tools) return;
 
-    const tokenControls = controls.find(control => control.name === "token");
-    if (!tokenControls) return;
-
-    tokenControls.tools ??= [];
-
-    const tool = {
+    controls.tokens.tools[TOOL_NAME] = {
         name: TOOL_NAME,
         title: "Terr Encounters",
-        icon: "fas fa-cloud-sun",
+        icon: "fa-solid fa-cloud-sun",
+        order: Object.keys(controls.tokens.tools).length,
         button: true,
         visible: true,
-        onClick: async () => {
+        onChange: async () => {
             await openWeatherPanel();
         }
     };
-
-    const existingIndex = tokenControls.tools.findIndex(entry => entry.name === TOOL_NAME);
-    if (existingIndex >= 0) {
-        tokenControls.tools[existingIndex] = tool;
-    } else {
-        tokenControls.tools.push(tool);
-    }
 }
 
 Hooks.once("init", () => {
