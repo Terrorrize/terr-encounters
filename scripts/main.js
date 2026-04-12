@@ -7,16 +7,8 @@ function registerSceneControl(controls) {
     if (!game.user?.isGM) return;
     if (!Array.isArray(controls)) return;
 
-    let tokenControls = controls.find(control => control.name === "token");
-    if (!tokenControls) {
-        tokenControls = {
-            name: "token",
-            title: "Token Controls",
-            tools: [],
-            activeTool: "select"
-        };
-        controls.push(tokenControls);
-    }
+    const tokenControls = controls.find(control => control.name === "token");
+    if (!tokenControls) return;
 
     tokenControls.tools ??= [];
 
