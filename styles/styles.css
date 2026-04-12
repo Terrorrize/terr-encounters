@@ -1,9 +1,12 @@
-.control-tool[data-tool="terr-encounters-open-weather"] i {
-    font-family: var(--font-primary);
+#controls .scene-control[data-control="token"] .control-tool[data-tool="terr-encounters-open-weather"] i.terr-encounters-tool-icon,
+#controls .scene-control[data-control="token"] .control-tool[data-action="terr-encounters-open-weather"] i.terr-encounters-tool-icon {
     font-style: normal;
+    font-family: var(--font-primary, sans-serif);
     font-weight: 700;
+    line-height: 1;
 }
 
-    .control-tool[data-tool="terr-encounters-open-weather"] i::before {
+    #controls .scene-control[data-control="token"] .control-tool[data-tool="terr-encounters-open-weather"] i.terr-encounters-tool-icon::before,
+    #controls .scene-control[data-control="token"] .control-tool[data-action="terr-encounters-open-weather"] i.terr-encounters-tool-icon::before {
         content: "T";
     }

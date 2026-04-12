@@ -2,6 +2,7 @@ import { openWeatherPanel } from "./weather/weather-ui.js";
 
 const MODULE_ID = "terr-encounters";
 const TOOL_NAME = `${MODULE_ID}-open-weather`;
+const TOOL_ICON_CLASS = "terr-encounters-tool-icon";
 
 function registerSceneControl(controls) {
     if (!game.user?.isGM) return;
@@ -11,12 +12,11 @@ function registerSceneControl(controls) {
 
     tokenControls.tools ??= [];
 
-    const existingIndex = tokenControls.tools.findIndex((tool) => tool.name === TOOL_NAME);
     const tool = {
         name: TOOL_NAME,
         title: "Terr Encounters",
-        icon: "fa-solid fa-t",
-        order: 1,
+        icon: TOOL_ICON_CLASS,
+        order: 3,
         button: true,
         visible: true,
         onChange: async () => {
@@ -24,6 +24,7 @@ function registerSceneControl(controls) {
         }
     };
 
+    const existingIndex = tokenControls.tools.findIndex((entry) => entry.name === TOOL_NAME);
     if (existingIndex >= 0) {
         tokenControls.tools[existingIndex] = tool;
     } else {
