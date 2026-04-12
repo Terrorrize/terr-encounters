@@ -1,6 +1,12 @@
 import { BIOME_DEFAULT_RUIN_FAMILIES } from "../data/weather-ruins-data.js";
 import { getAvailableSeasonsForBiome, WEATHER_BIOMES } from "../data/weather-biomes.js";
 
+const OUTPUT_LABELS = {
+    ground: "Ground",
+    temperature: "Temperature",
+    weather: "Weather"
+};
+
 export class WeatherRender {
     static buildTemplateData(record, environment) {
         const orderedOutput = this.getOrderedOutput(record);
@@ -55,7 +61,7 @@ export class WeatherRender {
     }
 
     static getOrderedOutput(record) {
-        const map = {
+        const lines = {
             ground: record.outputGroundLine || "",
             temperature: record.outputTemperatureLine || "",
             weather: record.outputWeatherLine || ""
@@ -66,24 +72,12 @@ export class WeatherRender {
             : ["ground", "temperature", "weather"];
 
         return order
+            .filter(key => ["ground", "temperature", "weather"].includes(key))
             .map(key => ({
                 key,
-                label: this.labelForKey(key),
-                text: map[key] || ""
+                label: OUTPUT_LABELS[key] || key,
+                text: String(lines[key] || "").trim()
             }))
-            .filter(entry => !!entry.text);
-    }
-
-    static labelForKey(key) {
-        switch (key) {
-            case "ground":
-                return "Ground";
-            case "temperature":
-                return "Temperature";
-            case "weather":
-                return "Weather";
-            default:
-                return key;
-        }
+            .filter(entry => entry.text.length > 0);
     }
 }

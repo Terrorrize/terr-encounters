@@ -5,7 +5,7 @@
     <button type="button" data-action="advance-day" class="weather-advance-button">Advance Day</button>
   </section>
 
-  <div class="weather-panel-scroll">
+  <div class="weather-panel-body">
     <details class="weather-block weather-current-day" open>
       <summary class="weather-block-summary">
         <span class="weather-block-title">Current Day</span>
@@ -17,42 +17,41 @@
             <label>Day</label>
             <div>{{dayLabel}}</div>
           </div>
+
           <div class="weather-summary-item">
             <label>Biome</label>
             <div>{{biome}}</div>
           </div>
+
           <div class="weather-summary-item">
             <label>Season</label>
             <div>{{season}}</div>
           </div>
+
           <div class="weather-summary-item">
             <label>Phase</label>
             <div>{{phase}}</div>
           </div>
 
-          <div class="weather-summary-item weather-summary-item-wide">
+          <div class="weather-summary-item">
             <label>Ground State</label>
             <div>{{groundState}}</div>
           </div>
 
           <div class="weather-summary-item">
             <label>Temperature</label>
-            <div>{{temperatureState}}{{#if temperatureState}} ({{temperatureDaysRemaining}} day{{#unless (eq temperatureDaysRemaining 1)}}s{{/unless}} remaining){{else}} —{{/if}}</div>
+            <div>{{temperatureState}} ({{temperatureDaysRemaining}} days remaining)</div>
           </div>
 
           <div class="weather-summary-item">
             <label>Weather</label>
-            <div>{{weatherEvent}}{{#if weatherEvent}} ({{weatherDaysRemaining}} day{{#unless (eq weatherDaysRemaining 1)}}s{{/unless}} remaining){{else}} —{{/if}}</div>
+            <div>{{weatherEvent}} ({{weatherDaysRemaining}} days remaining)</div>
           </div>
 
           {{#if hasRuinsApplied}}
           <div class="weather-summary-item">
-            <label>Ruin Modifier</label>
-            <div>{{ruinModifier}}</div>
-          </div>
-          <div class="weather-summary-item weather-summary-item-wide">
-            <label>Ruin Family</label>
-            <div>{{ruinFamily}}</div>
+            <label>Ruins</label>
+            <div>{{ruinModifier}} — {{ruinFamily}}</div>
           </div>
           {{/if}}
         </div>
@@ -65,16 +64,16 @@
       </summary>
 
       <div class="weather-block-body">
-        <div class="weather-inline-grid weather-inline-grid-3">
-          <div class="weather-field">
-            <label for="{{moduleId}}-biome">Biome</label>
-            <select id="{{moduleId}}-biome" name="biome">
-              {{#each biomeChoices}}
-              <option value="{{this.value}}" {{#if (eq ../controls.biome this.value)}}selected{{/if}}>{{this.label}}</option>
-              {{/each}}
-            </select>
-          </div>
+        <div class="weather-field">
+          <label for="{{moduleId}}-biome">Biome</label>
+          <select id="{{moduleId}}-biome" name="biome">
+            {{#each biomeChoices}}
+            <option value="{{this.value}}" {{#if (eq ../controls.biome this.value)}}selected{{/if}}>{{this.label}}</option>
+            {{/each}}
+          </select>
+        </div>
 
+        <div class="weather-inline-grid weather-inline-grid-2">
           <div class="weather-field">
             <label for="{{moduleId}}-season">Season</label>
             <select id="{{moduleId}}-season" name="season">
@@ -151,8 +150,9 @@
       <div class="weather-block-body">
         <div class="weather-output-list">
           {{#each orderedOutput}}
-          <div class="weather-output-line">
-            <p>{{this}}</p>
+          <div class="weather-output-line weather-output-line-{{this.key}}">
+            <label>{{this.label}}</label>
+            <p>{{this.text}}</p>
           </div>
           {{/each}}
         </div>
