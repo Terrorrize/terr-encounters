@@ -25,26 +25,3 @@ Hooks.once("ready", async () => {
 
     console.log(`${MODULE_ID} | Weather system ready`);
 });
-
-Hooks.on("getSceneControlButtons", (controls) => {
-    if (!game.user?.isGM) return;
-
-    let tokenTools = controls.find(control => control.name === "token");
-    if (!tokenTools) {
-        tokenTools = {
-            name: "token",
-            title: "Token Controls",
-            tools: []
-        };
-        controls.push(tokenTools);
-    }
-
-    tokenTools.tools ??= [];
-    tokenTools.tools.push({
-        name: `${MODULE_ID}-weather`,
-        title: "Weather Panel",
-        icon: "fas fa-cloud-sun",
-        button: true,
-        onClick: () => openWeatherPanel()
-    });
-});

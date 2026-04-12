@@ -1,40 +1,47 @@
-import { openEncounterPopup } from "./ui-popup.js";
-import { registerEncounterSettings } from "./settings.js";
+import { openWeatherPanel } from "./weather/weather-ui.js";
+
+const MODULE_ID = "terr-encounters";
 
 function registerSceneControl(controls) {
     if (!game.user?.isGM) return;
-    if (!controls || typeof controls !== "object") return;
-    if (controls.terrEncounters) return;
+    if (!Array.isArray(controls)) return;
 
-    controls.terrEncounters = {
-        name: "terrEncounters",
+    let tokenTools = controls.find(control => control.name === "token");
+    if (!tokenTools) {
+        tokenTools = {
+            name: "token",
+            title: "Token Controls",
+            tools: []
+        };
+        controls.push(tokenTools);
+    }
+
+    tokenTools.tools ??= [];
+
+    const existingIndex = tokenTools.tools.findIndex(tool => tool.name === `${MODULE_ID}-weather`);
+    const toolDef = {
+        name: `${MODULE_ID}-weather`,
         title: "Terr Encounters",
-        icon: "fas fa-t",
-        layer: "tokens",
+        icon: "fas fa-cloud-sun",
+        button: true,
         visible: true,
-        tools: {
-            open: {
-                name: "open",
-                title: "Open Terr Encounters",
-                icon: "fas fa-t",
-                button: true,
-                visible: true,
-                onClick: () => openEncounterPopup()
-            }
-        },
-        activeTool: "open"
+        onClick: () => openWeatherPanel()
     };
+
+    if (existingIndex >= 0) {
+        tokenTools.tools[existingIndex] = toolDef;
+    } else {
+        tokenTools.tools.push(toolDef);
+    }
 }
 
 Hooks.once("init", () => {
-    console.log("Terr's Encounter System | Init");
-    registerEncounterSettings();
+    console.log("Terr Encounters | Main init");
 });
 
 Hooks.once("ready", () => {
-    game.terrEncounters = {
-        open: openEncounterPopup
-    };
+    game.terrEncounters ??= {};
+    game.terrEncounters.open = () => openWeatherPanel();
 });
 
 Hooks.on("getSceneControlButtons", (controls) => {
