@@ -36,35 +36,91 @@ export function randomInt(min, max) {
 
 export function pickOne(items) {
     if (!Array.isArray(items) || items.length === 0) return null;
-    return items[randomInt(0, items.length - 1)];
+    return items[randomInt(0, items.length - 1)] ?? null;
+}
+
+export function chooseOne(items) {
+    return pickOne(items);
 }
 
 export function clamp(value, min, max) {
     return Math.min(Math.max(value, min), max);
 }
 
+export function sentenceCase(value) {
+    const text = String(value ?? "").trim();
+    if (!text) return "";
+    return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+export function normalizeWeights(entries) {
+    if (!Array.isArray(entries)) return [];
+
+    return entries
+        .map((entry) => {
+            if (entry === null || entry === undefined) return null;
+
+            if (typeof entry === "string") {
+                return { value: entry, weight: 1 };
+            }
+
+            if (typeof entry === "object") {
+                const value = entry.value ?? entry.key ?? entry.name ?? null;
+                if (value === null || value === undefined || value === "") return null;
+
+                const weight = Math.max(0, Number(entry.weight) || 0);
+                return { value, weight };
+            }
+
+            return { value: String(entry), weight: 1 };
+        })
+        .filter((entry) => entry && entry.value !== null && entry.value !== undefined);
+}
+
+export function buildWeightedArrayFromMap(weightMap) {
+    if (!(weightMap instanceof Map)) return [];
+
+    const entries = [];
+    for (const [value, weight] of weightMap.entries()) {
+        const numericWeight = Math.max(0, Number(weight) || 0);
+        if (numericWeight <= 0) continue;
+        entries.push({ value, weight: numericWeight });
+    }
+
+    return entries;
+}
+
+export function upsertWeight(weightMap, key, amount) {
+    if (!(weightMap instanceof Map)) return;
+    if (key === null || key === undefined) return;
+
+    const current = Math.max(0, Number(weightMap.get(key)) || 0);
+    const next = Math.max(0, current + (Number(amount) || 0));
+    weightMap.set(key, next);
+}
+
 export function weightedPick(entries) {
-    if (!Array.isArray(entries) || entries.length === 0) return null;
+    const normalized = normalizeWeights(entries);
+    if (normalized.length === 0) return null;
 
     let total = 0;
-    for (const entry of entries) {
-        total += Math.max(0, Number(entry?.weight) || 0);
+    for (const entry of normalized) {
+        total += Math.max(0, Number(entry.weight) || 0);
     }
 
     if (total <= 0) {
-        return entries[entries.length - 1] ?? null;
+        return normalized[normalized.length - 1]?.value ?? null;
     }
 
     let roll = Math.random() * total;
-    for (const entry of entries) {
-        roll -= Math.max(0, Number(entry?.weight) || 0);
-        if (roll <= 0) return entry;
+    for (const entry of normalized) {
+        roll -= Math.max(0, Number(entry.weight) || 0);
+        if (roll <= 0) return entry.value;
     }
 
-    return entries[entries.length - 1] ?? null;
+    return normalized[normalized.length - 1]?.value ?? null;
 }
 
 export function weightedValue(entries) {
-    const picked = weightedPick(entries);
-    return picked?.value ?? null;
+    return weightedPick(entries);
 }
