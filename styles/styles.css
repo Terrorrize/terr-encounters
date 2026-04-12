@@ -1,3 +1,9 @@
-form .form-group {
-  margin-bottom: 10px;
+.control-tool[data-tool="terr-encounters-open-weather"] i {
+    font-family: var(--font-primary);
+    font-style: normal;
+    font-weight: 700;
 }
+
+    .control-tool[data-tool="terr-encounters-open-weather"] i::before {
+        content: "T";
+    }

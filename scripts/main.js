@@ -23,7 +23,7 @@ function registerSceneControl(controls) {
     const tool = {
         name: TOOL_NAME,
         title: "Terr Encounters",
-        icon: "fa-solid fa-t",
+        icon: "fas fa-cloud-sun",
         button: true,
         visible: true,
         onClick: async () => {
