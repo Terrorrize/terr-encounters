@@ -1,24 +1,44 @@
 import { openWeatherPanel } from "./weather/weather-ui.js";
 
 const MODULE_ID = "terr-encounters";
-const TOOL_NAME = `${MODULE_ID}-open-weather`;
+const LAUNCHER_ID = "terr-encounters-launcher";
 
-function registerLauncher(controls) {
-    if (!game.user?.isGM) return;
-    if (!controls?.tokens?.tools) return;
-    if (controls.tokens.tools[TOOL_NAME]) return;
+function removeLauncher() {
+    const existing = document.getElementById(LAUNCHER_ID);
+    if (existing) existing.remove();
+}
 
-    controls.tokens.tools[TOOL_NAME] = {
-        name: TOOL_NAME,
-        title: "Terr Encounters",
-        icon: "terr-encounters-tool-icon",
-        order: Object.keys(controls.tokens.tools).length,
-        button: true,
-        visible: true,
-        onChange: async () => {
-            await openWeatherPanel();
-        }
-    };
+function createLauncher() {
+    if (!game.user?.isGM) {
+        removeLauncher();
+        return;
+    }
+
+    const uiLeft = document.getElementById("ui-left");
+    if (!uiLeft) return;
+
+    let launcher = document.getElementById(LAUNCHER_ID);
+    if (launcher) return;
+
+    launcher = document.createElement("button");
+    launcher.id = LAUNCHER_ID;
+    launcher.type = "button";
+    launcher.title = "Terr Encounters";
+    launcher.setAttribute("aria-label", "Terr Encounters");
+    launcher.textContent = "T";
+
+    launcher.addEventListener("click", async (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        await openWeatherPanel();
+    });
+
+    uiLeft.appendChild(launcher);
+}
+
+function refreshLauncher() {
+    removeLauncher();
+    createLauncher();
 }
 
 Hooks.once("init", () => {
@@ -28,8 +48,17 @@ Hooks.once("init", () => {
 Hooks.once("ready", () => {
     game.terrEncounters ??= {};
     game.terrEncounters.openWeather = openWeatherPanel;
+    refreshLauncher();
 });
 
-Hooks.on("getSceneControlButtons", (controls) => {
-    registerLauncher(controls);
+Hooks.on("canvasReady", () => {
+    createLauncher();
+});
+
+Hooks.on("renderSceneNavigation", () => {
+    createLauncher();
+});
+
+Hooks.on("renderSidebar", () => {
+    createLauncher();
 });
