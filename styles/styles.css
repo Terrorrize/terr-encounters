@@ -1,12 +1,24 @@
-#controls .scene-control[data-control="token"] .control-tool[data-tool="terr-encounters-open-weather"] i.terr-encounters-tool-icon,
-#controls .scene-control[data-control="token"] .control-tool[data-action="terr-encounters-open-weather"] i.terr-encounters-tool-icon {
-    font-style: normal;
-    font-family: var(--font-primary, sans-serif);
-    font-weight: 700;
-    line-height: 1;
+#terr-encounters-launcher {
+    width: 36px;
+    height: 36px;
+    margin: 8px 0 0 0;
+    border: 1px solid var(--color-border-dark, #000);
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-    #controls .scene-control[data-control="token"] .control-tool[data-tool="terr-encounters-open-weather"] i.terr-encounters-tool-icon::before,
-    #controls .scene-control[data-control="token"] .control-tool[data-action="terr-encounters-open-weather"] i.terr-encounters-tool-icon::before {
-        content: "T";
+    #terr-encounters-launcher .terr-encounters-launcher-icon {
+        font-family: var(--font-primary, sans-serif);
+        font-style: normal;
+        font-weight: 700;
+        font-size: 20px;
+        line-height: 1;
+    }
+
+    #terr-encounters-launcher:hover,
+    #terr-encounters-launcher.active {
+        box-shadow: 0 0 6px var(--color-shadow-primary, #f7c267);
     }

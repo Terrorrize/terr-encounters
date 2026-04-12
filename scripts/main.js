@@ -1,35 +1,39 @@
 import { openWeatherPanel } from "./weather/weather-ui.js";
 
 const MODULE_ID = "terr-encounters";
-const TOOL_NAME = `${MODULE_ID}-open-weather`;
-const TOOL_ICON_CLASS = "terr-encounters-tool-icon";
+const BUTTON_ID = "terr-encounters-launcher";
 
-function registerSceneControl(controls) {
-    if (!game.user?.isGM) return;
-
-    const tokenControls = controls.find((control) => control.name === "token");
-    if (!tokenControls) return;
-
-    tokenControls.tools ??= [];
-
-    const tool = {
-        name: TOOL_NAME,
-        title: "Terr Encounters",
-        icon: TOOL_ICON_CLASS,
-        order: 3,
-        button: true,
-        visible: true,
-        onChange: async () => {
-            await openWeatherPanel();
-        }
-    };
-
-    const existingIndex = tokenControls.tools.findIndex((entry) => entry.name === TOOL_NAME);
-    if (existingIndex >= 0) {
-        tokenControls.tools[existingIndex] = tool;
-    } else {
-        tokenControls.tools.push(tool);
+function ensureLauncher() {
+    if (!game.user?.isGM) {
+        document.getElementById(BUTTON_ID)?.remove();
+        return;
     }
+
+    const controls = document.getElementById("controls");
+    if (!controls) return;
+
+    let button = document.getElementById(BUTTON_ID);
+    if (button) return;
+
+    button = document.createElement("li");
+    button.id = BUTTON_ID;
+    button.className = "scene-control";
+    button.dataset.tooltip = "Terr Encounters";
+    button.setAttribute("aria-label", "Terr Encounters");
+    button.innerHTML = `<i class="terr-encounters-launcher-icon">T</i>`;
+
+    button.addEventListener("click", async (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        await openWeatherPanel();
+    });
+
+    controls.appendChild(button);
+}
+
+function refreshLauncher() {
+    document.getElementById(BUTTON_ID)?.remove();
+    ensureLauncher();
 }
 
 Hooks.once("init", () => {
@@ -39,8 +43,13 @@ Hooks.once("init", () => {
 Hooks.once("ready", () => {
     game.terrEncounters ??= {};
     game.terrEncounters.openWeather = () => openWeatherPanel();
+    ensureLauncher();
 });
 
-Hooks.on("getSceneControlButtons", (controls) => {
-    registerSceneControl(controls);
+Hooks.on("canvasReady", () => {
+    ensureLauncher();
+});
+
+Hooks.on("renderSceneControls", () => {
+    setTimeout(refreshLauncher, 0);
 });
