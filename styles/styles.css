@@ -4,41 +4,34 @@ form .form-group {
 
 #terr-encounters-launcher {
     position: fixed;
-    top: 8px;
-    left: 8px;
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
-    min-height: 44px;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    padding: 0;
+    margin: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0;
-    margin: 0;
-    border: 1px solid rgba(255, 255, 255, 0.28);
+    border: 1px solid var(--color-border-dark-primary, #555);
     border-radius: 6px;
     background: rgba(18, 18, 24, 0.96);
     color: #ffffff;
-    font-size: 22px;
-    font-weight: 800;
+    font-family: Arial, sans-serif;
+    font-size: 20px;
+    font-weight: 700;
     line-height: 1;
     text-align: center;
     cursor: pointer;
-    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35), 0 4px 14px rgba(0, 0, 0, 0.45);
-    opacity: 1;
-    visibility: visible;
-    pointer-events: auto;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.45);
     z-index: 2147483647;
-    overflow: visible;
 }
 
-    #terr-encounters-launcher:hover,
-    #terr-encounters-launcher:focus {
-        background: rgba(36, 36, 48, 0.98);
-        border-color: rgba(255, 255, 255, 0.42);
-        outline: none;
+    #terr-encounters-launcher:hover {
+        filter: brightness(1.12);
     }
 
-    #terr-encounters-launcher:active {
-        transform: translateY(1px);
+    #terr-encounters-launcher:focus {
+        outline: 1px solid #999;
+        outline-offset: 1px;
     }
