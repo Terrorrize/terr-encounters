@@ -52,15 +52,14 @@ function autoSizeSelect(select) {
 
     const style = window.getComputedStyle(select);
     const font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+    const selectedText = select.options[select.selectedIndex]?.textContent ?? "";
+    const measured = measureTextWidth(selectedText, font);
 
-    let longest = 0;
-    for (const option of Array.from(select.options)) {
-        longest = Math.max(longest, measureTextWidth(option.textContent ?? "", font));
-    }
+    const borderAllowance = 30;
+    const minWidth = 34;
+    const width = Math.max(minWidth, Math.ceil(measured + borderAllowance));
 
-    const horizontalPadding = 34;
-    const width = Math.ceil(longest + horizontalPadding);
-    select.style.width = `${Math.max(width, 72)}px`;
+    select.style.width = `${width}px`;
 }
 
 function autoSizeSelects(root) {
@@ -108,7 +107,7 @@ export class WeatherPanelApp extends BaseWeatherApp {
             icon: "fas fa-cloud"
         },
         position: {
-            width: 236,
+            width: 172,
             height: "auto"
         }
     };
@@ -174,11 +173,12 @@ export class WeatherPanelApp extends BaseWeatherApp {
         const form = content.querySelector("form");
         if (!form) return;
 
-        const applyChanges = async () => {
+        const applyChanges = async (targetSelect = null) => {
             const formData = readFormData(form);
             this._openState = captureOpenState(content);
             await saveEnvironmentFromForm(formData);
             await this.rerenderPreservingOpenState(content);
+            if (targetSelect) autoSizeSelect(targetSelect);
         };
 
         form.querySelector('[data-action="main-day-action"]')?.addEventListener("click", async (event) => {
@@ -191,17 +191,18 @@ export class WeatherPanelApp extends BaseWeatherApp {
             await this.doReset(content);
         });
 
-        form.querySelector('select[name="biome"]')?.addEventListener("change", applyChanges);
-        form.querySelector('select[name="season"]')?.addEventListener("change", applyChanges);
-        form.querySelector('select[name="phase"]')?.addEventListener("change", applyChanges);
+        for (const select of Array.from(form.querySelectorAll("select"))) {
+            select.addEventListener("change", async () => {
+                autoSizeSelect(select);
+                await applyChanges(select);
+            });
+        }
+
         form.querySelector('input[name="addRuins"]')?.addEventListener("change", async () => {
             const ruinsDetails = form.querySelector(".weather-ruins-details");
             if (ruinsDetails) ruinsDetails.open = !!form.querySelector('input[name="addRuins"]')?.checked;
             await applyChanges();
         });
-        form.querySelector('select[name="ruinFrequency"]')?.addEventListener("change", applyChanges);
-        form.querySelector('select[name="ruinStyleMode"]')?.addEventListener("change", applyChanges);
-        form.querySelector('select[name="manualRuinFamily"]')?.addEventListener("change", applyChanges);
     }
 
     async close(options) {
