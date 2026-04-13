@@ -13,7 +13,6 @@
       {{#if hasStarted}}
       <div class="weather-state-line">{{displayTemperatureState}} / {{displayWeatherLabel}}</div>
       <div class="weather-temp-line">{{displayTemperatureValue}}</div>
-      <div class="weather-feel-line">{{displayTemperatureType}}</div>
 
       <div class="weather-ground-block">
         <div class="weather-ground-label">Ground</div>
@@ -60,7 +59,7 @@
             </select>
           </div>
 
-          <details class="weather-ruins-details">
+          <details class="weather-ruins-details" {{#if controls.addRuins}}open{{/if}}>
             <summary class="weather-ruins-summary">
               <input type="checkbox" name="addRuins" {{#if controls.addRuins}}checked{{/if}}>
               <span>Add Ruins</span>

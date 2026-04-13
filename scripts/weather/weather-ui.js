@@ -21,43 +21,72 @@ function readFormData(form) {
 }
 
 async function saveEnvironmentFromForm(formData) {
-    await setWeatherSetting(SETTING_KEYS.biome, formData.biome);
-    await setWeatherSetting(SETTING_KEYS.season, formData.season);
-    await setWeatherSetting(SETTING_KEYS.seasonPhase, formData.phase);
-    await setWeatherSetting(SETTING_KEYS.addRuins, !!formData.addRuins);
-    await setWeatherSetting(SETTING_KEYS.ruinFrequency, formData.ruinFrequency || "mixed");
-    await setWeatherSetting(SETTING_KEYS.ruinStyleMode, formData.ruinStyleMode || "auto");
+    const biome = formData.biome || getWeatherSetting(SETTING_KEYS.biome);
+    const validSeasons = getAvailableSeasonsForBiome(biome);
+    let season = formData.season || getWeatherSetting(SETTING_KEYS.season);
+    if (!validSeasons.includes(season)) season = validSeasons[0];
+
+    const phase = ["Early", "Mid", "Late"].includes(formData.phase) ? formData.phase : "Early";
+    const addRuins = !!formData.addRuins;
+    const ruinFrequency = ["faint", "light", "mixed"].includes(formData.ruinFrequency) ? formData.ruinFrequency : "mixed";
+    const ruinStyleMode = ["auto", "manual"].includes(formData.ruinStyleMode) ? formData.ruinStyleMode : "auto";
+
+    await setWeatherSetting(SETTING_KEYS.biome, biome);
+    await setWeatherSetting(SETTING_KEYS.season, season);
+    await setWeatherSetting(SETTING_KEYS.seasonPhase, phase);
+    await setWeatherSetting(SETTING_KEYS.addRuins, addRuins);
+    await setWeatherSetting(SETTING_KEYS.ruinFrequency, ruinFrequency);
+    await setWeatherSetting(SETTING_KEYS.ruinStyleMode, ruinStyleMode);
     await setWeatherSetting(SETTING_KEYS.manualRuinFamily, formData.manualRuinFamily || "");
 }
 
-class WeatherPanelApp extends foundry.applications.api.ApplicationV2 {
-    static DEFAULT_OPTIONS = {
-        id: "terr-encounters-weather-panel",
-        tag: "section",
-        window: {
-            title: "Terr Encounters Weather",
-            icon: "fas fa-cloud"
-        },
-        position: {
-            width: 520,
-            height: "auto"
-        }
-    };
+function measureTextWidth(text, font) {
+    const canvas = measureTextWidth.canvas ?? (measureTextWidth.canvas = document.createElement("canvas"));
+    const context = canvas.getContext("2d");
+    context.font = font;
+    return context.measureText(text).width;
+}
 
-    get template() {
-        return "modules/terr-encounters/templates/weather-panel.hbs";
+function autoSizeSelect(select) {
+    if (!select) return;
+
+    const style = window.getComputedStyle(select);
+    const font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+
+    let longest = 0;
+    for (const option of Array.from(select.options)) {
+        longest = Math.max(longest, measureTextWidth(option.textContent ?? "", font));
     }
 
-    async _prepareContext() {
-        if (!this._record) {
-            this._record = await WeatherController.getCurrentDay();
-        }
+    const horizontalPadding = 34;
+    const width = Math.ceil(longest + horizontalPadding);
+    select.style.width = `${Math.max(width, 72)}px`;
+}
 
-        if (!this._environment) {
-            this._environment = WeatherState.normalizeEnvironment(getWeatherEnvironment());
-        }
+function autoSizeSelects(root) {
+    for (const select of Array.from(root.querySelectorAll("select"))) {
+        autoSizeSelect(select);
+    }
+}
 
-        return WeatherRender.buildTemplateData(this._record, this._environment);
+function captureOpenState(root) {
+    return {
+        controlsOpen: !!root.querySelector(".weather-controls-details")?.open,
+        ruinsOpen: !!root.querySelector(".weather-ruins-details")?.open
+    };
+}
+
+function restoreOpenState(root, state) {
+    const controls = root.querySelector(".weather-controls-details");
+    const ruins = root.querySelector(".weather-ruins-details");
+
+    if (controls) controls.open = !!state.controlsOpen;
+    if (ruins) ruins.open = !!state.ruinsOpen;
+}
+
+class BaseWeatherApp extends foundry.applications.api.ApplicationV2 {
+    get template() {
+        return "modules/terr-encounters/templates/weather-panel.hbs";
     }
 
     async _renderHTML(context) {
@@ -68,69 +97,116 @@ class WeatherPanelApp extends foundry.applications.api.ApplicationV2 {
         content.innerHTML = result;
         this._bindDOM(content);
     }
+}
 
-    _bindDOM(content) {
-        const form = content.querySelector("form");
-        if (!form) return;
+export class WeatherPanelApp extends BaseWeatherApp {
+    static DEFAULT_OPTIONS = {
+        id: `${MODULE_ID}-weather-panel`,
+        tag: "section",
+        window: {
+            title: "Terr Encounters Weather",
+            icon: "fas fa-cloud"
+        },
+        position: {
+            width: 236,
+            height: "auto"
+        }
+    };
 
-        const rerenderFromControls = async () => {
-            const formData = readFormData(form);
-            await saveEnvironmentFromForm(formData);
+    async _prepareContext() {
+        if (!this._record) {
+            this._record = await WeatherController.getCurrentDay();
+        }
+
+        if (!this._environment) {
             this._environment = WeatherState.normalizeEnvironment(getWeatherEnvironment());
+        }
 
-            if (!this._record) {
-                this._record = await WeatherController.getCurrentDay();
-            }
-
-            await this.render(true);
+        return {
+            ...WeatherRender.buildTemplateData(this._record, this._environment)
         };
-
-        form.querySelector('select[name="biome"]')?.addEventListener("change", async () => {
-            const biome = form.querySelector('select[name="biome"]')?.value || getWeatherSetting(SETTING_KEYS.biome);
-            const seasonSelect = form.querySelector('select[name="season"]');
-            const validSeasons = getAvailableSeasonsForBiome(biome);
-
-            if (seasonSelect && !validSeasons.includes(seasonSelect.value)) {
-                seasonSelect.value = validSeasons[0];
-            }
-
-            await rerenderFromControls();
-        });
-
-        form.querySelector('select[name="season"]')?.addEventListener("change", rerenderFromControls);
-        form.querySelector('select[name="phase"]')?.addEventListener("change", rerenderFromControls);
-        form.querySelector('input[name="addRuins"]')?.addEventListener("change", rerenderFromControls);
-        form.querySelector('select[name="ruinFrequency"]')?.addEventListener("change", rerenderFromControls);
-        form.querySelector('select[name="ruinStyleMode"]')?.addEventListener("change", rerenderFromControls);
-        form.querySelector('select[name="manualRuinFamily"]')?.addEventListener("change", rerenderFromControls);
-
-        form.querySelector('[data-action="main-day-action"]')?.addEventListener("click", async (event) => {
-            event.preventDefault();
-            event.stopPropagation();
-
-            const formData = readFormData(form);
-            await saveEnvironmentFromForm(formData);
-            this._environment = WeatherState.normalizeEnvironment(getWeatherEnvironment());
-            this._record = await WeatherController.advanceDay();
-            await this.render(true);
-        });
-
-        form.querySelector('[data-action="reset-current-set"]')?.addEventListener("click", async (event) => {
-            event.preventDefault();
-            event.stopPropagation();
-
-            const formData = readFormData(form);
-            await saveEnvironmentFromForm(formData);
-            this._environment = WeatherState.normalizeEnvironment(getWeatherEnvironment());
-            this._record = await WeatherController.resetCurrentDay();
-            await this.render(true);
-        });
     }
 
     async refreshFromState() {
         this._record = await WeatherController.getCurrentDay();
         this._environment = WeatherState.normalizeEnvironment(getWeatherEnvironment());
+    }
+
+    async rerenderPreservingOpenState(content) {
+        this._openState = captureOpenState(content);
+        await this.refreshFromState();
         await this.render(true);
+    }
+
+    async doMainAction(content) {
+        if (typeof WeatherController.advanceDay === "function") {
+            this._record = await WeatherController.advanceDay();
+        } else {
+            this._record = await WeatherController.getCurrentDay();
+        }
+
+        this._environment = WeatherState.normalizeEnvironment(getWeatherEnvironment());
+        this._openState = captureOpenState(content);
+        await this.render(true);
+    }
+
+    async doReset(content) {
+        if (typeof WeatherController.resetCurrentDay === "function") {
+            this._record = await WeatherController.resetCurrentDay();
+        } else {
+            const environment = WeatherState.normalizeEnvironment(getWeatherEnvironment());
+            this._record = await WeatherState.setCurrentDayRecord({
+                biome: environment.biome,
+                season: environment.season,
+                phase: environment.phase
+            });
+        }
+
+        this._environment = WeatherState.normalizeEnvironment(getWeatherEnvironment());
+        this._openState = captureOpenState(content);
+        await this.render(true);
+    }
+
+    _bindDOM(content) {
+        restoreOpenState(content, this._openState ?? {});
+        autoSizeSelects(content);
+
+        const form = content.querySelector("form");
+        if (!form) return;
+
+        const applyChanges = async () => {
+            const formData = readFormData(form);
+            this._openState = captureOpenState(content);
+            await saveEnvironmentFromForm(formData);
+            await this.rerenderPreservingOpenState(content);
+        };
+
+        form.querySelector('[data-action="main-day-action"]')?.addEventListener("click", async (event) => {
+            event.preventDefault();
+            await this.doMainAction(content);
+        });
+
+        form.querySelector('[data-action="reset-current-set"]')?.addEventListener("click", async (event) => {
+            event.preventDefault();
+            await this.doReset(content);
+        });
+
+        form.querySelector('select[name="biome"]')?.addEventListener("change", applyChanges);
+        form.querySelector('select[name="season"]')?.addEventListener("change", applyChanges);
+        form.querySelector('select[name="phase"]')?.addEventListener("change", applyChanges);
+        form.querySelector('input[name="addRuins"]')?.addEventListener("change", async () => {
+            const ruinsDetails = form.querySelector(".weather-ruins-details");
+            if (ruinsDetails) ruinsDetails.open = !!form.querySelector('input[name="addRuins"]')?.checked;
+            await applyChanges();
+        });
+        form.querySelector('select[name="ruinFrequency"]')?.addEventListener("change", applyChanges);
+        form.querySelector('select[name="ruinStyleMode"]')?.addEventListener("change", applyChanges);
+        form.querySelector('select[name="manualRuinFamily"]')?.addEventListener("change", applyChanges);
+    }
+
+    async close(options) {
+        weatherPanelInstance = null;
+        return super.close(options);
     }
 }
 
@@ -148,5 +224,3 @@ export async function openWeatherPanel() {
     weatherPanelInstance.render(true);
     return weatherPanelInstance;
 }
-
-export { WeatherPanelApp };
