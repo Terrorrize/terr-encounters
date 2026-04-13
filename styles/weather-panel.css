@@ -1,54 +1,57 @@
 ﻿.weather-panel {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 2px;
 }
 
 .weather-panel-toolbar {
     display: flex;
     align-items: center;
-    gap: 4px;
-    margin-bottom: 2px;
+    gap: 2px;
+    margin-bottom: 0;
 }
 
 .weather-main-button,
 .weather-reroll-button {
-    border: 1px solid rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.14);
     background: rgba(52, 66, 83, 0.92);
     color: #f2eadf;
-    border-radius: 5px;
+    border-radius: 4px;
     cursor: pointer;
     box-shadow: none;
 }
 
 .weather-main-button {
-    min-width: 84px;
-    height: 28px;
-    font-size: 12px;
+    min-width: 52px;
+    height: 16px;
+    font-size: 8px;
     font-weight: 700;
+    padding: 0 6px;
+    line-height: 1;
 }
 
 .weather-reroll-button {
-    width: 28px;
-    height: 28px;
-    font-size: 14px;
+    width: 16px;
+    height: 16px;
+    font-size: 9px;
     font-weight: 700;
     padding: 0;
+    line-height: 1;
 }
 
 .weather-panel-body {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 2px;
 }
 
 .weather-day-card {
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 5px;
     background: rgba(53, 65, 79, 0.96);
-    padding: 8px 9px;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
-    max-width: 260px;
+    padding: 4px 5px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    max-width: 138px;
     width: 100%;
     margin: 0 auto;
 }
@@ -57,105 +60,109 @@
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    margin-bottom: 6px;
+    margin-bottom: 2px;
 }
 
 .weather-day-badge {
     display: inline-flex;
     align-items: center;
-    min-height: 18px;
-    padding: 0 8px;
-    border-radius: 5px;
+    min-height: 11px;
+    padding: 0 4px;
+    border-radius: 3px;
     background: rgba(23, 31, 41, 0.92);
     color: #f2eadf;
-    font-size: 11px;
+    font-size: 7px;
     font-weight: 700;
+    line-height: 1;
 }
 
 .weather-state-line {
     text-align: center;
     color: #f2eadf;
-    font-size: 11px;
+    font-size: 7px;
     font-weight: 700;
-    line-height: 1.1;
-    margin-bottom: 4px;
+    line-height: 1.05;
+    margin-bottom: 2px;
 }
 
 .weather-temp-line {
     text-align: center;
     color: #ffffff;
-    font-size: 18px;
+    font-size: 11px;
     font-weight: 800;
     line-height: 1;
-    margin-bottom: 2px;
+    margin-bottom: 1px;
 }
 
 .weather-feel-line {
     text-align: center;
     color: rgba(242, 234, 223, 0.82);
-    font-size: 10px;
+    font-size: 6px;
     font-weight: 600;
-    margin-bottom: 6px;
+    line-height: 1;
+    margin-bottom: 3px;
 }
 
 .weather-ground-block {
-    border-top: 1px solid rgba(255, 255, 255, 0.10);
-    margin-top: 4px;
-    padding-top: 6px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    margin-top: 2px;
+    padding-top: 3px;
 }
 
 .weather-ground-label {
     color: rgba(242, 234, 223, 0.72);
-    font-size: 9px;
+    font-size: 6px;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
-    margin-bottom: 3px;
+    letter-spacing: 0.03em;
+    margin-bottom: 2px;
 }
 
 .weather-ground-value {
     color: #f2eadf;
-    font-size: 11px;
+    font-size: 7px;
     font-weight: 600;
-    line-height: 1.15;
+    line-height: 1.05;
     text-align: center;
 }
 
 .weather-ground-bit + .weather-ground-bit {
-    margin-top: 2px;
+    margin-top: 1px;
 }
 
 .weather-empty-block {
     text-align: center;
     color: rgba(242, 234, 223, 0.82);
-    font-size: 11px;
-    padding: 10px 6px;
+    font-size: 7px;
+    line-height: 1.1;
+    padding: 4px 2px;
 }
 
 .weather-controls-dropdown {
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 5px;
     background: rgba(18, 20, 26, 0.72);
     overflow: hidden;
 }
 
 .weather-controls-summary {
     cursor: pointer;
-    padding: 7px 9px;
+    padding: 4px 5px;
     color: #f2eadf;
-    font-size: 11px;
+    font-size: 7px;
     font-weight: 700;
     user-select: none;
+    line-height: 1;
 }
 
 .weather-controls-body {
-    padding: 10px;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 6px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .weather-inline-grid {
     display: grid;
-    gap: 8px;
+    gap: 4px;
 }
 
 .weather-inline-grid-3 {
@@ -165,43 +172,51 @@
 .weather-field {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 2px;
 }
 
     .weather-field label {
         color: rgba(242, 234, 223, 0.72);
-        font-size: 10px;
+        font-size: 6px;
         font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.04em;
+        letter-spacing: 0.03em;
+        line-height: 1;
     }
 
     .weather-field select {
-        height: 32px;
-        min-height: 32px;
-        padding: 0 8px;
-        border-radius: 6px;
-        border: 1px solid rgba(255, 255, 255, 0.14);
+        height: 18px;
+        min-height: 18px;
+        padding: 0 4px;
+        border-radius: 4px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
         background: rgba(53, 65, 79, 0.96);
         color: #f2eadf;
-        font-size: 12px;
+        font-size: 7px;
+        line-height: 1;
     }
 
 .weather-ruins-inline {
-    margin-top: 8px;
+    margin-top: 4px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 4px;
 }
 
 .weather-ruins-toggle {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
     color: #f2eadf;
-    font-size: 12px;
+    font-size: 7px;
     font-weight: 600;
+    line-height: 1;
 }
+
+    .weather-ruins-toggle input {
+        margin: 0;
+        transform: scale(0.8);
+    }
 
 .weather-ruins-controls.is-disabled {
     opacity: 0.55;

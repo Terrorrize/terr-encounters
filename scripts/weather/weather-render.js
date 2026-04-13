@@ -148,7 +148,7 @@ function formatTemperature(stateName, environment) {
     );
 
     const f = Math.round((c * 9 / 5) + 32);
-    return `${c}°C / ${f}°F`;
+    return `${c}C / ${f}F`;
 }
 
 function buildGroundBits(record) {
