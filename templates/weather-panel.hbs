@@ -7,10 +7,7 @@
   <div class="weather-panel-body">
     <section class="weather-day-card">
       <div class="weather-day-card-top">
-        <div class="weather-day-badge">{{displayDayLabel}}</div>
-        {{#if hasStarted}}
-        <div class="weather-lock-strip">{{temperatureDaysRemaining}}d / {{weatherDaysRemaining}}d</div>
-        {{/if}}
+        <div class="weather-day-badge">{{displayDayCounter}}</div>
       </div>
 
       {{#if hasStarted}}
@@ -20,10 +17,12 @@
 
       <div class="weather-ground-block">
         <div class="weather-ground-label">Ground</div>
-        <div class="weather-ground-value">{{displayGroundCompact}}</div>
+        <div class="weather-ground-value">
+          {{#each groundBits}}
+          <div class="weather-ground-bit">{{this}}</div>
+          {{/each}}
+        </div>
       </div>
-
-      <div class="weather-context-line">{{displayContextLine}}</div>
       {{else}}
       <div class="weather-empty-block">Press “How's My Day Going?” to start the current set.</div>
       {{/if}}

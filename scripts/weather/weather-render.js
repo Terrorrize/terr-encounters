@@ -48,19 +48,19 @@ function temperatureTypeLabel(stateName) {
         "Mild": "Mild",
         "Warm": "Warm",
         "Hot": "Heat",
-        "Heat Wave": "Extreme heat",
-        "Humid Heat": "Wet heat",
-        "Dry Heat": "Dry heat",
-        "Harsh Dry Heat": "Dry heat",
+        "Heat Wave": "Extreme Heat",
+        "Humid Heat": "Wet Heat",
+        "Dry Heat": "Dry Heat",
+        "Harsh Dry Heat": "Dry Heat",
         "Chill": "Chill",
         "Cold": "Cold",
-        "Cold Snap": "Snap cold",
-        "Hard Cold": "Dry cold",
-        "Deep Cold": "Dry cold",
-        "Bitter Freeze": "Dry cold",
-        "Severe Cold": "Dry cold",
+        "Cold Snap": "Snap Cold",
+        "Hard Cold": "Dry Cold",
+        "Deep Cold": "Dry Cold",
+        "Bitter Freeze": "Dry Cold",
+        "Severe Cold": "Dry Cold",
         "Thaw / Mild Thaw / Warm Break": "Thaw",
-        "Cool Break": "Cool break"
+        "Cool Break": "Cool Break"
     };
 
     return map[stateName] ?? titleCase(stateName);
@@ -151,18 +151,22 @@ function formatTemperature(stateName, environment) {
     return `${c}°C / ${f}°F`;
 }
 
-function compactGround(record) {
-    const parts = [];
+function buildGroundBits(record) {
+    const bits = [];
 
     if (record.groundState) {
-        parts.push(titleCase(record.groundState));
+        bits.push(titleCase(record.groundState));
     }
 
     if (record.ruinModifier && record.ruinModifier !== "none") {
-        parts.push(titleCase(record.ruinModifier));
+        bits.push(titleCase(record.ruinModifier));
     }
 
-    return parts.join(" • ") || "—";
+    if (record.ruinFamily) {
+        bits.push(titleCase(record.ruinFamily));
+    }
+
+    return bits;
 }
 
 function isStarted(record) {
@@ -183,21 +187,14 @@ export class WeatherRender {
         const phaseChoices = ["Early", "Mid", "Late"].map(value => ({ value, label: value }));
         const manualRuinFamilyChoices = (BIOME_DEFAULT_RUIN_FAMILIES[environment.biome] ?? []).map(value => ({ value, label: value }));
 
+        const groundBits = started ? buildGroundBits(record) : [];
+        const totalLock = (Number(record.temperatureDaysRemaining) || 0) + (Number(record.weatherDaysRemaining) || 0);
+        const currentLock = Math.max(Number(record.temperatureDaysRemaining) || 0, Number(record.weatherDaysRemaining) || 0);
+
         return {
             moduleId: "terr-encounters",
             hasStarted: started,
             mainButtonLabel: started ? "Next Day" : "How's My Day Going?",
-            dayLabel: record.dayLabel || "",
-            biome: record.biome || environment.biome || "",
-            season: record.season || environment.season || "",
-            phase: record.phase || environment.phase || "",
-            groundState: record.groundState || "",
-            temperatureState: record.temperatureState || "",
-            temperatureDaysRemaining: Number.isFinite(record.temperatureDaysRemaining) ? record.temperatureDaysRemaining : 0,
-            weatherEvent: record.weatherEvent || "",
-            weatherDaysRemaining: Number.isFinite(record.weatherDaysRemaining) ? record.weatherDaysRemaining : 0,
-            ruinModifier: record.ruinModifier || "",
-            ruinFamily: record.ruinFamily || "",
             controls: {
                 biome: environment.biome,
                 season: environment.season,
@@ -207,13 +204,12 @@ export class WeatherRender {
                 ruinStyleMode: environment.ruinStyleMode,
                 manualRuinFamily: environment.manualRuinFamily
             },
-            displayDayLabel: record.dayLabel ? `Day ${record.dayLabel}` : "Not Started",
-            displayContextLine: `${record.biome || environment.biome} · ${record.season || environment.season} · ${record.phase || environment.phase}`,
+            displayDayCounter: started ? `Day ${currentLock}/${totalLock}` : "Day 0/0",
             displayTemperatureState: titleCase(record.temperatureState || "—"),
             displayWeatherLabel: weatherLabel(record.weatherEvent || ""),
             displayTemperatureValue: started ? formatTemperature(record.temperatureState, environment) : "—",
             displayTemperatureType: started ? temperatureTypeLabel(record.temperatureState) : "",
-            displayGroundCompact: started ? compactGround(record) : "—",
+            groundBits,
             showRuins: !!environment.addRuins,
             showManualRuinFamily: !!environment.addRuins && environment.ruinStyleMode === "manual",
             biomeChoices,
