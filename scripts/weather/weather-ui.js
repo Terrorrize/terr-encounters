@@ -23,7 +23,7 @@ function readFormData(form) {
 async function saveEnvironmentFromForm(formData) {
     await setWeatherSetting(SETTING_KEYS.biome, formData.biome);
     await setWeatherSetting(SETTING_KEYS.season, formData.season);
-    await setWeatherSetting(SETTING_KEYS.phase, formData.phase);
+    await setWeatherSetting(SETTING_KEYS.seasonPhase, formData.phase);
     await setWeatherSetting(SETTING_KEYS.addRuins, !!formData.addRuins);
     await setWeatherSetting(SETTING_KEYS.ruinFrequency, formData.ruinFrequency || "mixed");
     await setWeatherSetting(SETTING_KEYS.ruinStyleMode, formData.ruinStyleMode || "auto");
