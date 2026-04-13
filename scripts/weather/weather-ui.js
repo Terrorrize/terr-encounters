@@ -55,10 +55,8 @@ function autoSizeSelect(select) {
     const selectedText = select.options[select.selectedIndex]?.textContent ?? "";
     const measured = measureTextWidth(selectedText, font);
 
-    const borderAllowance = 30;
-    const minWidth = 34;
-    const width = Math.max(minWidth, Math.ceil(measured + borderAllowance));
-
+    const borderAllowance = 22;
+    const width = Math.max(46, Math.ceil(measured + borderAllowance));
     select.style.width = `${width}px`;
 }
 
@@ -103,11 +101,11 @@ export class WeatherPanelApp extends BaseWeatherApp {
         id: `${MODULE_ID}-weather-panel`,
         tag: "section",
         window: {
-            title: "Terr Encounters Weather",
+            title: "Terr Encounters",
             icon: "fas fa-cloud"
         },
         position: {
-            width: 172,
+            width: 132,
             height: "auto"
         }
     };
@@ -178,6 +176,7 @@ export class WeatherPanelApp extends BaseWeatherApp {
             this._openState = captureOpenState(content);
             await saveEnvironmentFromForm(formData);
             await this.rerenderPreservingOpenState(content);
+
             if (targetSelect) autoSizeSelect(targetSelect);
         };
 
