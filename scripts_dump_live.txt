@@ -1,7 +1,7 @@
 ﻿====================================================================================================
 LIVE SCRIPT DUMP
 ROOT: C:\FoundryMods\terr-encounters
-GENERATED: 2026-04-12 17:05:16
+GENERATED: 2026-04-12 18:23:13
 FILE COUNT: 22
 ====================================================================================================
 
@@ -34,8 +34,8 @@ MANIFEST
 ----------------------------------------------------------------------------------------------------
 FILE: .\module.json
 SIZE: 860 bytes
-MODIFIED: 2026-04-12 17:00:00
-SHA256: 9AE423F4A16E31804EB677F1340197763B49648CF4B4C2A44CDB450B033EAB26
+MODIFIED: 2026-04-12 18:02:00
+SHA256: 805DB26A41FAF12547179944C0989E34EF5F9A2DDF2CC10EB69DBD9F2A6E930F
 
 FILE: .\README.md
 SIZE: 192 bytes
@@ -68,9 +68,9 @@ MODIFIED: 2026-04-12 13:21:20
 SHA256: 929A5F427EF92F248ACC10865BFE604BF5A14634260FA4AF4254741184C57F4D
 
 FILE: .\scripts\main.js
-SIZE: 930 bytes
-MODIFIED: 2026-04-12 17:00:28
-SHA256: D6564A7EB98B2494D19FECE1A481C3824F5402C6000ED79A6400C34DE196F5AA
+SIZE: 1650 bytes
+MODIFIED: 2026-04-12 17:27:19
+SHA256: B97902EC6578540992BB7AE5020B24D00E4DCEB745910CCABBB73D4FD4753A96
 
 FILE: .\scripts\weather\weather-combiner.js
 SIZE: 3696 bytes
@@ -78,9 +78,9 @@ MODIFIED: 2026-04-12 13:21:20
 SHA256: E488E842F093F1568D1CACC5BC32BAC5955A780F50574F868AC06589FE55F15A
 
 FILE: .\scripts\weather\weather-controller.js
-SIZE: 4711 bytes
-MODIFIED: 2026-04-12 13:21:20
-SHA256: E8C8B820DBEFBBE6C9A42C8EFFFD968142B3662205A46086D8782B3EA722319E
+SIZE: 5654 bytes
+MODIFIED: 2026-04-12 17:58:38
+SHA256: 4984E44D750A1E2D595D6E6B7A662CF209232AAC93D54A3E6541C67800D93E1B
 
 FILE: .\scripts\weather\weather-ground.js
 SIZE: 4644 bytes
@@ -93,9 +93,9 @@ MODIFIED: 2026-04-12 14:08:10
 SHA256: B8D3EB7B8C354F16AF36E5A119A661512FF05BDE8F61517EA09DAF9DAD713F1A
 
 FILE: .\scripts\weather\weather-render.js
-SIZE: 3923 bytes
-MODIFIED: 2026-04-12 14:08:10
-SHA256: 960A0F4B1D743F3A05C3E36AB15C3E1A88289949BB808F06D019B8A036D71FA1
+SIZE: 4219 bytes
+MODIFIED: 2026-04-12 17:58:38
+SHA256: A48516D632910B5D61C710492FAAD94CF119FC4A3BDA117CCAC9CA016B23F01A
 
 FILE: .\scripts\weather\weather-rolls.js
 SIZE: 2738 bytes
@@ -118,9 +118,9 @@ MODIFIED: 2026-04-12 13:21:20
 SHA256: 9DD4A82CC063CFD9DBB8F12C2E9A3AC89335879AB82A38D546C64198895DC889
 
 FILE: .\scripts\weather\weather-ui.js
-SIZE: 7535 bytes
-MODIFIED: 2026-04-12 14:08:10
-SHA256: D0576381A1241D717AC2AE45B17155D578206DE0930B95A94894780E67461D39
+SIZE: 6225 bytes
+MODIFIED: 2026-04-12 17:57:45
+SHA256: 25ACCAC07DD1623802155CF0300376ADA27B752C1B5909473F6BF033056B4C50
 
 FILE: .\scripts\weather\weather-utils.js
 SIZE: 3829 bytes
@@ -128,9 +128,9 @@ MODIFIED: 2026-04-12 15:18:32
 SHA256: 253E65B07C64893466A0F52F378AFEEE069317FE8C444227C13E8C3D76A626CF
 
 FILE: .\styles\styles.css
-SIZE: 511 bytes
-MODIFIED: 2026-04-12 17:00:28
-SHA256: A15D1168992F5091DCA9B8EBD1006EF4CC1B6CD83E74B4419D114BB07737B4CD
+SIZE: 752 bytes
+MODIFIED: 2026-04-12 17:27:19
+SHA256: B4C67E09F21CC913113074FFB484A86ED3299088EC9B0A04D6B55AC14205E167
 
 FILE: .\styles\weather-panel.css
 SIZE: 4922 bytes
@@ -138,29 +138,29 @@ MODIFIED: 2026-04-12 15:43:08
 SHA256: 1B448931180CD774120406F399814A76C3DD448497E1289F75F07F5F2EB783B7
 
 FILE: .\templates\weather-panel.hbs
-SIZE: 6582 bytes
-MODIFIED: 2026-04-12 15:43:08
-SHA256: AB000798A133DB749377EDB0D7C1D2528B500029739BE4BAA5EFA62168E1A60F
+SIZE: 6780 bytes
+MODIFIED: 2026-04-12 17:58:38
+SHA256: 1B9B5D583FDD6B4949D817BA161A4AA6A74E69E4ECA67B3C79FA13DBF3AB9C5A
 
 CONTENTS
 ====================================================================================================
 FILE: .\module.json
 SIZE: 860 bytes
-MODIFIED: 2026-04-12 17:00:00
-SHA256: 9AE423F4A16E31804EB677F1340197763B49648CF4B4C2A44CDB450B033EAB26
+MODIFIED: 2026-04-12 18:02:00
+SHA256: 805DB26A41FAF12547179944C0989E34EF5F9A2DDF2CC10EB69DBD9F2A6E930F
 ----------------------------------------------------------------------------------------------------
 {
   "id": "terr-encounters",
   "title": "Terr Encounters",
   "description": "PF2e biome, weather, and encounter generation tools.",
-  "version": "0.0.4",
+  "version": "0.0.6",
   "authors": [
     {
       "name": "Terrorrize"
     }
   ],
   "manifest": "https://github.com/Terrorrize/terr-encounters/releases/latest/download/module.json",
-  "download": "https://github.com/Terrorrize/terr-encounters/releases/download/0.0.4/module.zip",
+  "download": "https://github.com/Terrorrize/terr-encounters/releases/download/0.0.6/module.zip",
   "url": "https://github.com/Terrorrize/terr-encounters",
   "compatibility": {
     "minimum": "13",
@@ -1389,44 +1389,71 @@ export const BIOME_DEFAULT_RUIN_FAMILIES = {
 ====================================================================================================
 
 FILE: .\scripts\main.js
-SIZE: 930 bytes
-MODIFIED: 2026-04-12 17:00:28
-SHA256: D6564A7EB98B2494D19FECE1A481C3824F5402C6000ED79A6400C34DE196F5AA
+SIZE: 1650 bytes
+MODIFIED: 2026-04-12 17:27:19
+SHA256: B97902EC6578540992BB7AE5020B24D00E4DCEB745910CCABBB73D4FD4753A96
 ----------------------------------------------------------------------------------------------------
 import { openWeatherPanel } from "./weather/weather-ui.js";
 
 const MODULE_ID = "terr-encounters";
-const TOOL_NAME = `${MODULE_ID}-open-weather`;
+const LAUNCHER_ID = "terr-encounters-launcher";
 
-function registerSceneControl(controls) {
-    if (!game.user?.isGM) return;
-    if (!controls?.tokens?.tools) return;
+function removeLauncher() {
+    const existing = document.getElementById(LAUNCHER_ID);
+    if (existing) existing.remove();
+}
 
-    controls.tokens.tools[TOOL_NAME] = {
-        name: TOOL_NAME,
-        title: "Terr Encounters",
-        icon: "terr-encounters-tool-icon",
-        order: Object.keys(controls.tokens.tools).length,
-        button: true,
-        visible: true,
-        onChange: async () => {
-            await openWeatherPanel();
-        }
-    };
+function createLauncher() {
+    if (!game.user?.isGM) {
+        removeLauncher();
+        return;
+    }
+
+    if (!document.body) return;
+
+    let launcher = document.getElementById(LAUNCHER_ID);
+    if (launcher) return launcher;
+
+    launcher = document.createElement("button");
+    launcher.id = LAUNCHER_ID;
+    launcher.type = "button";
+    launcher.title = "Terr Encounters";
+    launcher.setAttribute("aria-label", "Terr Encounters");
+    launcher.textContent = "T";
+
+    launcher.addEventListener("click", async (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        await openWeatherPanel();
+    });
+
+    document.body.appendChild(launcher);
+    return launcher;
+}
+
+function refreshLauncher() {
+    removeLauncher();
+    createLauncher();
 }
 
 Hooks.once("init", () => {
-    console.log(`${MODULE_ID} | Main init`);
+    console.log(`${MODULE_ID} | init`);
 });
 
 Hooks.once("ready", () => {
     game.terrEncounters ??= {};
-    game.terrEncounters.openWeather = () => openWeatherPanel();
+    game.terrEncounters.openWeather = openWeatherPanel;
+    refreshLauncher();
+
+    window.setTimeout(refreshLauncher, 250);
+    window.setTimeout(refreshLauncher, 1000);
 });
 
-Hooks.on("getSceneControlButtons", (controls) => {
-    registerSceneControl(controls);
-});
+Hooks.on("canvasReady", refreshLauncher);
+Hooks.on("renderSceneNavigation", refreshLauncher);
+Hooks.on("renderSidebar", refreshLauncher);
+Hooks.on("renderPlayerList", refreshLauncher);
+Hooks.on("renderHotbar", refreshLauncher);
 
 ====================================================================================================
 
@@ -1514,9 +1541,9 @@ export class WeatherCombiner {
 ====================================================================================================
 
 FILE: .\scripts\weather\weather-controller.js
-SIZE: 4711 bytes
-MODIFIED: 2026-04-12 13:21:20
-SHA256: E8C8B820DBEFBBE6C9A42C8EFFFD968142B3662205A46086D8782B3EA722319E
+SIZE: 5654 bytes
+MODIFIED: 2026-04-12 17:58:38
+SHA256: 4984E44D750A1E2D595D6E6B7A662CF209232AAC93D54A3E6541C67800D93E1B
 ----------------------------------------------------------------------------------------------------
 import { getWeatherEnvironment } from "./weather-settings.js";
 import { WeatherState } from "./weather-state.js";
@@ -1525,6 +1552,7 @@ import { WeatherGround } from "./weather-ground.js";
 import { WeatherRuins } from "./weather-ruins.js";
 import { WeatherCombiner } from "./weather-combiner.js";
 import { currentDayLabel, isoNow } from "./weather-utils.js";
+import { getInitialGroundState } from "../data/weather-biomes.js";
 
 function pushHistory(history, next, max = 3) {
     const copy = Array.isArray(history) ? [...history] : [];
@@ -1533,57 +1561,74 @@ function pushHistory(history, next, max = 3) {
     return copy;
 }
 
+function buildEmptyRecord(environment) {
+    return WeatherState.normalizeRecord({
+        dayLabel: "",
+        biome: environment.biome,
+        season: environment.season,
+        phase: environment.phase,
+        groundState: getInitialGroundState(environment.biome, environment.season, environment.phase),
+        temperatureState: "",
+        temperatureDaysRemaining: 0,
+        weatherEvent: "",
+        weatherDaysRemaining: 0,
+        ruinModifier: null,
+        ruinFamily: null,
+        outputOrder: ["ground", "temperature", "weather"],
+        outputGroundLine: "",
+        outputTemperatureLine: "",
+        outputWeatherLine: "",
+        generatedAt: "",
+        recentTemperatureStates: [],
+        recentWeatherEvents: [],
+        lastTemperatureState: null,
+        lastWeatherEvent: null
+    });
+}
+
 export class WeatherController {
     static async getCurrentDay() {
-        const record = await WeatherState.ensureCurrentDayRecord();
-        return record;
+        return await WeatherState.ensureCurrentDayRecord();
     }
 
-    static async rebuildCurrentDay() {
-        const current = WeatherState.getCurrentDayRecord();
+    static isStarted(record) {
+        return !!(
+            record?.temperatureState ||
+            record?.weatherEvent ||
+            record?.outputGroundLine ||
+            record?.outputTemperatureLine ||
+            record?.outputWeatherLine
+        );
+    }
+
+    static async resetCurrentDay() {
         const environment = WeatherState.normalizeEnvironment(getWeatherEnvironment());
-
-        const ruins = WeatherRuins.resolve(environment);
-        const rebuilt = {
-            ...current,
-            biome: environment.biome,
-            season: environment.season,
-            phase: environment.phase,
-            ruinModifier: ruins.ruinModifier,
-            ruinFamily: ruins.ruinFamily
-        };
-
-        const output = WeatherCombiner.build({
-            ...rebuilt,
-            ruinDetail: ruins.ruinDetail
-        });
-
-        const next = {
-            ...rebuilt,
-            ...output,
-            generatedAt: isoNow()
-        };
-
-        await WeatherState.setCurrentDayRecord(next);
-        return next;
+        const emptyRecord = buildEmptyRecord(environment);
+        await WeatherState.setCurrentDayRecord(emptyRecord);
+        return emptyRecord;
     }
 
     static async advanceDay() {
         const current = WeatherState.getCurrentDayRecord();
         const environment = WeatherState.normalizeEnvironment(getWeatherEnvironment());
+        const hasStarted = this.isStarted(current);
 
         let nextTemperatureState = current.temperatureState;
-        let nextTemperatureDaysRemaining = Math.max(0, (current.temperatureDaysRemaining ?? 0) - 1);
+        let nextTemperatureDaysRemaining = hasStarted
+            ? Math.max(0, (current.temperatureDaysRemaining ?? 0) - 1)
+            : 0;
 
         let nextWeatherEvent = current.weatherEvent;
-        let nextWeatherDaysRemaining = Math.max(0, (current.weatherDaysRemaining ?? 0) - 1);
+        let nextWeatherDaysRemaining = hasStarted
+            ? Math.max(0, (current.weatherDaysRemaining ?? 0) - 1)
+            : 0;
 
         if (!nextTemperatureState || nextTemperatureDaysRemaining <= 0) {
             const rolled = WeatherRolls.rollTemperature({
                 biome: environment.biome,
                 season: environment.season,
                 phase: environment.phase,
-                currentTemperatureState: current.temperatureState
+                currentTemperatureState: hasStarted ? current.temperatureState : null
             });
 
             nextTemperatureState = rolled.temperatureState;
@@ -1595,7 +1640,7 @@ export class WeatherController {
                 biome: environment.biome,
                 season: environment.season,
                 phase: environment.phase,
-                currentWeatherEvent: current.weatherEvent,
+                currentWeatherEvent: hasStarted ? current.weatherEvent : null,
                 temperatureState: nextTemperatureState
             });
 
@@ -1609,14 +1654,18 @@ export class WeatherController {
             biome: environment.biome,
             season: environment.season,
             phase: environment.phase,
-            lastTemperatureState: current.temperatureState ?? null,
-            lastWeatherEvent: current.weatherEvent ?? null,
+            lastTemperatureState: hasStarted ? (current.temperatureState ?? null) : null,
+            lastWeatherEvent: hasStarted ? (current.weatherEvent ?? null) : null,
             temperatureState: nextTemperatureState,
             temperatureDaysRemaining: nextTemperatureDaysRemaining,
             weatherEvent: nextWeatherEvent,
             weatherDaysRemaining: nextWeatherDaysRemaining,
-            recentTemperatureStates: pushHistory(current.recentTemperatureStates, nextTemperatureState),
-            recentWeatherEvents: pushHistory(current.recentWeatherEvents, nextWeatherEvent)
+            recentTemperatureStates: hasStarted
+                ? pushHistory(current.recentTemperatureStates, nextTemperatureState)
+                : [nextTemperatureState],
+            recentWeatherEvents: hasStarted
+                ? pushHistory(current.recentWeatherEvents, nextWeatherEvent)
+                : [nextWeatherEvent]
         };
 
         const groundState = WeatherGround.updateGroundState(intermediate, environment);
@@ -1643,7 +1692,6 @@ export class WeatherController {
         return finalRecord;
     }
 }
-
 
 ====================================================================================================
 
@@ -1794,15 +1842,32 @@ Hooks.once("ready", async () => {
 ====================================================================================================
 
 FILE: .\scripts\weather\weather-render.js
-SIZE: 3923 bytes
-MODIFIED: 2026-04-12 14:08:10
-SHA256: 960A0F4B1D743F3A05C3E36AB15C3E1A88289949BB808F06D019B8A036D71FA1
+SIZE: 4219 bytes
+MODIFIED: 2026-04-12 17:58:38
+SHA256: A48516D632910B5D61C710492FAAD94CF119FC4A3BDA117CCAC9CA016B23F01A
 ----------------------------------------------------------------------------------------------------
 import { BIOME_DEFAULT_RUIN_FAMILIES } from "../data/weather-ruins-data.js";
 import { getAvailableSeasonsForBiome, WEATHER_BIOMES } from "../data/weather-biomes.js";
 
+const OUTPUT_LABELS = {
+    ground: "Ground",
+    temperature: "Temperature",
+    weather: "Weather"
+};
+
+function isStarted(record) {
+    return !!(
+        record?.temperatureState ||
+        record?.weatherEvent ||
+        record?.outputGroundLine ||
+        record?.outputTemperatureLine ||
+        record?.outputWeatherLine
+    );
+}
+
 export class WeatherRender {
     static buildTemplateData(record, environment) {
+        const started = isStarted(record);
         const orderedOutput = this.getOrderedOutput(record);
         const biomeChoices = Object.keys(WEATHER_BIOMES).map(value => ({ value, label: value }));
         const seasonChoices = getAvailableSeasonsForBiome(environment.biome).map(value => ({ value, label: value }));
@@ -1811,6 +1876,8 @@ export class WeatherRender {
 
         return {
             moduleId: "terr-encounters",
+            hasStarted: started,
+            mainButtonLabel: started ? "Next Day" : "How's My Day Going?",
             dayLabel: record.dayLabel || "",
             biome: record.biome || environment.biome || "",
             season: record.season || environment.season || "",
@@ -1855,7 +1922,7 @@ export class WeatherRender {
     }
 
     static getOrderedOutput(record) {
-        const map = {
+        const lines = {
             ground: record.outputGroundLine || "",
             temperature: record.outputTemperatureLine || "",
             weather: record.outputWeatherLine || ""
@@ -1866,25 +1933,13 @@ export class WeatherRender {
             : ["ground", "temperature", "weather"];
 
         return order
+            .filter(key => ["ground", "temperature", "weather"].includes(key))
             .map(key => ({
                 key,
-                label: this.labelForKey(key),
-                text: map[key] || ""
+                label: OUTPUT_LABELS[key] || key,
+                text: String(lines[key] || "").trim()
             }))
-            .filter(entry => !!entry.text);
-    }
-
-    static labelForKey(key) {
-        switch (key) {
-            case "ground":
-                return "Ground";
-            case "temperature":
-                return "Temperature";
-            case "weather":
-                return "Weather";
-            default:
-                return key;
-        }
+            .filter(entry => entry.text.length > 0);
     }
 }
 
@@ -2278,15 +2333,14 @@ export class WeatherState {
 ====================================================================================================
 
 FILE: .\scripts\weather\weather-ui.js
-SIZE: 7535 bytes
-MODIFIED: 2026-04-12 14:08:10
-SHA256: D0576381A1241D717AC2AE45B17155D578206DE0930B95A94894780E67461D39
+SIZE: 6225 bytes
+MODIFIED: 2026-04-12 17:57:45
+SHA256: 25ACCAC07DD1623802155CF0300376ADA27B752C1B5909473F6BF033056B4C50
 ----------------------------------------------------------------------------------------------------
 import { MODULE_ID, getWeatherEnvironment, getWeatherSetting, setWeatherSetting, SETTING_KEYS } from "./weather-settings.js";
 import { WeatherController } from "./weather-controller.js";
 import { WeatherRender } from "./weather-render.js";
 import { WeatherState } from "./weather-state.js";
-import { BIOME_DEFAULT_RUIN_FAMILIES } from "../data/weather-ruins-data.js";
 import { getAvailableSeasonsForBiome } from "../data/weather-biomes.js";
 
 let weatherPanelInstance = null;
@@ -2306,63 +2360,43 @@ function readFormData(form) {
 }
 
 async function saveEnvironmentFromForm(formData) {
-    const biome = formData.biome || getWeatherSetting(SETTING_KEYS.biome);
-    const validSeasons = getAvailableSeasonsForBiome(biome);
-    let season = formData.season || getWeatherSetting(SETTING_KEYS.season);
-    if (!validSeasons.includes(season)) season = validSeasons[0];
-
-    const phase = ["Early", "Mid", "Late"].includes(formData.phase) ? formData.phase : "Early";
-    const addRuins = !!formData.addRuins;
-    const ruinFrequency = ["faint", "light", "mixed"].includes(formData.ruinFrequency) ? formData.ruinFrequency : "mixed";
-    const ruinStyleMode = ["auto", "manual"].includes(formData.ruinStyleMode) ? formData.ruinStyleMode : "auto";
-
-    const availableFamilies = BIOME_DEFAULT_RUIN_FAMILIES[biome] ?? [];
-    let manualRuinFamily = formData.manualRuinFamily || "";
-    if (!availableFamilies.includes(manualRuinFamily)) {
-        manualRuinFamily = availableFamilies[0] ?? "";
-    }
-
-    await setWeatherSetting(SETTING_KEYS.biome, biome);
-    await setWeatherSetting(SETTING_KEYS.season, season);
-    await setWeatherSetting(SETTING_KEYS.seasonPhase, phase);
-    await setWeatherSetting(SETTING_KEYS.addRuins, addRuins);
-    await setWeatherSetting(SETTING_KEYS.ruinFrequency, ruinFrequency);
-    await setWeatherSetting(SETTING_KEYS.ruinStyleMode, ruinStyleMode);
-    await setWeatherSetting(SETTING_KEYS.manualRuinFamily, manualRuinFamily);
+    await setWeatherSetting(SETTING_KEYS.biome, formData.biome);
+    await setWeatherSetting(SETTING_KEYS.season, formData.season);
+    await setWeatherSetting(SETTING_KEYS.phase, formData.phase);
+    await setWeatherSetting(SETTING_KEYS.addRuins, !!formData.addRuins);
+    await setWeatherSetting(SETTING_KEYS.ruinFrequency, formData.ruinFrequency || "mixed");
+    await setWeatherSetting(SETTING_KEYS.ruinStyleMode, formData.ruinStyleMode || "auto");
+    await setWeatherSetting(SETTING_KEYS.manualRuinFamily, formData.manualRuinFamily || "");
 }
 
-export class WeatherPanelApp extends foundry.applications.api.ApplicationV2 {
+class WeatherPanelApp extends foundry.applications.api.ApplicationV2 {
     static DEFAULT_OPTIONS = {
-        id: `${MODULE_ID}-weather-panel`,
+        id: "terr-encounters-weather-panel",
         tag: "section",
-        classes: [MODULE_ID, "weather-panel-app"],
         window: {
-            title: "Terr's Encounter System",
-            icon: "fas fa-cloud-sun",
-            resizable: true
+            title: "Terr Encounters Weather",
+            icon: "fas fa-cloud"
         },
         position: {
-            width: 680,
+            width: 520,
             height: "auto"
         }
     };
 
-    constructor(options = {}) {
-        super(options);
-        this._record = null;
-        this._environment = null;
-    }
-
     get template() {
-        return `modules/${MODULE_ID}/templates/weather-panel.hbs`;
+        return "modules/terr-encounters/templates/weather-panel.hbs";
     }
 
     async _prepareContext() {
-        const record = this._record ?? await WeatherState.ensureCurrentDayRecord();
-        const environment = WeatherState.normalizeEnvironment(this._environment ?? getWeatherEnvironment());
-        this._record = record;
-        this._environment = environment;
-        return WeatherRender.buildTemplateData(record, environment);
+        if (!this._record) {
+            this._record = await WeatherController.getCurrentDay();
+        }
+
+        if (!this._environment) {
+            this._environment = WeatherState.normalizeEnvironment(getWeatherEnvironment());
+        }
+
+        return WeatherRender.buildTemplateData(this._record, this._environment);
     }
 
     async _renderHTML(context) {
@@ -2379,7 +2413,7 @@ export class WeatherPanelApp extends foundry.applications.api.ApplicationV2 {
         await this.render(true);
     }
 
-    async doAdvanceDay(form) {
+    async doMainAction(form) {
         const formData = readFormData(form);
         await saveEnvironmentFromForm(formData);
         this._environment = WeatherState.normalizeEnvironment(getWeatherEnvironment());
@@ -2387,11 +2421,11 @@ export class WeatherPanelApp extends foundry.applications.api.ApplicationV2 {
         await this.render(true);
     }
 
-    async doRebuild(form) {
+    async doReset(form) {
         const formData = readFormData(form);
         await saveEnvironmentFromForm(formData);
         this._environment = WeatherState.normalizeEnvironment(getWeatherEnvironment());
-        this._record = await WeatherController.rebuildCurrentDay();
+        this._record = await WeatherController.resetCurrentDay();
         await this.render(true);
     }
 
@@ -2431,19 +2465,14 @@ export class WeatherPanelApp extends foundry.applications.api.ApplicationV2 {
         form.querySelector('select[name="ruinStyleMode"]')?.addEventListener("change", rerenderFromControls);
         form.querySelector('select[name="manualRuinFamily"]')?.addEventListener("change", rerenderFromControls);
 
-        form.querySelector('[data-action="refresh-current"]')?.addEventListener("click", async (event) => {
+        form.querySelector('[data-action="main-day-action"]')?.addEventListener("click", async (event) => {
             event.preventDefault();
-            await this.refreshFromState();
+            await this.doMainAction(form);
         });
 
-        form.querySelector('[data-action="rebuild-current"]')?.addEventListener("click", async (event) => {
+        form.querySelector('[data-action="reset-current-set"]')?.addEventListener("click", async (event) => {
             event.preventDefault();
-            await this.doRebuild(form);
-        });
-
-        form.querySelector('[data-action="advance-day"]')?.addEventListener("click", async (event) => {
-            event.preventDefault();
-            await this.doAdvanceDay(form);
+            await this.doReset(form);
         });
     }
 }
@@ -2462,6 +2491,8 @@ export async function openWeatherPanel() {
     weatherPanelInstance.render(true);
     return weatherPanelInstance;
 }
+
+export { WeatherPanelApp };
 
 ====================================================================================================
 
@@ -2600,29 +2631,43 @@ export function weightedValue(entries) {
 ====================================================================================================
 
 FILE: .\styles\styles.css
-SIZE: 511 bytes
-MODIFIED: 2026-04-12 17:00:28
-SHA256: A15D1168992F5091DCA9B8EBD1006EF4CC1B6CD83E74B4419D114BB07737B4CD
+SIZE: 752 bytes
+MODIFIED: 2026-04-12 17:27:19
+SHA256: B4C67E09F21CC913113074FFB484A86ED3299088EC9B0A04D6B55AC14205E167
 ----------------------------------------------------------------------------------------------------
 form .form-group {
     margin-bottom: 10px;
 }
 
-[data-tool="terr-encounters-open-weather"] i.terr-encounters-tool-icon {
-    font-style: normal;
-    display: inline-flex;
+#terr-encounters-launcher {
+    position: fixed;
+    left: 12px;
+    top: 430px;
+    width: 36px;
+    height: 36px;
+    z-index: 99999;
+    display: flex;
     align-items: center;
     justify-content: center;
-    width: 100%;
-    height: 100%;
+    border: 1px solid #666;
+    border-radius: 6px;
+    background: rgba(20, 20, 24, 0.96);
+    color: #fff;
+    font-family: Arial, sans-serif;
+    font-size: 18px;
+    font-weight: 700;
     line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.55);
 }
 
-    [data-tool="terr-encounters-open-weather"] i.terr-encounters-tool-icon::before {
-        content: "T";
-        font-family: var(--font-primary);
-        font-size: 0.95rem;
-        font-weight: 700;
+    #terr-encounters-launcher:hover {
+        filter: brightness(1.15);
+    }
+
+    #terr-encounters-launcher:focus {
+        outline: 1px solid #999;
+        outline-offset: 1px;
     }
 
 
@@ -2837,18 +2882,17 @@ form .form-group {
 ====================================================================================================
 
 FILE: .\templates\weather-panel.hbs
-SIZE: 6582 bytes
-MODIFIED: 2026-04-12 15:43:08
-SHA256: AB000798A133DB749377EDB0D7C1D2528B500029739BE4BAA5EFA62168E1A60F
+SIZE: 6780 bytes
+MODIFIED: 2026-04-12 17:58:38
+SHA256: 1B9B5D583FDD6B4949D817BA161A4AA6A74E69E4ECA67B3C79FA13DBF3AB9C5A
 ----------------------------------------------------------------------------------------------------
 <form class="weather-panel">
   <section class="weather-panel-toolbar">
-    <button type="button" data-action="refresh-current">Refresh</button>
-    <button type="button" data-action="rebuild-current">Rebuild Current</button>
-    <button type="button" data-action="advance-day" class="weather-advance-button">Advance Day</button>
+    <button type="button" data-action="main-day-action" class="weather-main-button">{{mainButtonLabel}}</button>
+    <button type="button" data-action="reset-current-set" class="weather-reroll-button" title="Start over">↻</button>
   </section>
 
-  <div class="weather-panel-scroll">
+  <div class="weather-panel-body">
     <details class="weather-block weather-current-day" open>
       <summary class="weather-block-summary">
         <span class="weather-block-title">Current Day</span>
@@ -2858,44 +2902,55 @@ SHA256: AB000798A133DB749377EDB0D7C1D2528B500029739BE4BAA5EFA62168E1A60F
         <div class="weather-summary-grid">
           <div class="weather-summary-item">
             <label>Day</label>
-            <div>{{dayLabel}}</div>
+            <div>{{#if hasStarted}}{{dayLabel}}{{else}}Not started{{/if}}</div>
           </div>
+
           <div class="weather-summary-item">
             <label>Biome</label>
             <div>{{biome}}</div>
           </div>
+
           <div class="weather-summary-item">
             <label>Season</label>
             <div>{{season}}</div>
           </div>
+
           <div class="weather-summary-item">
             <label>Phase</label>
             <div>{{phase}}</div>
           </div>
 
-          <div class="weather-summary-item weather-summary-item-wide">
+          <div class="weather-summary-item">
             <label>Ground State</label>
-            <div>{{groundState}}</div>
+            <div>{{#if hasStarted}}{{groundState}}{{else}}—{{/if}}</div>
           </div>
 
           <div class="weather-summary-item">
             <label>Temperature</label>
-            <div>{{temperatureState}}{{#if temperatureState}} ({{temperatureDaysRemaining}} day{{#unless (eq temperatureDaysRemaining 1)}}s{{/unless}} remaining){{else}} —{{/if}}</div>
+            <div>
+              {{#if hasStarted}}
+                {{temperatureState}} ({{temperatureDaysRemaining}} days remaining)
+              {{else}}
+                —
+              {{/if}}
+            </div>
           </div>
 
           <div class="weather-summary-item">
             <label>Weather</label>
-            <div>{{weatherEvent}}{{#if weatherEvent}} ({{weatherDaysRemaining}} day{{#unless (eq weatherDaysRemaining 1)}}s{{/unless}} remaining){{else}} —{{/if}}</div>
+            <div>
+              {{#if hasStarted}}
+                {{weatherEvent}} ({{weatherDaysRemaining}} days remaining)
+              {{else}}
+                —
+              {{/if}}
+            </div>
           </div>
 
           {{#if hasRuinsApplied}}
           <div class="weather-summary-item">
-            <label>Ruin Modifier</label>
-            <div>{{ruinModifier}}</div>
-          </div>
-          <div class="weather-summary-item weather-summary-item-wide">
-            <label>Ruin Family</label>
-            <div>{{ruinFamily}}</div>
+            <label>Ruins</label>
+            <div>{{ruinModifier}} — {{ruinFamily}}</div>
           </div>
           {{/if}}
         </div>
@@ -2908,16 +2963,16 @@ SHA256: AB000798A133DB749377EDB0D7C1D2528B500029739BE4BAA5EFA62168E1A60F
       </summary>
 
       <div class="weather-block-body">
-        <div class="weather-inline-grid weather-inline-grid-3">
-          <div class="weather-field">
-            <label for="{{moduleId}}-biome">Biome</label>
-            <select id="{{moduleId}}-biome" name="biome">
-              {{#each biomeChoices}}
-              <option value="{{this.value}}" {{#if (eq ../controls.biome this.value)}}selected{{/if}}>{{this.label}}</option>
-              {{/each}}
-            </select>
-          </div>
+        <div class="weather-field">
+          <label for="{{moduleId}}-biome">Biome</label>
+          <select id="{{moduleId}}-biome" name="biome">
+            {{#each biomeChoices}}
+            <option value="{{this.value}}" {{#if (eq ../controls.biome this.value)}}selected{{/if}}>{{this.label}}</option>
+            {{/each}}
+          </select>
+        </div>
 
+        <div class="weather-inline-grid weather-inline-grid-2">
           <div class="weather-field">
             <label for="{{moduleId}}-season">Season</label>
             <select id="{{moduleId}}-season" name="season">
@@ -2992,13 +3047,18 @@ SHA256: AB000798A133DB749377EDB0D7C1D2528B500029739BE4BAA5EFA62168E1A60F
       </summary>
 
       <div class="weather-block-body">
+        {{#if hasStarted}}
         <div class="weather-output-list">
           {{#each orderedOutput}}
-          <div class="weather-output-line">
-            <p>{{this}}</p>
+          <div class="weather-output-line weather-output-line-{{this.key}}">
+            <label>{{this.label}}</label>
+            <p>{{this.text}}</p>
           </div>
           {{/each}}
         </div>
+        {{else}}
+        <div class="weather-output-empty">Press “How's My Day Going?” to start the current set.</div>
+        {{/if}}
       </div>
     </details>
   </div>

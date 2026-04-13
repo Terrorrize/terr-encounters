@@ -66,46 +66,22 @@ class WeatherPanelApp extends foundry.applications.api.ApplicationV2 {
 
     async _replaceHTML(result, content) {
         content.innerHTML = result;
+        this._bindDOM(content);
     }
 
-    async refreshFromState() {
-        this._record = await WeatherController.getCurrentDay();
-        this._environment = WeatherState.normalizeEnvironment(getWeatherEnvironment());
-        await this.render(true);
-    }
-
-    async doMainAction(form) {
-        const formData = readFormData(form);
-        await saveEnvironmentFromForm(formData);
-        this._environment = WeatherState.normalizeEnvironment(getWeatherEnvironment());
-        this._record = await WeatherController.advanceDay();
-        await this.render(true);
-    }
-
-    async doReset(form) {
-        const formData = readFormData(form);
-        await saveEnvironmentFromForm(formData);
-        this._environment = WeatherState.normalizeEnvironment(getWeatherEnvironment());
-        this._record = await WeatherController.resetCurrentDay();
-        await this.render(true);
-    }
-
-    async _onRender(context, options) {
-        await super._onRender(context, options);
-
-        const root = this.element;
-        if (!root) return;
-
-        const form = root.querySelector("form");
+    _bindDOM(content) {
+        const form = content.querySelector("form");
         if (!form) return;
 
         const rerenderFromControls = async () => {
             const formData = readFormData(form);
             await saveEnvironmentFromForm(formData);
             this._environment = WeatherState.normalizeEnvironment(getWeatherEnvironment());
+
             if (!this._record) {
                 this._record = await WeatherController.getCurrentDay();
             }
+
             await this.render(true);
         };
 
@@ -113,9 +89,11 @@ class WeatherPanelApp extends foundry.applications.api.ApplicationV2 {
             const biome = form.querySelector('select[name="biome"]')?.value || getWeatherSetting(SETTING_KEYS.biome);
             const seasonSelect = form.querySelector('select[name="season"]');
             const validSeasons = getAvailableSeasonsForBiome(biome);
+
             if (seasonSelect && !validSeasons.includes(seasonSelect.value)) {
                 seasonSelect.value = validSeasons[0];
             }
+
             await rerenderFromControls();
         });
 
@@ -128,13 +106,31 @@ class WeatherPanelApp extends foundry.applications.api.ApplicationV2 {
 
         form.querySelector('[data-action="main-day-action"]')?.addEventListener("click", async (event) => {
             event.preventDefault();
-            await this.doMainAction(form);
+            event.stopPropagation();
+
+            const formData = readFormData(form);
+            await saveEnvironmentFromForm(formData);
+            this._environment = WeatherState.normalizeEnvironment(getWeatherEnvironment());
+            this._record = await WeatherController.advanceDay();
+            await this.render(true);
         });
 
         form.querySelector('[data-action="reset-current-set"]')?.addEventListener("click", async (event) => {
             event.preventDefault();
-            await this.doReset(form);
+            event.stopPropagation();
+
+            const formData = readFormData(form);
+            await saveEnvironmentFromForm(formData);
+            this._environment = WeatherState.normalizeEnvironment(getWeatherEnvironment());
+            this._record = await WeatherController.resetCurrentDay();
+            await this.render(true);
         });
+    }
+
+    async refreshFromState() {
+        this._record = await WeatherController.getCurrentDay();
+        this._environment = WeatherState.normalizeEnvironment(getWeatherEnvironment());
+        await this.render(true);
     }
 }
 

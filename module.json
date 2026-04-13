@@ -2,14 +2,14 @@
   "id": "terr-encounters",
   "title": "Terr Encounters",
   "description": "PF2e biome, weather, and encounter generation tools.",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "authors": [
     {
       "name": "Terrorrize"
     }
   ],
   "manifest": "https://github.com/Terrorrize/terr-encounters/releases/latest/download/module.json",
-  "download": "https://github.com/Terrorrize/terr-encounters/releases/download/0.0.6/module.zip",
+  "download": "https://github.com/Terrorrize/terr-encounters/releases/download/0.0.7/module.zip",
   "url": "https://github.com/Terrorrize/terr-encounters",
   "compatibility": {
     "minimum": "13",
