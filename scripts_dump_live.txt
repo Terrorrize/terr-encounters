@@ -1,166 +1,18 @@
-﻿====================================================================================================
-LIVE SCRIPT DUMP
-ROOT: C:\FoundryMods\terr-encounters
-GENERATED: 2026-04-12 18:23:13
-FILE COUNT: 22
 ====================================================================================================
-
-TREE
-----------------------------------------------------------------------------------------------------
-.\module.json
-.\README.md
-.\scripts\data\weather-biomes.js
-.\scripts\data\weather-compatibility.js
-.\scripts\data\weather-ground-openers.js
-.\scripts\data\weather-language-foundation.js
-.\scripts\data\weather-ruins-data.js
-.\scripts\main.js
-.\scripts\weather\weather-combiner.js
-.\scripts\weather\weather-controller.js
-.\scripts\weather\weather-ground.js
-.\scripts\weather\weather-init.js
-.\scripts\weather\weather-render.js
-.\scripts\weather\weather-rolls.js
-.\scripts\weather\weather-ruins.js
-.\scripts\weather\weather-settings.js
-.\scripts\weather\weather-state.js
-.\scripts\weather\weather-ui.js
-.\scripts\weather\weather-utils.js
-.\styles\styles.css
-.\styles\weather-panel.css
-.\templates\weather-panel.hbs
-
-MANIFEST
-----------------------------------------------------------------------------------------------------
-FILE: .\module.json
-SIZE: 860 bytes
-MODIFIED: 2026-04-12 18:02:00
-SHA256: 805DB26A41FAF12547179944C0989E34EF5F9A2DDF2CC10EB69DBD9F2A6E930F
-
-FILE: .\README.md
-SIZE: 192 bytes
-MODIFIED: 2026-04-10 09:49:30
-SHA256: 0347188A35BF0F9BD723A2A9D283CD4B39A8B156BB8BF8735A37F2FEC862BFB5
-
-FILE: .\scripts\data\weather-biomes.js
-SIZE: 48119 bytes
-MODIFIED: 2026-04-12 13:21:20
-SHA256: BE50599AF860B2E06363087AC10488121FDD15C2C2C5355AB3A9A4EA2F8947D7
-
-FILE: .\scripts\data\weather-compatibility.js
-SIZE: 5401 bytes
-MODIFIED: 2026-04-12 13:21:20
-SHA256: EE7ABBF3DBA0559300A1723B870DAF3523796D92D0883FBFAFD1DBC72C756006
-
-FILE: .\scripts\data\weather-ground-openers.js
-SIZE: 4258 bytes
-MODIFIED: 2026-04-12 13:21:20
-SHA256: 502175DD2A5817B4943837B0E3515F7E6FC427B7A80011D8DE9D75CF3D6DEC51
-
-FILE: .\scripts\data\weather-language-foundation.js
-SIZE: 8419 bytes
-MODIFIED: 2026-04-12 13:21:20
-SHA256: 5957DEAD68E9331365A0FB45AC3137F9A40D020AB86377AA071BE1D5CFEF2F5D
-
-FILE: .\scripts\data\weather-ruins-data.js
-SIZE: 4738 bytes
-MODIFIED: 2026-04-12 13:21:20
-SHA256: 929A5F427EF92F248ACC10865BFE604BF5A14634260FA4AF4254741184C57F4D
-
-FILE: .\scripts\main.js
-SIZE: 1650 bytes
-MODIFIED: 2026-04-12 17:27:19
-SHA256: B97902EC6578540992BB7AE5020B24D00E4DCEB745910CCABBB73D4FD4753A96
-
-FILE: .\scripts\weather\weather-combiner.js
-SIZE: 3696 bytes
-MODIFIED: 2026-04-12 13:21:20
-SHA256: E488E842F093F1568D1CACC5BC32BAC5955A780F50574F868AC06589FE55F15A
-
-FILE: .\scripts\weather\weather-controller.js
-SIZE: 5654 bytes
-MODIFIED: 2026-04-12 17:58:38
-SHA256: 4984E44D750A1E2D595D6E6B7A662CF209232AAC93D54A3E6541C67800D93E1B
-
-FILE: .\scripts\weather\weather-ground.js
-SIZE: 4644 bytes
-MODIFIED: 2026-04-12 13:21:20
-SHA256: 1F474F17B01BCF309B5F7244F528536636AF5F71952AA2FF138393240F236D9A
-
-FILE: .\scripts\weather\weather-init.js
-SIZE: 975 bytes
-MODIFIED: 2026-04-12 14:08:10
-SHA256: B8D3EB7B8C354F16AF36E5A119A661512FF05BDE8F61517EA09DAF9DAD713F1A
-
-FILE: .\scripts\weather\weather-render.js
-SIZE: 4219 bytes
-MODIFIED: 2026-04-12 17:58:38
-SHA256: A48516D632910B5D61C710492FAAD94CF119FC4A3BDA117CCAC9CA016B23F01A
-
-FILE: .\scripts\weather\weather-rolls.js
-SIZE: 2738 bytes
-MODIFIED: 2026-04-12 13:21:20
-SHA256: FAAE371614A24F0D457A1BAEA40176922E0E8DC3B715D668208FC1787C7C132F
-
-FILE: .\scripts\weather\weather-ruins.js
-SIZE: 1403 bytes
-MODIFIED: 2026-04-12 13:21:20
-SHA256: 1B196BA62E7B7DA4F7D774683B6B1B2692F4E949E9F2EBE5FA2E8BF8F11F461F
-
-FILE: .\scripts\weather\weather-settings.js
-SIZE: 4455 bytes
-MODIFIED: 2026-04-12 13:21:20
-SHA256: 5511C7BF98C454E6774C00DA4DAA0FE677428E651E5BB8E18C4A22D4E6BF5102
-
-FILE: .\scripts\weather\weather-state.js
-SIZE: 3777 bytes
-MODIFIED: 2026-04-12 13:21:20
-SHA256: 9DD4A82CC063CFD9DBB8F12C2E9A3AC89335879AB82A38D546C64198895DC889
-
-FILE: .\scripts\weather\weather-ui.js
-SIZE: 6225 bytes
-MODIFIED: 2026-04-12 17:57:45
-SHA256: 25ACCAC07DD1623802155CF0300376ADA27B752C1B5909473F6BF033056B4C50
-
-FILE: .\scripts\weather\weather-utils.js
-SIZE: 3829 bytes
-MODIFIED: 2026-04-12 15:18:32
-SHA256: 253E65B07C64893466A0F52F378AFEEE069317FE8C444227C13E8C3D76A626CF
-
-FILE: .\styles\styles.css
-SIZE: 752 bytes
-MODIFIED: 2026-04-12 17:27:19
-SHA256: B4C67E09F21CC913113074FFB484A86ED3299088EC9B0A04D6B55AC14205E167
-
-FILE: .\styles\weather-panel.css
-SIZE: 4922 bytes
-MODIFIED: 2026-04-12 15:43:08
-SHA256: 1B448931180CD774120406F399814A76C3DD448497E1289F75F07F5F2EB783B7
-
-FILE: .\templates\weather-panel.hbs
-SIZE: 6780 bytes
-MODIFIED: 2026-04-12 17:58:38
-SHA256: 1B9B5D583FDD6B4949D817BA161A4AA6A74E69E4ECA67B3C79FA13DBF3AB9C5A
-
-CONTENTS
-====================================================================================================
-FILE: .\module.json
-SIZE: 860 bytes
-MODIFIED: 2026-04-12 18:02:00
-SHA256: 805DB26A41FAF12547179944C0989E34EF5F9A2DDF2CC10EB69DBD9F2A6E930F
+FILE: C:\FoundryMods\terr-encounters\module.json
 ----------------------------------------------------------------------------------------------------
 {
   "id": "terr-encounters",
   "title": "Terr Encounters",
   "description": "PF2e biome, weather, and encounter generation tools.",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "authors": [
     {
       "name": "Terrorrize"
     }
   ],
   "manifest": "https://github.com/Terrorrize/terr-encounters/releases/latest/download/module.json",
-  "download": "https://github.com/Terrorrize/terr-encounters/releases/download/0.0.6/module.zip",
+  "download": "https://github.com/Terrorrize/terr-encounters/releases/download/0.0.7/module.zip",
   "url": "https://github.com/Terrorrize/terr-encounters",
   "compatibility": {
     "minimum": "13",
@@ -186,28 +38,72 @@ SHA256: 805DB26A41FAF12547179944C0989E34EF5F9A2DDF2CC10EB69DBD9F2A6E930F
 }
 
 ====================================================================================================
-
-FILE: .\README.md
-SIZE: 192 bytes
-MODIFIED: 2026-04-10 09:49:30
-SHA256: 0347188A35BF0F9BD723A2A9D283CD4B39A8B156BB8BF8735A37F2FEC862BFB5
+FILE: C:\FoundryMods\terr-encounters\scripts\main.js
 ----------------------------------------------------------------------------------------------------
-# Terr Encounters
+import { openWeatherPanel } from "./weather/weather-ui.js";
 
-PF2e biome, weather, and encounter generation module.
+const MODULE_ID = "terr-encounters";
+const LAUNCHER_ID = "terr-encounters-launcher";
 
-## Current baseline
-- Manifest wired
-- Settings registered
-- Popup opens
-- Dispatcher creates stub chat output
+function removeLauncher() {
+    const existing = document.getElementById(LAUNCHER_ID);
+    if (existing) existing.remove();
+}
+
+function createLauncher() {
+    if (!game.user?.isGM) {
+        removeLauncher();
+        return;
+    }
+
+    if (!document.body) return;
+
+    let launcher = document.getElementById(LAUNCHER_ID);
+    if (launcher) return launcher;
+
+    launcher = document.createElement("button");
+    launcher.id = LAUNCHER_ID;
+    launcher.type = "button";
+    launcher.title = "Terr Encounters";
+    launcher.setAttribute("aria-label", "Terr Encounters");
+    launcher.textContent = "T";
+
+    launcher.addEventListener("click", async (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        await openWeatherPanel();
+    });
+
+    document.body.appendChild(launcher);
+    return launcher;
+}
+
+function refreshLauncher() {
+    removeLauncher();
+    createLauncher();
+}
+
+Hooks.once("init", () => {
+    console.log(`${MODULE_ID} | init`);
+});
+
+Hooks.once("ready", () => {
+    game.terrEncounters ??= {};
+    game.terrEncounters.openWeather = openWeatherPanel;
+    refreshLauncher();
+
+    window.setTimeout(refreshLauncher, 250);
+    window.setTimeout(refreshLauncher, 1000);
+});
+
+Hooks.on("canvasReady", refreshLauncher);
+Hooks.on("renderSceneNavigation", refreshLauncher);
+Hooks.on("renderSidebar", refreshLauncher);
+Hooks.on("renderPlayerList", refreshLauncher);
+Hooks.on("renderHotbar", refreshLauncher);
 
 ====================================================================================================
-
-FILE: .\scripts\data\weather-biomes.js
-SIZE: 48119 bytes
-MODIFIED: 2026-04-12 13:21:20
-SHA256: BE50599AF860B2E06363087AC10488121FDD15C2C2C5355AB3A9A4EA2F8947D7
+FILE: C:\FoundryMods\terr-encounters\scripts\data\weather-biomes.js
 ----------------------------------------------------------------------------------------------------
 import { toKey } from "../weather/weather-utils.js";
 
@@ -898,11 +794,7 @@ export function makePhaseKey(season, phase) {
 
 
 ====================================================================================================
-
-FILE: .\scripts\data\weather-compatibility.js
-SIZE: 5401 bytes
-MODIFIED: 2026-04-12 13:21:20
-SHA256: EE7ABBF3DBA0559300A1723B870DAF3523796D92D0883FBFAFD1DBC72C756006
+FILE: C:\FoundryMods\terr-encounters\scripts\data\weather-compatibility.js
 ----------------------------------------------------------------------------------------------------
 export const TEMPERATURE_OPENERS = {
     mild: "The air is",
@@ -1010,11 +902,7 @@ export const WEATHER_COMPATIBILITY = {
 
 
 ====================================================================================================
-
-FILE: .\scripts\data\weather-ground-openers.js
-SIZE: 4258 bytes
-MODIFIED: 2026-04-12 13:21:20
-SHA256: 502175DD2A5817B4943837B0E3515F7E6FC427B7A80011D8DE9D75CF3D6DEC51
+FILE: C:\FoundryMods\terr-encounters\scripts\data\weather-ground-openers.js
 ----------------------------------------------------------------------------------------------------
 export const GROUND_OPENERS = {
     "light snow cover": ["Light snow lies over", "Thin snow rests on", "A light cover of snow lies across"],
@@ -1057,11 +945,7 @@ export const GROUND_OPENERS = {
 
 
 ====================================================================================================
-
-FILE: .\scripts\data\weather-language-foundation.js
-SIZE: 8419 bytes
-MODIFIED: 2026-04-12 13:21:20
-SHA256: 5957DEAD68E9331365A0FB45AC3137F9A40D020AB86377AA071BE1D5CFEF2F5D
+FILE: C:\FoundryMods\terr-encounters\scripts\data\weather-language-foundation.js
 ----------------------------------------------------------------------------------------------------
 export const GROUND_ANCHORS = {
     "Forest": ["the roots and stone beneath the trees", "the leaf-dark forest floor", "the ground beneath the canopy"],
@@ -1224,11 +1108,7 @@ export const WEATHER_INTENSITY = {
 
 
 ====================================================================================================
-
-FILE: .\scripts\data\weather-ruins-data.js
-SIZE: 4738 bytes
-MODIFIED: 2026-04-12 13:21:20
-SHA256: 929A5F427EF92F248ACC10865BFE604BF5A14634260FA4AF4254741184C57F4D
+FILE: C:\FoundryMods\terr-encounters\scripts\data\weather-ruins-data.js
 ----------------------------------------------------------------------------------------------------
 export const RUIN_MODIFIERS = ["none", "faint traces", "light ruins", "exposed remnants"];
 
@@ -1387,80 +1267,7 @@ export const BIOME_DEFAULT_RUIN_FAMILIES = {
 
 
 ====================================================================================================
-
-FILE: .\scripts\main.js
-SIZE: 1650 bytes
-MODIFIED: 2026-04-12 17:27:19
-SHA256: B97902EC6578540992BB7AE5020B24D00E4DCEB745910CCABBB73D4FD4753A96
-----------------------------------------------------------------------------------------------------
-import { openWeatherPanel } from "./weather/weather-ui.js";
-
-const MODULE_ID = "terr-encounters";
-const LAUNCHER_ID = "terr-encounters-launcher";
-
-function removeLauncher() {
-    const existing = document.getElementById(LAUNCHER_ID);
-    if (existing) existing.remove();
-}
-
-function createLauncher() {
-    if (!game.user?.isGM) {
-        removeLauncher();
-        return;
-    }
-
-    if (!document.body) return;
-
-    let launcher = document.getElementById(LAUNCHER_ID);
-    if (launcher) return launcher;
-
-    launcher = document.createElement("button");
-    launcher.id = LAUNCHER_ID;
-    launcher.type = "button";
-    launcher.title = "Terr Encounters";
-    launcher.setAttribute("aria-label", "Terr Encounters");
-    launcher.textContent = "T";
-
-    launcher.addEventListener("click", async (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        await openWeatherPanel();
-    });
-
-    document.body.appendChild(launcher);
-    return launcher;
-}
-
-function refreshLauncher() {
-    removeLauncher();
-    createLauncher();
-}
-
-Hooks.once("init", () => {
-    console.log(`${MODULE_ID} | init`);
-});
-
-Hooks.once("ready", () => {
-    game.terrEncounters ??= {};
-    game.terrEncounters.openWeather = openWeatherPanel;
-    refreshLauncher();
-
-    window.setTimeout(refreshLauncher, 250);
-    window.setTimeout(refreshLauncher, 1000);
-});
-
-Hooks.on("canvasReady", refreshLauncher);
-Hooks.on("renderSceneNavigation", refreshLauncher);
-Hooks.on("renderSidebar", refreshLauncher);
-Hooks.on("renderPlayerList", refreshLauncher);
-Hooks.on("renderHotbar", refreshLauncher);
-
-====================================================================================================
-
-FILE: .\scripts\weather\weather-combiner.js
-SIZE: 3696 bytes
-MODIFIED: 2026-04-12 13:21:20
-SHA256: E488E842F093F1568D1CACC5BC32BAC5955A780F50574F868AC06589FE55F15A
+FILE: C:\FoundryMods\terr-encounters\scripts\weather\weather-combiner.js
 ----------------------------------------------------------------------------------------------------
 import { chooseOne, sentenceCase } from "./weather-utils.js";
 import { GROUND_ANCHORS, TERRAIN_INTERACTIONS, WEATHER_ACTION_BY_EVENT, WEATHER_ACTIONS, WEATHER_INTENSITY, WEATHER_OPENERS } from "../data/weather-language-foundation.js";
@@ -1539,11 +1346,7 @@ export class WeatherCombiner {
 
 
 ====================================================================================================
-
-FILE: .\scripts\weather\weather-controller.js
-SIZE: 5654 bytes
-MODIFIED: 2026-04-12 17:58:38
-SHA256: 4984E44D750A1E2D595D6E6B7A662CF209232AAC93D54A3E6541C67800D93E1B
+FILE: C:\FoundryMods\terr-encounters\scripts\weather\weather-controller.js
 ----------------------------------------------------------------------------------------------------
 import { getWeatherEnvironment } from "./weather-settings.js";
 import { WeatherState } from "./weather-state.js";
@@ -1694,11 +1497,7 @@ export class WeatherController {
 }
 
 ====================================================================================================
-
-FILE: .\scripts\weather\weather-ground.js
-SIZE: 4644 bytes
-MODIFIED: 2026-04-12 13:21:20
-SHA256: 1F474F17B01BCF309B5F7244F528536636AF5F71952AA2FF138393240F236D9A
+FILE: C:\FoundryMods\terr-encounters\scripts\weather\weather-ground.js
 ----------------------------------------------------------------------------------------------------
 import { getPhaseData, getInitialGroundState } from "../data/weather-biomes.js";
 import { chooseOne } from "./weather-utils.js";
@@ -1805,11 +1604,7 @@ export class WeatherGround {
 
 
 ====================================================================================================
-
-FILE: .\scripts\weather\weather-init.js
-SIZE: 975 bytes
-MODIFIED: 2026-04-12 14:08:10
-SHA256: B8D3EB7B8C354F16AF36E5A119A661512FF05BDE8F61517EA09DAF9DAD713F1A
+FILE: C:\FoundryMods\terr-encounters\scripts\weather\weather-init.js
 ----------------------------------------------------------------------------------------------------
 import { MODULE_ID, registerWeatherSettings } from "./weather-settings.js";
 import { WeatherState } from "./weather-state.js";
@@ -1840,20 +1635,178 @@ Hooks.once("ready", async () => {
 });
 
 ====================================================================================================
-
-FILE: .\scripts\weather\weather-render.js
-SIZE: 4219 bytes
-MODIFIED: 2026-04-12 17:58:38
-SHA256: A48516D632910B5D61C710492FAAD94CF119FC4A3BDA117CCAC9CA016B23F01A
+FILE: C:\FoundryMods\terr-encounters\scripts\weather\weather-render.js
 ----------------------------------------------------------------------------------------------------
 import { BIOME_DEFAULT_RUIN_FAMILIES } from "../data/weather-ruins-data.js";
 import { getAvailableSeasonsForBiome, WEATHER_BIOMES } from "../data/weather-biomes.js";
 
-const OUTPUT_LABELS = {
-    ground: "Ground",
-    temperature: "Temperature",
-    weather: "Weather"
-};
+function titleCase(value) {
+    return String(value ?? "")
+        .replaceAll("/", " / ")
+        .replaceAll("-", " ")
+        .replace(/\s+/g, " ")
+        .trim()
+        .split(" ")
+        .map(part => part ? part.charAt(0).toUpperCase() + part.slice(1) : "")
+        .join(" ");
+}
+
+function weatherLabel(eventName) {
+    const map = {
+        "clear/fair": "Clear / Fair",
+        "cloud cover": "High Thin Clouds",
+        "mist/fog": "Mist / Fog",
+        "freezing fog": "Freezing Fog",
+        "sea mist": "Sea Mist",
+        "thaw mist": "Thaw Mist",
+        "light snow": "Light Snow",
+        "steady snow": "Steady Snow",
+        "hard wind": "Strong Wind",
+        "dry wind": "Dry Wind",
+        "sea breeze": "Sea Breeze",
+        "brief hard rain": "Hard Rain",
+        "storm squall": "Storm Squall",
+        "cold squall": "Cold Squall",
+        "humid haze": "Humid Haze",
+        "heat haze": "Heat Haze",
+        "hot still air": "Still Heat",
+        "warm still air": "Still Warmth",
+        "stagnant still air": "Stagnant Air",
+        "furnace still air": "Furnace Heat",
+        "blowing dust": "Blowing Dust",
+        "dust wall": "Dust Wall",
+        "sand-lifting gusts": "Sand Gusts",
+        "ice-crystal drift": "Ice Crystal Drift"
+    };
+
+    return map[eventName] ?? titleCase(eventName);
+}
+
+function temperatureTypeLabel(stateName) {
+    const map = {
+        "Mild": "Mild",
+        "Warm": "Warm",
+        "Hot": "Heat",
+        "Heat Wave": "Extreme Heat",
+        "Humid Heat": "Wet Heat",
+        "Dry Heat": "Dry Heat",
+        "Harsh Dry Heat": "Dry Heat",
+        "Chill": "Chill",
+        "Cold": "Cold",
+        "Cold Snap": "Snap Cold",
+        "Hard Cold": "Dry Cold",
+        "Deep Cold": "Dry Cold",
+        "Bitter Freeze": "Dry Cold",
+        "Severe Cold": "Dry Cold",
+        "Thaw / Mild Thaw / Warm Break": "Thaw",
+        "Cool Break": "Cool Break"
+    };
+
+    return map[stateName] ?? titleCase(stateName);
+}
+
+function baseTemperatureForState(stateName) {
+    const map = {
+        "Mild": 12,
+        "Warm": 22,
+        "Hot": 30,
+        "Heat Wave": 38,
+        "Humid Heat": 31,
+        "Dry Heat": 34,
+        "Harsh Dry Heat": 40,
+        "Chill": 7,
+        "Cold": 0,
+        "Cold Snap": -10,
+        "Hard Cold": -18,
+        "Deep Cold": -28,
+        "Bitter Freeze": -36,
+        "Severe Cold": -42,
+        "Thaw / Mild Thaw / Warm Break": 4,
+        "Cool Break": 15
+    };
+
+    return map[stateName] ?? 10;
+}
+
+function seasonOffsetForEnvironment(environment) {
+    const season = String(environment.season ?? "");
+    const phase = String(environment.phase ?? "");
+    const biome = String(environment.biome ?? "");
+
+    const phaseOffset = phase === "Early" ? -2 : phase === "Late" ? 2 : 0;
+
+    if (biome === "Desert") {
+        const desertSeason = season === "Hot Season" ? 12 : 0;
+        return desertSeason + phaseOffset;
+    }
+
+    if (biome === "Tropical Coast" || biome === "Tropical Swamp") {
+        const tropicalSeason = season === "Dry Season" ? 10 : 8;
+        return tropicalSeason + phaseOffset;
+    }
+
+    const temperateMap = {
+        "Spring": 2,
+        "Summer": 10,
+        "Autumn": 0,
+        "Winter": -10
+    };
+
+    return (temperateMap[season] ?? 0) + phaseOffset;
+}
+
+function biomeOffset(environment) {
+    const biome = String(environment.biome ?? "");
+
+    const map = {
+        "Forest": 0,
+        "Plains": 1,
+        "Hills": -2,
+        "Mountains": -10,
+        "Desert": 8,
+        "Tundra": -10,
+        "Urban Fringe": 1,
+        "Temperate Coast": 2,
+        "Tropical Coast": 8,
+        "Temperate Swamp": 3,
+        "Tropical Swamp": 9
+    };
+
+    return map[biome] ?? 0;
+}
+
+function clamp(value, min, max) {
+    return Math.max(min, Math.min(max, value));
+}
+
+function formatTemperature(stateName, environment) {
+    const c = clamp(
+        Math.round(baseTemperatureForState(stateName) + seasonOffsetForEnvironment(environment) + biomeOffset(environment)),
+        -50,
+        50
+    );
+
+    const f = Math.round((c * 9 / 5) + 32);
+    return `${c}C / ${f}F`;
+}
+
+function buildGroundBits(record) {
+    const bits = [];
+
+    if (record.groundState) {
+        bits.push(titleCase(record.groundState));
+    }
+
+    if (record.ruinModifier && record.ruinModifier !== "none") {
+        bits.push(titleCase(record.ruinModifier));
+    }
+
+    if (record.ruinFamily) {
+        bits.push(titleCase(record.ruinFamily));
+    }
+
+    return bits;
+}
 
 function isStarted(record) {
     return !!(
@@ -1868,31 +1821,19 @@ function isStarted(record) {
 export class WeatherRender {
     static buildTemplateData(record, environment) {
         const started = isStarted(record);
-        const orderedOutput = this.getOrderedOutput(record);
         const biomeChoices = Object.keys(WEATHER_BIOMES).map(value => ({ value, label: value }));
         const seasonChoices = getAvailableSeasonsForBiome(environment.biome).map(value => ({ value, label: value }));
         const phaseChoices = ["Early", "Mid", "Late"].map(value => ({ value, label: value }));
         const manualRuinFamilyChoices = (BIOME_DEFAULT_RUIN_FAMILIES[environment.biome] ?? []).map(value => ({ value, label: value }));
 
+        const groundBits = started ? buildGroundBits(record) : [];
+        const totalLock = (Number(record.temperatureDaysRemaining) || 0) + (Number(record.weatherDaysRemaining) || 0);
+        const currentLock = Math.max(Number(record.temperatureDaysRemaining) || 0, Number(record.weatherDaysRemaining) || 0);
+
         return {
             moduleId: "terr-encounters",
             hasStarted: started,
             mainButtonLabel: started ? "Next Day" : "How's My Day Going?",
-            dayLabel: record.dayLabel || "",
-            biome: record.biome || environment.biome || "",
-            season: record.season || environment.season || "",
-            phase: record.phase || environment.phase || "",
-            groundState: record.groundState || "",
-            temperatureState: record.temperatureState || "",
-            temperatureDaysRemaining: Number.isFinite(record.temperatureDaysRemaining) ? record.temperatureDaysRemaining : 0,
-            weatherEvent: record.weatherEvent || "",
-            weatherDaysRemaining: Number.isFinite(record.weatherDaysRemaining) ? record.weatherDaysRemaining : 0,
-            ruinModifier: record.ruinModifier || "",
-            ruinFamily: record.ruinFamily || "",
-            outputGroundLine: record.outputGroundLine || "",
-            outputTemperatureLine: record.outputTemperatureLine || "",
-            outputWeatherLine: record.outputWeatherLine || "",
-            orderedOutput,
             controls: {
                 biome: environment.biome,
                 season: environment.season,
@@ -1902,9 +1843,14 @@ export class WeatherRender {
                 ruinStyleMode: environment.ruinStyleMode,
                 manualRuinFamily: environment.manualRuinFamily
             },
+            displayDayCounter: started ? `Day ${currentLock}/${totalLock}` : "Day 0/0",
+            displayTemperatureState: titleCase(record.temperatureState || "�"),
+            displayWeatherLabel: weatherLabel(record.weatherEvent || ""),
+            displayTemperatureValue: started ? formatTemperature(record.temperatureState, environment) : "�",
+            displayTemperatureType: started ? temperatureTypeLabel(record.temperatureState) : "",
+            groundBits,
             showRuins: !!environment.addRuins,
             showManualRuinFamily: !!environment.addRuins && environment.ruinStyleMode === "manual",
-            hasRuinsApplied: !!record.ruinModifier && !!record.ruinFamily,
             biomeChoices,
             seasonChoices,
             phaseChoices,
@@ -1920,35 +1866,10 @@ export class WeatherRender {
             manualRuinFamilyChoices
         };
     }
-
-    static getOrderedOutput(record) {
-        const lines = {
-            ground: record.outputGroundLine || "",
-            temperature: record.outputTemperatureLine || "",
-            weather: record.outputWeatherLine || ""
-        };
-
-        const order = Array.isArray(record.outputOrder) && record.outputOrder.length === 3
-            ? record.outputOrder
-            : ["ground", "temperature", "weather"];
-
-        return order
-            .filter(key => ["ground", "temperature", "weather"].includes(key))
-            .map(key => ({
-                key,
-                label: OUTPUT_LABELS[key] || key,
-                text: String(lines[key] || "").trim()
-            }))
-            .filter(entry => entry.text.length > 0);
-    }
 }
 
 ====================================================================================================
-
-FILE: .\scripts\weather\weather-rolls.js
-SIZE: 2738 bytes
-MODIFIED: 2026-04-12 13:21:20
-SHA256: FAAE371614A24F0D457A1BAEA40176922E0E8DC3B715D668208FC1787C7C132F
+FILE: C:\FoundryMods\terr-encounters\scripts\weather\weather-rolls.js
 ----------------------------------------------------------------------------------------------------
 import { getPhaseData, getLockRange } from "../data/weather-biomes.js";
 import { WEATHER_COMPATIBILITY } from "../data/weather-compatibility.js";
@@ -2018,11 +1939,7 @@ export class WeatherRolls {
 
 
 ====================================================================================================
-
-FILE: .\scripts\weather\weather-ruins.js
-SIZE: 1403 bytes
-MODIFIED: 2026-04-12 13:21:20
-SHA256: 1B196BA62E7B7DA4F7D774683B6B1B2692F4E949E9F2EBE5FA2E8BF8F11F461F
+FILE: C:\FoundryMods\terr-encounters\scripts\weather\weather-ruins.js
 ----------------------------------------------------------------------------------------------------
 import { BIOME_DEFAULT_RUIN_FAMILIES, RUIN_FAMILIES, RUIN_FREQUENCY_WEIGHTS } from "../data/weather-ruins-data.js";
 import { buildWeightedArrayFromMap, chooseOne, weightedPick } from "./weather-utils.js";
@@ -2062,11 +1979,7 @@ export class WeatherRuins {
 
 
 ====================================================================================================
-
-FILE: .\scripts\weather\weather-settings.js
-SIZE: 4455 bytes
-MODIFIED: 2026-04-12 13:21:20
-SHA256: 5511C7BF98C454E6774C00DA4DAA0FE677428E651E5BB8E18C4A22D4E6BF5102
+FILE: C:\FoundryMods\terr-encounters\scripts\weather\weather-settings.js
 ----------------------------------------------------------------------------------------------------
 export const MODULE_ID = "terr-encounters";
 
@@ -2216,11 +2129,7 @@ export function getWeatherEnvironment() {
 
 
 ====================================================================================================
-
-FILE: .\scripts\weather\weather-state.js
-SIZE: 3777 bytes
-MODIFIED: 2026-04-12 13:21:20
-SHA256: 9DD4A82CC063CFD9DBB8F12C2E9A3AC89335879AB82A38D546C64198895DC889
+FILE: C:\FoundryMods\terr-encounters\scripts\weather\weather-state.js
 ----------------------------------------------------------------------------------------------------
 import { MODULE_ID, SETTING_KEYS, getWeatherEnvironment, setWeatherSetting } from "./weather-settings.js";
 import { currentDayLabel, deepClone, isoNow } from "./weather-utils.js";
@@ -2331,11 +2240,7 @@ export class WeatherState {
 
 
 ====================================================================================================
-
-FILE: .\scripts\weather\weather-ui.js
-SIZE: 6225 bytes
-MODIFIED: 2026-04-12 17:57:45
-SHA256: 25ACCAC07DD1623802155CF0300376ADA27B752C1B5909473F6BF033056B4C50
+FILE: C:\FoundryMods\terr-encounters\scripts\weather\weather-ui.js
 ----------------------------------------------------------------------------------------------------
 import { MODULE_ID, getWeatherEnvironment, getWeatherSetting, setWeatherSetting, SETTING_KEYS } from "./weather-settings.js";
 import { WeatherController } from "./weather-controller.js";
@@ -2360,32 +2265,94 @@ function readFormData(form) {
 }
 
 async function saveEnvironmentFromForm(formData) {
-    await setWeatherSetting(SETTING_KEYS.biome, formData.biome);
-    await setWeatherSetting(SETTING_KEYS.season, formData.season);
-    await setWeatherSetting(SETTING_KEYS.phase, formData.phase);
-    await setWeatherSetting(SETTING_KEYS.addRuins, !!formData.addRuins);
-    await setWeatherSetting(SETTING_KEYS.ruinFrequency, formData.ruinFrequency || "mixed");
-    await setWeatherSetting(SETTING_KEYS.ruinStyleMode, formData.ruinStyleMode || "auto");
+    const biome = formData.biome || getWeatherSetting(SETTING_KEYS.biome);
+    const validSeasons = getAvailableSeasonsForBiome(biome);
+    let season = formData.season || getWeatherSetting(SETTING_KEYS.season);
+    if (!validSeasons.includes(season)) season = validSeasons[0];
+
+    const phase = ["Early", "Mid", "Late"].includes(formData.phase) ? formData.phase : "Early";
+    const addRuins = !!formData.addRuins;
+    const ruinFrequency = ["faint", "light", "mixed"].includes(formData.ruinFrequency) ? formData.ruinFrequency : "mixed";
+    const ruinStyleMode = ["auto", "manual"].includes(formData.ruinStyleMode) ? formData.ruinStyleMode : "auto";
+
+    await setWeatherSetting(SETTING_KEYS.biome, biome);
+    await setWeatherSetting(SETTING_KEYS.season, season);
+    await setWeatherSetting(SETTING_KEYS.seasonPhase, phase);
+    await setWeatherSetting(SETTING_KEYS.addRuins, addRuins);
+    await setWeatherSetting(SETTING_KEYS.ruinFrequency, ruinFrequency);
+    await setWeatherSetting(SETTING_KEYS.ruinStyleMode, ruinStyleMode);
     await setWeatherSetting(SETTING_KEYS.manualRuinFamily, formData.manualRuinFamily || "");
 }
 
-class WeatherPanelApp extends foundry.applications.api.ApplicationV2 {
-    static DEFAULT_OPTIONS = {
-        id: "terr-encounters-weather-panel",
-        tag: "section",
-        window: {
-            title: "Terr Encounters Weather",
-            icon: "fas fa-cloud"
-        },
-        position: {
-            width: 520,
-            height: "auto"
-        }
-    };
+function measureTextWidth(text, font) {
+    const canvas = measureTextWidth.canvas ?? (measureTextWidth.canvas = document.createElement("canvas"));
+    const context = canvas.getContext("2d");
+    context.font = font;
+    return context.measureText(text).width;
+}
 
+function autoSizeSelect(select) {
+    if (!select) return;
+
+    const style = window.getComputedStyle(select);
+    const font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+    const selectedText = select.options[select.selectedIndex]?.textContent ?? "";
+    const measured = measureTextWidth(selectedText, font);
+
+    const borderAllowance = 22;
+    const width = Math.max(46, Math.ceil(measured + borderAllowance));
+    select.style.width = `${width}px`;
+}
+
+function autoSizeSelects(root) {
+    for (const select of Array.from(root.querySelectorAll("select"))) {
+        autoSizeSelect(select);
+    }
+}
+
+function captureOpenState(root) {
+    return {
+        controlsOpen: !!root.querySelector(".weather-controls-details")?.open,
+        ruinsOpen: !!root.querySelector(".weather-ruins-details")?.open
+    };
+}
+
+function restoreOpenState(root, state) {
+    const controls = root.querySelector(".weather-controls-details");
+    const ruins = root.querySelector(".weather-ruins-details");
+
+    if (controls) controls.open = !!state.controlsOpen;
+    if (ruins) ruins.open = !!state.ruinsOpen;
+}
+
+class BaseWeatherApp extends foundry.applications.api.ApplicationV2 {
     get template() {
         return "modules/terr-encounters/templates/weather-panel.hbs";
     }
+
+    async _renderHTML(context) {
+        return foundry.applications.handlebars.renderTemplate(this.template, context);
+    }
+
+    async _replaceHTML(result, content) {
+        content.innerHTML = result;
+        this._bindDOM(content);
+    }
+}
+
+export class WeatherPanelApp extends BaseWeatherApp {
+    static DEFAULT_OPTIONS = {
+        id: `${MODULE_ID}-weather-panel`,
+        tag: "section",
+        window: {
+            title: "Terr Encounters",
+            icon: "fas fa-cloud"
+        },
+        position: {
+            width: 132,
+            height: "auto"
+        }
+    };
 
     async _prepareContext() {
         if (!this._record) {
@@ -2396,84 +2363,94 @@ class WeatherPanelApp extends foundry.applications.api.ApplicationV2 {
             this._environment = WeatherState.normalizeEnvironment(getWeatherEnvironment());
         }
 
-        return WeatherRender.buildTemplateData(this._record, this._environment);
-    }
-
-    async _renderHTML(context) {
-        return foundry.applications.handlebars.renderTemplate(this.template, context);
-    }
-
-    async _replaceHTML(result, content) {
-        content.innerHTML = result;
+        return {
+            ...WeatherRender.buildTemplateData(this._record, this._environment)
+        };
     }
 
     async refreshFromState() {
         this._record = await WeatherController.getCurrentDay();
         this._environment = WeatherState.normalizeEnvironment(getWeatherEnvironment());
+    }
+
+    async rerenderPreservingOpenState(content) {
+        this._openState = captureOpenState(content);
+        await this.refreshFromState();
         await this.render(true);
     }
 
-    async doMainAction(form) {
-        const formData = readFormData(form);
-        await saveEnvironmentFromForm(formData);
+    async doMainAction(content) {
+        if (typeof WeatherController.advanceDay === "function") {
+            this._record = await WeatherController.advanceDay();
+        } else {
+            this._record = await WeatherController.getCurrentDay();
+        }
+
         this._environment = WeatherState.normalizeEnvironment(getWeatherEnvironment());
-        this._record = await WeatherController.advanceDay();
+        this._openState = captureOpenState(content);
         await this.render(true);
     }
 
-    async doReset(form) {
-        const formData = readFormData(form);
-        await saveEnvironmentFromForm(formData);
+    async doReset(content) {
+        if (typeof WeatherController.resetCurrentDay === "function") {
+            this._record = await WeatherController.resetCurrentDay();
+        } else {
+            const environment = WeatherState.normalizeEnvironment(getWeatherEnvironment());
+            this._record = await WeatherState.setCurrentDayRecord({
+                biome: environment.biome,
+                season: environment.season,
+                phase: environment.phase
+            });
+        }
+
         this._environment = WeatherState.normalizeEnvironment(getWeatherEnvironment());
-        this._record = await WeatherController.resetCurrentDay();
+        this._openState = captureOpenState(content);
         await this.render(true);
     }
 
-    async _onRender(context, options) {
-        await super._onRender(context, options);
+    _bindDOM(content) {
+        restoreOpenState(content, this._openState ?? {});
+        autoSizeSelects(content);
 
-        const root = this.element;
-        if (!root) return;
-
-        const form = root.querySelector("form");
+        const form = content.querySelector("form");
         if (!form) return;
 
-        const rerenderFromControls = async () => {
+        const applyChanges = async (targetSelect = null) => {
             const formData = readFormData(form);
+            this._openState = captureOpenState(content);
             await saveEnvironmentFromForm(formData);
-            this._environment = WeatherState.normalizeEnvironment(getWeatherEnvironment());
-            if (!this._record) {
-                this._record = await WeatherController.getCurrentDay();
-            }
-            await this.render(true);
+            await this.rerenderPreservingOpenState(content);
+
+            if (targetSelect) autoSizeSelect(targetSelect);
         };
-
-        form.querySelector('select[name="biome"]')?.addEventListener("change", async () => {
-            const biome = form.querySelector('select[name="biome"]')?.value || getWeatherSetting(SETTING_KEYS.biome);
-            const seasonSelect = form.querySelector('select[name="season"]');
-            const validSeasons = getAvailableSeasonsForBiome(biome);
-            if (seasonSelect && !validSeasons.includes(seasonSelect.value)) {
-                seasonSelect.value = validSeasons[0];
-            }
-            await rerenderFromControls();
-        });
-
-        form.querySelector('select[name="season"]')?.addEventListener("change", rerenderFromControls);
-        form.querySelector('select[name="phase"]')?.addEventListener("change", rerenderFromControls);
-        form.querySelector('input[name="addRuins"]')?.addEventListener("change", rerenderFromControls);
-        form.querySelector('select[name="ruinFrequency"]')?.addEventListener("change", rerenderFromControls);
-        form.querySelector('select[name="ruinStyleMode"]')?.addEventListener("change", rerenderFromControls);
-        form.querySelector('select[name="manualRuinFamily"]')?.addEventListener("change", rerenderFromControls);
 
         form.querySelector('[data-action="main-day-action"]')?.addEventListener("click", async (event) => {
             event.preventDefault();
-            await this.doMainAction(form);
+            await this.doMainAction(content);
         });
 
         form.querySelector('[data-action="reset-current-set"]')?.addEventListener("click", async (event) => {
             event.preventDefault();
-            await this.doReset(form);
+            await this.doReset(content);
         });
+
+        for (const select of Array.from(form.querySelectorAll("select"))) {
+            select.addEventListener("change", async () => {
+                autoSizeSelect(select);
+                await applyChanges(select);
+            });
+        }
+
+        form.querySelector('input[name="addRuins"]')?.addEventListener("change", async () => {
+            const ruinsDetails = form.querySelector(".weather-ruins-details");
+            if (ruinsDetails) ruinsDetails.open = !!form.querySelector('input[name="addRuins"]')?.checked;
+            await applyChanges();
+        });
+    }
+
+    async close(options) {
+        weatherPanelInstance = null;
+        return super.close(options);
     }
 }
 
@@ -2492,14 +2469,8 @@ export async function openWeatherPanel() {
     return weatherPanelInstance;
 }
 
-export { WeatherPanelApp };
-
 ====================================================================================================
-
-FILE: .\scripts\weather\weather-utils.js
-SIZE: 3829 bytes
-MODIFIED: 2026-04-12 15:18:32
-SHA256: 253E65B07C64893466A0F52F378AFEEE069317FE8C444227C13E8C3D76A626CF
+FILE: C:\FoundryMods\terr-encounters\scripts\weather\weather-utils.js
 ----------------------------------------------------------------------------------------------------
 // terr-encounters
 // File: scripts/weather/weather-utils.js
@@ -2629,351 +2600,546 @@ export function weightedValue(entries) {
 }
 
 ====================================================================================================
-
-FILE: .\styles\styles.css
-SIZE: 752 bytes
-MODIFIED: 2026-04-12 17:27:19
-SHA256: B4C67E09F21CC913113074FFB484A86ED3299088EC9B0A04D6B55AC14205E167
+FILE: C:\FoundryMods\terr-encounters\styles\styles.css
 ----------------------------------------------------------------------------------------------------
-form .form-group {
-    margin-bottom: 10px;
+.weather-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
 }
 
-#terr-encounters-launcher {
-    position: fixed;
-    left: 12px;
-    top: 430px;
-    width: 36px;
-    height: 36px;
-    z-index: 99999;
+.weather-panel-main {
+    padding: 0;
+    margin: 0;
+}
+
+.weather-panel-shell {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    width: auto;
+    min-width: 0;
+    max-width: fit-content;
+    padding: 0;
+    margin: 0;
+}
+
+.weather-panel-toolbar {
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid #666;
-    border-radius: 6px;
-    background: rgba(20, 20, 24, 0.96);
-    color: #fff;
-    font-family: Arial, sans-serif;
-    font-size: 18px;
+    gap: 2px;
+    width: auto;
+    margin: 0;
+}
+
+.weather-panel-toolbar-centered {
+    justify-content: center;
+}
+
+.weather-main-button,
+.weather-reroll-button {
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(52, 66, 83, 0.92);
+    color: #f2eadf;
+    border-radius: 4px;
+    cursor: pointer;
+    box-shadow: none;
+    font-weight: 700;
+}
+
+.weather-main-button {
+    width: auto;
+    min-width: 0;
+    height: 18px;
+    padding: 0 6px;
+    font-size: 10px;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.weather-reroll-button {
+    width: 18px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0;
+    font-size: 10px;
+    line-height: 1;
+    flex: 0 0 auto;
+}
+
+.weather-day-card {
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 5px;
+    background: rgba(53, 65, 79, 0.96);
+    padding: 4px 5px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    width: 78px;
+    max-width: 78px;
+    margin: 0 auto;
+}
+
+.weather-day-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-bottom: 2px;
+}
+
+.weather-day-badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 10px;
+    padding: 0 3px;
+    border-radius: 3px;
+    background: rgba(23, 31, 41, 0.92);
+    color: #f2eadf;
+    font-size: 6px;
     font-weight: 700;
     line-height: 1;
-    cursor: pointer;
-    box-shadow: 0 0 8px rgba(0, 0, 0, 0.55);
 }
 
-    #terr-encounters-launcher:hover {
-        filter: brightness(1.15);
-    }
-
-    #terr-encounters-launcher:focus {
-        outline: 1px solid #999;
-        outline-offset: 1px;
-    }
-
-
-====================================================================================================
-
-FILE: .\styles\weather-panel.css
-SIZE: 4922 bytes
-MODIFIED: 2026-04-12 15:43:08
-SHA256: 1B448931180CD774120406F399814A76C3DD448497E1289F75F07F5F2EB783B7
-----------------------------------------------------------------------------------------------------
-form .form-group {
-    margin-bottom: 10px;
+.weather-state-line {
+    text-align: center;
+    color: #f2eadf;
+    font-size: 7px;
+    font-weight: 700;
+    line-height: 1.08;
+    margin-bottom: 2px;
 }
 
-.terrs-encounter-system.weather-panel-app .window-content {
-    padding: 0.5rem 0.5rem 0.6rem;
-    overflow: hidden;
+.weather-temp-line {
+    text-align: center;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 3px;
 }
 
-.terrs-encounter-system .weather-panel {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    height: 100%;
-    min-height: 0;
+.weather-ground-block {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    margin-top: 2px;
+    padding-top: 3px;
 }
 
-.terrs-encounter-system .weather-panel-toolbar {
-    display: flex;
+.weather-ground-label {
+    color: rgba(242, 234, 223, 0.72);
+    font-size: 6px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-bottom: 1px;
+}
+
+.weather-ground-value {
+    color: #f2eadf;
+    font-size: 7px;
+    font-weight: 600;
+    line-height: 1.05;
+    text-align: center;
+}
+
+.weather-ground-bit + .weather-ground-bit {
+    margin-top: 1px;
+}
+
+.weather-empty-block {
+    text-align: center;
+    color: rgba(242, 234, 223, 0.82);
+    font-size: 7px;
+    line-height: 1.1;
+    padding: 2px 1px;
+}
+
+.weather-controls-panel {
+    width: auto;
+    max-width: fit-content;
+}
+
+.weather-controls-details,
+.weather-ruins-details {
+    width: auto;
+}
+
+.weather-controls-summary,
+.weather-ruins-summary {
+    display: inline-flex;
     align-items: center;
-    gap: 0.4rem;
-    flex-wrap: wrap;
-    padding-bottom: 0.1rem;
-    border-bottom: 1px solid var(--color-border-light-tertiary);
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    background: var(--color-bg);
-}
-
-    .terrs-encounter-system .weather-panel-toolbar button {
-        width: auto;
-        min-width: 0;
-        white-space: nowrap;
-        flex: 0 0 auto;
-    }
-
-    .terrs-encounter-system .weather-panel-toolbar .weather-advance-button {
-        margin-left: auto;
-        font-weight: 700;
-    }
-
-.terrs-encounter-system .weather-panel-scroll {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    overflow-y: auto;
-    overflow-x: hidden;
-    min-height: 0;
-    padding-right: 0.15rem;
-}
-
-.terrs-encounter-system .weather-block {
-    border: 1px solid var(--color-border-light-primary);
-    border-radius: 6px;
-    background: color-mix(in srgb, var(--color-bg) 92%, black 8%);
-    overflow: hidden;
-}
-
-.terrs-encounter-system .weather-block-summary {
-    display: flex;
-    align-items: center;
-    list-style: none;
+    gap: 3px;
     cursor: pointer;
+    color: #f2eadf;
+    font-size: 7px;
+    font-weight: 700;
+    line-height: 1;
     user-select: none;
-    padding: 0.55rem 0.7rem;
-    border-bottom: 1px solid transparent;
+    list-style: none;
 }
 
-.terrs-encounter-system .weather-block[open] .weather-block-summary {
-    border-bottom-color: var(--color-border-light-tertiary);
+    .weather-controls-summary::-webkit-details-marker,
+    .weather-ruins-summary::-webkit-details-marker {
+        display: none;
+    }
+
+.weather-controls-stack,
+.weather-ruins-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    width: auto;
+    margin-top: 4px;
 }
 
-.terrs-encounter-system .weather-block-summary::-webkit-details-marker {
+.weather-field {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1px;
+    width: auto;
+}
+
+.weather-field-fit {
+    flex: 0 0 auto;
+    width: auto;
+}
+
+.weather-field label {
+    color: rgba(242, 234, 223, 0.78);
+    font-size: 6px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    line-height: 1;
+}
+
+.weather-field select {
+    width: auto;
+    min-width: 0;
+    max-width: none;
+    height: 16px;
+    padding: 0 16px 0 4px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(53, 65, 79, 0.96);
+    color: #f2eadf;
+    font-size: 8px;
+    line-height: 1;
+    appearance: auto;
+    white-space: nowrap;
+    box-sizing: border-box;
+}
+
+.weather-ruins-summary input {
+    margin: 0;
+    transform: scale(0.7);
+}
+
+.weather-ruins-details[open] .weather-ruins-stack {
+    display: flex;
+}
+
+.weather-ruins-details:not([open]) .weather-ruins-stack {
     display: none;
 }
 
-.terrs-encounter-system .weather-block-summary::before {
-    content: "▸";
-    display: inline-block;
-    width: 0.9rem;
-    margin-right: 0.3rem;
-    font-size: 0.9rem;
-    transform: translateY(-1px);
-}
 
-.terrs-encounter-system .weather-block[open] .weather-block-summary::before {
-    content: "▾";
-}
-
-.terrs-encounter-system .weather-block-title {
-    font-size: 1rem;
-    font-weight: 700;
-    line-height: 1.2;
-}
-
-.terrs-encounter-system .weather-block-body {
-    padding: 0.7rem;
-}
-
-.terrs-encounter-system .weather-summary-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.45rem 0.6rem;
-}
-
-.terrs-encounter-system .weather-summary-item {
-    min-width: 0;
-}
-
-.terrs-encounter-system .weather-summary-item-wide {
-    grid-column: 1 / -1;
-}
-
-.terrs-encounter-system .weather-summary-item label,
-.terrs-encounter-system .weather-field label {
-    display: block;
-    margin-bottom: 0.2rem;
-    font-size: 0.8rem;
-    font-weight: 700;
-    text-transform: none;
-}
-
-.terrs-encounter-system .weather-summary-item div {
-    font-size: 0.95rem;
-    line-height: 1.25;
-    word-break: break-word;
-}
-
-.terrs-encounter-system .weather-inline-grid {
-    display: grid;
-    gap: 0.55rem;
-    align-items: end;
-}
-
-.terrs-encounter-system .weather-inline-grid-3 {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.terrs-encounter-system .weather-inline-grid-2 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.terrs-encounter-system .weather-field {
-    min-width: 0;
-}
-
-    .terrs-encounter-system .weather-field select,
-    .terrs-encounter-system .weather-field input[type="text"] {
-        width: 100%;
-    }
-
-.terrs-encounter-system .weather-checkbox-row {
-    margin-bottom: 0.45rem;
-}
-
-    .terrs-encounter-system .weather-checkbox-row label.checkbox {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.45rem;
-        font-size: 0.95rem;
-        font-weight: 700;
-    }
-
-.terrs-encounter-system .weather-ruins-controls.is-disabled,
-.terrs-encounter-system .weather-ruin-family.is-disabled {
-    opacity: 0.55;
-}
-
-.terrs-encounter-system .weather-output-list {
+====================================================================================================
+FILE: C:\FoundryMods\terr-encounters\styles\weather-panel.css
+----------------------------------------------------------------------------------------------------
+.weather-panel {
     display: flex;
     flex-direction: column;
-    gap: 0.45rem;
+    align-items: center;
+    gap: 7px;
 }
 
-.terrs-encounter-system .weather-output-line {
-    border: 1px solid var(--color-border-light-tertiary);
+.weather-panel-main {
+    padding: 0;
+    margin: 0;
+}
+
+.weather-panel-shell {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    width: auto;
+    min-width: 0;
+    max-width: fit-content;
+    padding: 0;
+    margin: 0;
+}
+
+.weather-panel-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    width: auto;
+    margin: 0;
+}
+
+.weather-panel-toolbar-centered {
+    justify-content: center;
+}
+
+.weather-main-button,
+.weather-reroll-button {
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(52, 66, 83, 0.92);
+    color: #f2eadf;
     border-radius: 4px;
-    padding: 0.5rem 0.625rem;
-    background: color-mix(in srgb, var(--color-bg) 95%, black 5%);
+    cursor: pointer;
+    box-shadow: none;
+    font-weight: 700;
 }
 
-    .terrs-encounter-system .weather-output-line p {
-        margin: 0;
-        font-size: 0.95rem;
-        line-height: 1.35;
+.weather-main-button {
+    width: fit-content;
+    min-width: 0;
+    height: 20px;
+    padding: 0 8px;
+    font-size: 13px;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.weather-reroll-button {
+    width: 20px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0;
+    font-size: 12px;
+    line-height: 1;
+    flex: 0 0 auto;
+}
+
+.weather-day-card {
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 6px;
+    background: rgba(53, 65, 79, 0.96);
+    padding: 6px 7px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    width: 86px;
+    max-width: 86px;
+    margin: 0 auto;
+}
+
+.weather-day-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-bottom: 4px;
+}
+
+.weather-day-badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 12px;
+    padding: 0 4px;
+    border-radius: 3px;
+    background: rgba(23, 31, 41, 0.92);
+    color: #f2eadf;
+    font-size: 8px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.weather-state-line {
+    text-align: center;
+    color: #f2eadf;
+    font-size: 9px;
+    font-weight: 700;
+    line-height: 1.12;
+    margin-bottom: 4px;
+}
+
+.weather-temp-line {
+    text-align: center;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 5px;
+}
+
+.weather-ground-block {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    margin-top: 4px;
+    padding-top: 4px;
+}
+
+.weather-ground-label {
+    color: rgba(242, 234, 223, 0.72);
+    font-size: 7px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-bottom: 2px;
+}
+
+.weather-ground-value {
+    color: #f2eadf;
+    font-size: 9px;
+    font-weight: 600;
+    line-height: 1.08;
+    text-align: center;
+}
+
+.weather-ground-bit + .weather-ground-bit {
+    margin-top: 1px;
+}
+
+.weather-empty-block {
+    text-align: center;
+    color: rgba(242, 234, 223, 0.82);
+    font-size: 9px;
+    line-height: 1.15;
+    padding: 3px 1px;
+}
+
+.weather-controls-panel {
+    width: auto;
+    max-width: fit-content;
+}
+
+.weather-controls-details,
+.weather-ruins-details {
+    width: auto;
+}
+
+.weather-controls-summary,
+.weather-ruins-summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    color: #f2eadf;
+    font-size: 9px;
+    font-weight: 700;
+    line-height: 1;
+    user-select: none;
+    list-style: none;
+}
+
+    .weather-controls-summary::-webkit-details-marker,
+    .weather-ruins-summary::-webkit-details-marker {
+        display: none;
     }
 
-@media (max-width: 720px) {
-    .terrs-encounter-system .weather-summary-grid,
-    .terrs-encounter-system .weather-inline-grid-3,
-    .terrs-encounter-system .weather-inline-grid-2 {
-        grid-template-columns: 1fr;
-    }
+.weather-controls-stack,
+.weather-ruins-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    width: auto;
+    margin-top: 6px;
+}
 
-    .terrs-encounter-system .weather-panel-toolbar .weather-advance-button {
-        margin-left: 0;
-    }
+.weather-field {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    width: auto;
+}
+
+.weather-field-fit {
+    flex: 0 0 auto;
+    width: auto;
+}
+
+.weather-field label {
+    color: rgba(242, 234, 223, 0.78);
+    font-size: 7px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    line-height: 1;
+}
+
+.weather-field select {
+    width: auto;
+    min-width: 0;
+    max-width: none;
+    height: 18px;
+    padding: 0 18px 0 5px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(53, 65, 79, 0.96);
+    color: #f2eadf;
+    font-size: 10px;
+    line-height: 1;
+    appearance: auto;
+    white-space: nowrap;
+    box-sizing: border-box;
+}
+
+.weather-ruins-summary input {
+    margin: 0;
+    transform: scale(0.7);
+}
+
+.weather-ruins-details[open] .weather-ruins-stack {
+    display: flex;
+}
+
+.weather-ruins-details:not([open]) .weather-ruins-stack {
+    display: none;
 }
 
 
 ====================================================================================================
-
-FILE: .\templates\weather-panel.hbs
-SIZE: 6780 bytes
-MODIFIED: 2026-04-12 17:58:38
-SHA256: 1B9B5D583FDD6B4949D817BA161A4AA6A74E69E4ECA67B3C79FA13DBF3AB9C5A
+FILE: C:\FoundryMods\terr-encounters\templates\weather-panel.hbs
 ----------------------------------------------------------------------------------------------------
-<form class="weather-panel">
-  <section class="weather-panel-toolbar">
-    <button type="button" data-action="main-day-action" class="weather-main-button">{{mainButtonLabel}}</button>
-    <button type="button" data-action="reset-current-set" class="weather-reroll-button" title="Start over">↻</button>
-  </section>
+<form class="weather-panel weather-panel-main">
+  <section class="weather-panel-shell">
+    <section class="weather-panel-toolbar weather-panel-toolbar-centered">
+      <button type="button" data-action="main-day-action" class="weather-main-button">{{mainButtonLabel}}</button>
+      <button type="button" data-action="reset-current-set" class="weather-reroll-button" title="Start over">?</button>
+    </section>
 
-  <div class="weather-panel-body">
-    <details class="weather-block weather-current-day" open>
-      <summary class="weather-block-summary">
-        <span class="weather-block-title">Current Day</span>
-      </summary>
+    <section class="weather-day-card">
+      <div class="weather-day-card-top">
+        <div class="weather-day-badge">{{displayDayCounter}}</div>
+      </div>
 
-      <div class="weather-block-body">
-        <div class="weather-summary-grid">
-          <div class="weather-summary-item">
-            <label>Day</label>
-            <div>{{#if hasStarted}}{{dayLabel}}{{else}}Not started{{/if}}</div>
-          </div>
+      {{#if hasStarted}}
+      <div class="weather-state-line">{{displayTemperatureState}} / {{displayWeatherLabel}}</div>
+      <div class="weather-temp-line">{{displayTemperatureValue}}</div>
 
-          <div class="weather-summary-item">
-            <label>Biome</label>
-            <div>{{biome}}</div>
-          </div>
-
-          <div class="weather-summary-item">
-            <label>Season</label>
-            <div>{{season}}</div>
-          </div>
-
-          <div class="weather-summary-item">
-            <label>Phase</label>
-            <div>{{phase}}</div>
-          </div>
-
-          <div class="weather-summary-item">
-            <label>Ground State</label>
-            <div>{{#if hasStarted}}{{groundState}}{{else}}—{{/if}}</div>
-          </div>
-
-          <div class="weather-summary-item">
-            <label>Temperature</label>
-            <div>
-              {{#if hasStarted}}
-                {{temperatureState}} ({{temperatureDaysRemaining}} days remaining)
-              {{else}}
-                —
-              {{/if}}
-            </div>
-          </div>
-
-          <div class="weather-summary-item">
-            <label>Weather</label>
-            <div>
-              {{#if hasStarted}}
-                {{weatherEvent}} ({{weatherDaysRemaining}} days remaining)
-              {{else}}
-                —
-              {{/if}}
-            </div>
-          </div>
-
-          {{#if hasRuinsApplied}}
-          <div class="weather-summary-item">
-            <label>Ruins</label>
-            <div>{{ruinModifier}} — {{ruinFamily}}</div>
-          </div>
-          {{/if}}
+      <div class="weather-ground-block">
+        <div class="weather-ground-label">Ground</div>
+        <div class="weather-ground-value">
+          {{#each groundBits}}
+          <div class="weather-ground-bit">{{this}}</div>
+          {{/each}}
         </div>
       </div>
-    </details>
+      {{else}}
+      <div class="weather-empty-block">Press the button to generate the current day.</div>
+      {{/if}}
+    </section>
 
-    <details class="weather-block weather-controls" open>
-      <summary class="weather-block-summary">
-        <span class="weather-block-title">Controls</span>
-      </summary>
+    <section class="weather-controls-panel">
+      <details class="weather-controls-details">
+        <summary class="weather-controls-summary">Controls</summary>
 
-      <div class="weather-block-body">
-        <div class="weather-field">
-          <label for="{{moduleId}}-biome">Biome</label>
-          <select id="{{moduleId}}-biome" name="biome">
-            {{#each biomeChoices}}
-            <option value="{{this.value}}" {{#if (eq ../controls.biome this.value)}}selected{{/if}}>{{this.label}}</option>
-            {{/each}}
-          </select>
-        </div>
+        <div class="weather-controls-stack">
+          <div class="weather-field weather-field-fit">
+            <label for="{{moduleId}}-biome">Biome</label>
+            <select id="{{moduleId}}-biome" name="biome">
+              {{#each biomeChoices}}
+              <option value="{{this.value}}" {{#if (eq ../controls.biome this.value)}}selected{{/if}}>{{this.label}}</option>
+              {{/each}}
+            </select>
+          </div>
 
-        <div class="weather-inline-grid weather-inline-grid-2">
-          <div class="weather-field">
+          <div class="weather-field weather-field-fit">
             <label for="{{moduleId}}-season">Season</label>
             <select id="{{moduleId}}-season" name="season">
               {{#each seasonChoices}}
@@ -2982,7 +3148,7 @@ SHA256: 1B9B5D583FDD6B4949D817BA161A4AA6A74E69E4ECA67B3C79FA13DBF3AB9C5A
             </select>
           </div>
 
-          <div class="weather-field">
+          <div class="weather-field weather-field-fit">
             <label for="{{moduleId}}-phase">Phase</label>
             <select id="{{moduleId}}-phase" name="phase">
               {{#each phaseChoices}}
@@ -2990,79 +3156,46 @@ SHA256: 1B9B5D583FDD6B4949D817BA161A4AA6A74E69E4ECA67B3C79FA13DBF3AB9C5A
               {{/each}}
             </select>
           </div>
+
+          <details class="weather-ruins-details" {{#if controls.addRuins}}open{{/if}}>
+            <summary class="weather-ruins-summary">
+              <input type="checkbox" name="addRuins" {{#if controls.addRuins}}checked{{/if}}>
+              <span>Add Ruins</span>
+            </summary>
+
+            <div class="weather-ruins-stack">
+              <div class="weather-field weather-field-fit">
+                <label for="{{moduleId}}-ruin-frequency">Ruin Freq</label>
+                <select id="{{moduleId}}-ruin-frequency" name="ruinFrequency" {{#unless controls.addRuins}}disabled{{/unless}}>
+                  {{#each ruinFrequencyChoices}}
+                  <option value="{{this.value}}" {{#if (eq ../controls.ruinFrequency this.value)}}selected{{/if}}>{{this.label}}</option>
+                  {{/each}}
+                </select>
+              </div>
+
+              <div class="weather-field weather-field-fit">
+                <label for="{{moduleId}}-ruin-style-mode">Ruin Style</label>
+                <select id="{{moduleId}}-ruin-style-mode" name="ruinStyleMode" {{#unless controls.addRuins}}disabled{{/unless}}>
+                  {{#each ruinStyleModeChoices}}
+                  <option value="{{this.value}}" {{#if (eq ../controls.ruinStyleMode this.value)}}selected{{/if}}>{{this.label}}</option>
+                  {{/each}}
+                </select>
+              </div>
+
+              <div class="weather-field weather-field-fit">
+                <label for="{{moduleId}}-manual-ruin-family">Ruin Family</label>
+                <select id="{{moduleId}}-manual-ruin-family" name="manualRuinFamily" {{#unless controls.addRuins}}disabled{{/unless}}>
+                  <option value=""></option>
+                  {{#each manualRuinFamilyChoices}}
+                  <option value="{{this.value}}" {{#if (eq ../controls.manualRuinFamily this.value)}}selected{{/if}}>{{this.label}}</option>
+                  {{/each}}
+                </select>
+              </div>
+            </div>
+          </details>
         </div>
-      </div>
-    </details>
-
-    <details class="weather-block weather-ruins">
-      <summary class="weather-block-summary">
-        <span class="weather-block-title">Ruins</span>
-      </summary>
-
-      <div class="weather-block-body">
-        <div class="weather-field weather-checkbox-row">
-          <label class="checkbox">
-            <input type="checkbox" name="addRuins" {{#if controls.addRuins}}checked{{/if}}>
-            Add Ruins
-          </label>
-        </div>
-
-        <div class="weather-inline-grid weather-inline-grid-2 weather-ruins-controls {{#unless controls.addRuins}}is-disabled{{/unless}}">
-          <div class="weather-field">
-            <label for="{{moduleId}}-ruin-frequency">Ruin Frequency</label>
-            <select id="{{moduleId}}-ruin-frequency" name="ruinFrequency" {{#unless controls.addRuins}}disabled{{/unless}}>
-              {{#each ruinFrequencyChoices}}
-              <option value="{{this.value}}" {{#if (eq ../controls.ruinFrequency this.value)}}selected{{/if}}>{{this.label}}</option>
-              {{/each}}
-            </select>
-          </div>
-
-          <div class="weather-field">
-            <label for="{{moduleId}}-ruin-style-mode">Ruin Style Mode</label>
-            <select id="{{moduleId}}-ruin-style-mode" name="ruinStyleMode" {{#unless controls.addRuins}}disabled{{/unless}}>
-              {{#each ruinStyleModeChoices}}
-              <option value="{{this.value}}" {{#if (eq ../controls.ruinStyleMode this.value)}}selected{{/if}}>{{this.label}}</option>
-              {{/each}}
-            </select>
-          </div>
-        </div>
-
-        {{#if showManualRuinFamily}}
-        <div class="weather-field weather-ruin-family">
-          <label for="{{moduleId}}-manual-ruin-family">Ruin Family</label>
-          <select id="{{moduleId}}-manual-ruin-family" name="manualRuinFamily" {{#unless controls.addRuins}}disabled{{/unless}}>
-            <option value=""></option>
-            {{#each manualRuinFamilyChoices}}
-            <option value="{{this.value}}" {{#if (eq ../controls.manualRuinFamily this.value)}}selected{{/if}}>{{this.label}}</option>
-            {{/each}}
-          </select>
-        </div>
-        {{/if}}
-      </div>
-    </details>
-
-    <details class="weather-block weather-output" open>
-      <summary class="weather-block-summary">
-        <span class="weather-block-title">Narrative Output</span>
-      </summary>
-
-      <div class="weather-block-body">
-        {{#if hasStarted}}
-        <div class="weather-output-list">
-          {{#each orderedOutput}}
-          <div class="weather-output-line weather-output-line-{{this.key}}">
-            <label>{{this.label}}</label>
-            <p>{{this.text}}</p>
-          </div>
-          {{/each}}
-        </div>
-        {{else}}
-        <div class="weather-output-empty">Press “How's My Day Going?” to start the current set.</div>
-        {{/if}}
-      </div>
-    </details>
-  </div>
+      </details>
+    </section>
+  </section>
 </form>
-
-====================================================================================================
 
