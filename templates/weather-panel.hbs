@@ -1,10 +1,10 @@
-﻿<form class="weather-panel weather-panel-compact">
-  <section class="weather-panel-toolbar">
-    <button type="button" data-action="main-day-action" class="weather-main-button">{{mainButtonLabel}}</button>
-    <button type="button" data-action="reset-current-set" class="weather-reroll-button" title="Start over">↻</button>
-  </section>
+﻿<form class="weather-panel weather-panel-main">
+  <section class="weather-panel-shell">
+    <section class="weather-panel-toolbar weather-panel-toolbar-centered">
+      <button type="button" data-action="main-day-action" class="weather-main-button">{{mainButtonLabel}}</button>
+      <button type="button" data-action="reset-current-set" class="weather-reroll-button" title="Start over">↻</button>
+    </section>
 
-  <div class="weather-panel-body">
     <section class="weather-day-card">
       <div class="weather-day-card-top">
         <div class="weather-day-badge">{{displayDayCounter}}</div>
@@ -24,16 +24,16 @@
         </div>
       </div>
       {{else}}
-      <div class="weather-empty-block">Press "How's My Day Going?" to start the current set.</div>
+      <div class="weather-empty-block">Press the button to generate the current day.</div>
       {{/if}}
     </section>
 
-    <details class="weather-controls-dropdown">
-      <summary class="weather-controls-summary">Controls</summary>
+    <section class="weather-controls-panel">
+      <details class="weather-controls-details">
+        <summary class="weather-controls-summary">Controls</summary>
 
-      <div class="weather-controls-body">
-        <div class="weather-inline-grid weather-inline-grid-3">
-          <div class="weather-field">
+        <div class="weather-controls-stack">
+          <div class="weather-field weather-field-fit">
             <label for="{{moduleId}}-biome">Biome</label>
             <select id="{{moduleId}}-biome" name="biome">
               {{#each biomeChoices}}
@@ -42,7 +42,7 @@
             </select>
           </div>
 
-          <div class="weather-field">
+          <div class="weather-field weather-field-fit">
             <label for="{{moduleId}}-season">Season</label>
             <select id="{{moduleId}}-season" name="season">
               {{#each seasonChoices}}
@@ -51,7 +51,7 @@
             </select>
           </div>
 
-          <div class="weather-field">
+          <div class="weather-field weather-field-fit">
             <label for="{{moduleId}}-phase">Phase</label>
             <select id="{{moduleId}}-phase" name="phase">
               {{#each phaseChoices}}
@@ -59,45 +59,45 @@
               {{/each}}
             </select>
           </div>
+
+          <details class="weather-ruins-details">
+            <summary class="weather-ruins-summary">
+              <input type="checkbox" name="addRuins" {{#if controls.addRuins}}checked{{/if}}>
+              <span>Add Ruins</span>
+            </summary>
+
+            <div class="weather-ruins-stack">
+              <div class="weather-field weather-field-fit">
+                <label for="{{moduleId}}-ruin-frequency">Ruin Freq</label>
+                <select id="{{moduleId}}-ruin-frequency" name="ruinFrequency" {{#unless controls.addRuins}}disabled{{/unless}}>
+                  {{#each ruinFrequencyChoices}}
+                  <option value="{{this.value}}" {{#if (eq ../controls.ruinFrequency this.value)}}selected{{/if}}>{{this.label}}</option>
+                  {{/each}}
+                </select>
+              </div>
+
+              <div class="weather-field weather-field-fit">
+                <label for="{{moduleId}}-ruin-style-mode">Ruin Style</label>
+                <select id="{{moduleId}}-ruin-style-mode" name="ruinStyleMode" {{#unless controls.addRuins}}disabled{{/unless}}>
+                  {{#each ruinStyleModeChoices}}
+                  <option value="{{this.value}}" {{#if (eq ../controls.ruinStyleMode this.value)}}selected{{/if}}>{{this.label}}</option>
+                  {{/each}}
+                </select>
+              </div>
+
+              <div class="weather-field weather-field-fit">
+                <label for="{{moduleId}}-manual-ruin-family">Ruin Family</label>
+                <select id="{{moduleId}}-manual-ruin-family" name="manualRuinFamily" {{#unless controls.addRuins}}disabled{{/unless}}>
+                  <option value=""></option>
+                  {{#each manualRuinFamilyChoices}}
+                  <option value="{{this.value}}" {{#if (eq ../controls.manualRuinFamily this.value)}}selected{{/if}}>{{this.label}}</option>
+                  {{/each}}
+                </select>
+              </div>
+            </div>
+          </details>
         </div>
-
-        <div class="weather-ruins-inline">
-          <label class="checkbox weather-ruins-toggle">
-            <input type="checkbox" name="addRuins" {{#if controls.addRuins}}checked{{/if}}>
-            Add Ruins
-          </label>
-
-          <div class="weather-inline-grid weather-inline-grid-3 weather-ruins-controls {{#unless controls.addRuins}}is-disabled{{/unless}}">
-            <div class="weather-field">
-              <label for="{{moduleId}}-ruin-frequency">Ruin Freq</label>
-              <select id="{{moduleId}}-ruin-frequency" name="ruinFrequency" {{#unless controls.addRuins}}disabled{{/unless}}>
-                {{#each ruinFrequencyChoices}}
-                <option value="{{this.value}}" {{#if (eq ../controls.ruinFrequency this.value)}}selected{{/if}}>{{this.label}}</option>
-                {{/each}}
-              </select>
-            </div>
-
-            <div class="weather-field">
-              <label for="{{moduleId}}-ruin-style-mode">Ruin Style</label>
-              <select id="{{moduleId}}-ruin-style-mode" name="ruinStyleMode" {{#unless controls.addRuins}}disabled{{/unless}}>
-                {{#each ruinStyleModeChoices}}
-                <option value="{{this.value}}" {{#if (eq ../controls.ruinStyleMode this.value)}}selected{{/if}}>{{this.label}}</option>
-                {{/each}}
-              </select>
-            </div>
-
-            <div class="weather-field">
-              <label for="{{moduleId}}-manual-ruin-family">Ruin Family</label>
-              <select id="{{moduleId}}-manual-ruin-family" name="manualRuinFamily" {{#unless controls.addRuins}}disabled{{/unless}}>
-                <option value=""></option>
-                {{#each manualRuinFamilyChoices}}
-                <option value="{{this.value}}" {{#if (eq ../controls.manualRuinFamily this.value)}}selected{{/if}}>{{this.label}}</option>
-                {{/each}}
-              </select>
-            </div>
-          </div>
-        </div>
-      </div>
-    </details>
-  </div>
+      </details>
+    </section>
+  </section>
 </form>
