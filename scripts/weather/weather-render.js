@@ -7,8 +7,19 @@ const OUTPUT_LABELS = {
     weather: "Weather"
 };
 
+function isStarted(record) {
+    return !!(
+        record?.temperatureState ||
+        record?.weatherEvent ||
+        record?.outputGroundLine ||
+        record?.outputTemperatureLine ||
+        record?.outputWeatherLine
+    );
+}
+
 export class WeatherRender {
     static buildTemplateData(record, environment) {
+        const started = isStarted(record);
         const orderedOutput = this.getOrderedOutput(record);
         const biomeChoices = Object.keys(WEATHER_BIOMES).map(value => ({ value, label: value }));
         const seasonChoices = getAvailableSeasonsForBiome(environment.biome).map(value => ({ value, label: value }));
@@ -17,6 +28,8 @@ export class WeatherRender {
 
         return {
             moduleId: "terr-encounters",
+            hasStarted: started,
+            mainButtonLabel: started ? "Next Day" : "How's My Day Going?",
             dayLabel: record.dayLabel || "",
             biome: record.biome || environment.biome || "",
             season: record.season || environment.season || "",

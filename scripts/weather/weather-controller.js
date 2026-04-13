@@ -5,6 +5,7 @@ import { WeatherGround } from "./weather-ground.js";
 import { WeatherRuins } from "./weather-ruins.js";
 import { WeatherCombiner } from "./weather-combiner.js";
 import { currentDayLabel, isoNow } from "./weather-utils.js";
+import { getInitialGroundState } from "../data/weather-biomes.js";
 
 function pushHistory(history, next, max = 3) {
     const copy = Array.isArray(history) ? [...history] : [];
@@ -13,57 +14,74 @@ function pushHistory(history, next, max = 3) {
     return copy;
 }
 
+function buildEmptyRecord(environment) {
+    return WeatherState.normalizeRecord({
+        dayLabel: "",
+        biome: environment.biome,
+        season: environment.season,
+        phase: environment.phase,
+        groundState: getInitialGroundState(environment.biome, environment.season, environment.phase),
+        temperatureState: "",
+        temperatureDaysRemaining: 0,
+        weatherEvent: "",
+        weatherDaysRemaining: 0,
+        ruinModifier: null,
+        ruinFamily: null,
+        outputOrder: ["ground", "temperature", "weather"],
+        outputGroundLine: "",
+        outputTemperatureLine: "",
+        outputWeatherLine: "",
+        generatedAt: "",
+        recentTemperatureStates: [],
+        recentWeatherEvents: [],
+        lastTemperatureState: null,
+        lastWeatherEvent: null
+    });
+}
+
 export class WeatherController {
     static async getCurrentDay() {
-        const record = await WeatherState.ensureCurrentDayRecord();
-        return record;
+        return await WeatherState.ensureCurrentDayRecord();
     }
 
-    static async rebuildCurrentDay() {
-        const current = WeatherState.getCurrentDayRecord();
+    static isStarted(record) {
+        return !!(
+            record?.temperatureState ||
+            record?.weatherEvent ||
+            record?.outputGroundLine ||
+            record?.outputTemperatureLine ||
+            record?.outputWeatherLine
+        );
+    }
+
+    static async resetCurrentDay() {
         const environment = WeatherState.normalizeEnvironment(getWeatherEnvironment());
-
-        const ruins = WeatherRuins.resolve(environment);
-        const rebuilt = {
-            ...current,
-            biome: environment.biome,
-            season: environment.season,
-            phase: environment.phase,
-            ruinModifier: ruins.ruinModifier,
-            ruinFamily: ruins.ruinFamily
-        };
-
-        const output = WeatherCombiner.build({
-            ...rebuilt,
-            ruinDetail: ruins.ruinDetail
-        });
-
-        const next = {
-            ...rebuilt,
-            ...output,
-            generatedAt: isoNow()
-        };
-
-        await WeatherState.setCurrentDayRecord(next);
-        return next;
+        const emptyRecord = buildEmptyRecord(environment);
+        await WeatherState.setCurrentDayRecord(emptyRecord);
+        return emptyRecord;
     }
 
     static async advanceDay() {
         const current = WeatherState.getCurrentDayRecord();
         const environment = WeatherState.normalizeEnvironment(getWeatherEnvironment());
+        const hasStarted = this.isStarted(current);
 
         let nextTemperatureState = current.temperatureState;
-        let nextTemperatureDaysRemaining = Math.max(0, (current.temperatureDaysRemaining ?? 0) - 1);
+        let nextTemperatureDaysRemaining = hasStarted
+            ? Math.max(0, (current.temperatureDaysRemaining ?? 0) - 1)
+            : 0;
 
         let nextWeatherEvent = current.weatherEvent;
-        let nextWeatherDaysRemaining = Math.max(0, (current.weatherDaysRemaining ?? 0) - 1);
+        let nextWeatherDaysRemaining = hasStarted
+            ? Math.max(0, (current.weatherDaysRemaining ?? 0) - 1)
+            : 0;
 
         if (!nextTemperatureState || nextTemperatureDaysRemaining <= 0) {
             const rolled = WeatherRolls.rollTemperature({
                 biome: environment.biome,
                 season: environment.season,
                 phase: environment.phase,
-                currentTemperatureState: current.temperatureState
+                currentTemperatureState: hasStarted ? current.temperatureState : null
             });
 
             nextTemperatureState = rolled.temperatureState;
@@ -75,7 +93,7 @@ export class WeatherController {
                 biome: environment.biome,
                 season: environment.season,
                 phase: environment.phase,
-                currentWeatherEvent: current.weatherEvent,
+                currentWeatherEvent: hasStarted ? current.weatherEvent : null,
                 temperatureState: nextTemperatureState
             });
 
@@ -89,14 +107,18 @@ export class WeatherController {
             biome: environment.biome,
             season: environment.season,
             phase: environment.phase,
-            lastTemperatureState: current.temperatureState ?? null,
-            lastWeatherEvent: current.weatherEvent ?? null,
+            lastTemperatureState: hasStarted ? (current.temperatureState ?? null) : null,
+            lastWeatherEvent: hasStarted ? (current.weatherEvent ?? null) : null,
             temperatureState: nextTemperatureState,
             temperatureDaysRemaining: nextTemperatureDaysRemaining,
             weatherEvent: nextWeatherEvent,
             weatherDaysRemaining: nextWeatherDaysRemaining,
-            recentTemperatureStates: pushHistory(current.recentTemperatureStates, nextTemperatureState),
-            recentWeatherEvents: pushHistory(current.recentWeatherEvents, nextWeatherEvent)
+            recentTemperatureStates: hasStarted
+                ? pushHistory(current.recentTemperatureStates, nextTemperatureState)
+                : [nextTemperatureState],
+            recentWeatherEvents: hasStarted
+                ? pushHistory(current.recentWeatherEvents, nextWeatherEvent)
+                : [nextWeatherEvent]
         };
 
         const groundState = WeatherGround.updateGroundState(intermediate, environment);

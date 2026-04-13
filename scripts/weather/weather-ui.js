@@ -2,7 +2,6 @@ import { MODULE_ID, getWeatherEnvironment, getWeatherSetting, setWeatherSetting,
 import { WeatherController } from "./weather-controller.js";
 import { WeatherRender } from "./weather-render.js";
 import { WeatherState } from "./weather-state.js";
-import { BIOME_DEFAULT_RUIN_FAMILIES } from "../data/weather-ruins-data.js";
 import { getAvailableSeasonsForBiome } from "../data/weather-biomes.js";
 
 let weatherPanelInstance = null;
@@ -22,63 +21,43 @@ function readFormData(form) {
 }
 
 async function saveEnvironmentFromForm(formData) {
-    const biome = formData.biome || getWeatherSetting(SETTING_KEYS.biome);
-    const validSeasons = getAvailableSeasonsForBiome(biome);
-    let season = formData.season || getWeatherSetting(SETTING_KEYS.season);
-    if (!validSeasons.includes(season)) season = validSeasons[0];
-
-    const phase = ["Early", "Mid", "Late"].includes(formData.phase) ? formData.phase : "Early";
-    const addRuins = !!formData.addRuins;
-    const ruinFrequency = ["faint", "light", "mixed"].includes(formData.ruinFrequency) ? formData.ruinFrequency : "mixed";
-    const ruinStyleMode = ["auto", "manual"].includes(formData.ruinStyleMode) ? formData.ruinStyleMode : "auto";
-
-    const availableFamilies = BIOME_DEFAULT_RUIN_FAMILIES[biome] ?? [];
-    let manualRuinFamily = formData.manualRuinFamily || "";
-    if (!availableFamilies.includes(manualRuinFamily)) {
-        manualRuinFamily = availableFamilies[0] ?? "";
-    }
-
-    await setWeatherSetting(SETTING_KEYS.biome, biome);
-    await setWeatherSetting(SETTING_KEYS.season, season);
-    await setWeatherSetting(SETTING_KEYS.seasonPhase, phase);
-    await setWeatherSetting(SETTING_KEYS.addRuins, addRuins);
-    await setWeatherSetting(SETTING_KEYS.ruinFrequency, ruinFrequency);
-    await setWeatherSetting(SETTING_KEYS.ruinStyleMode, ruinStyleMode);
-    await setWeatherSetting(SETTING_KEYS.manualRuinFamily, manualRuinFamily);
+    await setWeatherSetting(SETTING_KEYS.biome, formData.biome);
+    await setWeatherSetting(SETTING_KEYS.season, formData.season);
+    await setWeatherSetting(SETTING_KEYS.phase, formData.phase);
+    await setWeatherSetting(SETTING_KEYS.addRuins, !!formData.addRuins);
+    await setWeatherSetting(SETTING_KEYS.ruinFrequency, formData.ruinFrequency || "mixed");
+    await setWeatherSetting(SETTING_KEYS.ruinStyleMode, formData.ruinStyleMode || "auto");
+    await setWeatherSetting(SETTING_KEYS.manualRuinFamily, formData.manualRuinFamily || "");
 }
 
-export class WeatherPanelApp extends foundry.applications.api.ApplicationV2 {
+class WeatherPanelApp extends foundry.applications.api.ApplicationV2 {
     static DEFAULT_OPTIONS = {
-        id: `${MODULE_ID}-weather-panel`,
+        id: "terr-encounters-weather-panel",
         tag: "section",
-        classes: [MODULE_ID, "weather-panel-app"],
         window: {
-            title: "Terr's Encounter System",
-            icon: "fas fa-cloud-sun",
-            resizable: true
+            title: "Terr Encounters Weather",
+            icon: "fas fa-cloud"
         },
         position: {
-            width: 680,
+            width: 520,
             height: "auto"
         }
     };
 
-    constructor(options = {}) {
-        super(options);
-        this._record = null;
-        this._environment = null;
-    }
-
     get template() {
-        return `modules/${MODULE_ID}/templates/weather-panel.hbs`;
+        return "modules/terr-encounters/templates/weather-panel.hbs";
     }
 
     async _prepareContext() {
-        const record = this._record ?? await WeatherState.ensureCurrentDayRecord();
-        const environment = WeatherState.normalizeEnvironment(this._environment ?? getWeatherEnvironment());
-        this._record = record;
-        this._environment = environment;
-        return WeatherRender.buildTemplateData(record, environment);
+        if (!this._record) {
+            this._record = await WeatherController.getCurrentDay();
+        }
+
+        if (!this._environment) {
+            this._environment = WeatherState.normalizeEnvironment(getWeatherEnvironment());
+        }
+
+        return WeatherRender.buildTemplateData(this._record, this._environment);
     }
 
     async _renderHTML(context) {
@@ -95,7 +74,7 @@ export class WeatherPanelApp extends foundry.applications.api.ApplicationV2 {
         await this.render(true);
     }
 
-    async doAdvanceDay(form) {
+    async doMainAction(form) {
         const formData = readFormData(form);
         await saveEnvironmentFromForm(formData);
         this._environment = WeatherState.normalizeEnvironment(getWeatherEnvironment());
@@ -103,11 +82,11 @@ export class WeatherPanelApp extends foundry.applications.api.ApplicationV2 {
         await this.render(true);
     }
 
-    async doRebuild(form) {
+    async doReset(form) {
         const formData = readFormData(form);
         await saveEnvironmentFromForm(formData);
         this._environment = WeatherState.normalizeEnvironment(getWeatherEnvironment());
-        this._record = await WeatherController.rebuildCurrentDay();
+        this._record = await WeatherController.resetCurrentDay();
         await this.render(true);
     }
 
@@ -147,19 +126,14 @@ export class WeatherPanelApp extends foundry.applications.api.ApplicationV2 {
         form.querySelector('select[name="ruinStyleMode"]')?.addEventListener("change", rerenderFromControls);
         form.querySelector('select[name="manualRuinFamily"]')?.addEventListener("change", rerenderFromControls);
 
-        form.querySelector('[data-action="refresh-current"]')?.addEventListener("click", async (event) => {
+        form.querySelector('[data-action="main-day-action"]')?.addEventListener("click", async (event) => {
             event.preventDefault();
-            await this.refreshFromState();
+            await this.doMainAction(form);
         });
 
-        form.querySelector('[data-action="rebuild-current"]')?.addEventListener("click", async (event) => {
+        form.querySelector('[data-action="reset-current-set"]')?.addEventListener("click", async (event) => {
             event.preventDefault();
-            await this.doRebuild(form);
-        });
-
-        form.querySelector('[data-action="advance-day"]')?.addEventListener("click", async (event) => {
-            event.preventDefault();
-            await this.doAdvanceDay(form);
+            await this.doReset(form);
         });
     }
 }
@@ -178,3 +152,5 @@ export async function openWeatherPanel() {
     weatherPanelInstance.render(true);
     return weatherPanelInstance;
 }
+
+export { WeatherPanelApp };

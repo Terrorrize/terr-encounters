@@ -1,8 +1,7 @@
-<form class="weather-panel">
+﻿<form class="weather-panel">
   <section class="weather-panel-toolbar">
-    <button type="button" data-action="refresh-current">Refresh</button>
-    <button type="button" data-action="rebuild-current">Rebuild Current</button>
-    <button type="button" data-action="advance-day" class="weather-advance-button">Advance Day</button>
+    <button type="button" data-action="main-day-action" class="weather-main-button">{{mainButtonLabel}}</button>
+    <button type="button" data-action="reset-current-set" class="weather-reroll-button" title="Start over">↻</button>
   </section>
 
   <div class="weather-panel-body">
@@ -15,7 +14,7 @@
         <div class="weather-summary-grid">
           <div class="weather-summary-item">
             <label>Day</label>
-            <div>{{dayLabel}}</div>
+            <div>{{#if hasStarted}}{{dayLabel}}{{else}}Not started{{/if}}</div>
           </div>
 
           <div class="weather-summary-item">
@@ -35,23 +34,35 @@
 
           <div class="weather-summary-item">
             <label>Ground State</label>
-            <div>{{groundState}}</div>
+            <div>{{#if hasStarted}}{{groundState}}{{else}}—{{/if}}</div>
           </div>
 
           <div class="weather-summary-item">
             <label>Temperature</label>
-            <div>{{temperatureState}} ({{temperatureDaysRemaining}} days remaining)</div>
+            <div>
+              {{#if hasStarted}}
+                {{temperatureState}} ({{temperatureDaysRemaining}} days remaining)
+              {{else}}
+                —
+              {{/if}}
+            </div>
           </div>
 
           <div class="weather-summary-item">
             <label>Weather</label>
-            <div>{{weatherEvent}} ({{weatherDaysRemaining}} days remaining)</div>
+            <div>
+              {{#if hasStarted}}
+                {{weatherEvent}} ({{weatherDaysRemaining}} days remaining)
+              {{else}}
+                —
+              {{/if}}
+            </div>
           </div>
 
           {{#if hasRuinsApplied}}
           <div class="weather-summary-item">
             <label>Ruins</label>
-            <div>{{ruinModifier}} � {{ruinFamily}}</div>
+            <div>{{ruinModifier}} — {{ruinFamily}}</div>
           </div>
           {{/if}}
         </div>
@@ -148,6 +159,7 @@
       </summary>
 
       <div class="weather-block-body">
+        {{#if hasStarted}}
         <div class="weather-output-list">
           {{#each orderedOutput}}
           <div class="weather-output-line weather-output-line-{{this.key}}">
@@ -156,6 +168,9 @@
           </div>
           {{/each}}
         </div>
+        {{else}}
+        <div class="weather-output-empty">Press “How's My Day Going?” to start the current set.</div>
+        {{/if}}
       </div>
     </details>
   </div>
