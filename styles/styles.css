@@ -1,0 +1,37 @@
+form .form-group {
+    margin-bottom: 10px;
+}
+
+#terr-encounters-launcher {
+    position: fixed;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--color-border-dark-primary, #555);
+    border-radius: 6px;
+    background: rgba(18, 18, 24, 0.96);
+    color: #ffffff;
+    font-family: Arial, sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1;
+    text-align: center;
+    cursor: pointer;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.45);
+    z-index: 2147483647;
+}
+
+    #terr-encounters-launcher:hover {
+        filter: brightness(1.12);
+    }
+
+    #terr-encounters-launcher:focus {
+        outline: 1px solid #999;
+        outline-offset: 1px;
+    }
