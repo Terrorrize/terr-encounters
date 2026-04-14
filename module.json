@@ -24,12 +24,11 @@
     ]
   },
   "esmodules": [
-    "scripts/main.js",
-    "scripts/weather/weather-init.js"
+    "scripts/main.js"
   ],
   "styles": [
-    "styles/styles.css",
-    "styles/weather-panel.css"
+    "styles/core/launcher.css",
+    "styles/weather/weather-panel.css"
   ],
   "socket": false
 }
