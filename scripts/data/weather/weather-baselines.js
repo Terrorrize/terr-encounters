@@ -1,11 +1,12 @@
+// FILE: scripts/data/weather/weather-baselines.js
 /**
- * terr-encounters v0.1.0-b3
+ * terr-encounters v0.1.0-b4
  * Function: baseline weather tables keyed by biome -> climate -> season -> phase.
  * These tables drive weighted trend generation for condition, temperature,
- * precipitation, wind, and duration.
+ * precipitation, wind, and duration. Also exposes selector helpers for the UI.
  */
 
-export const WEATHER_BASELINES_VERSION = "0.1.0-b3";
+export const WEATHER_BASELINES_VERSION = "0.1.0-b4";
 
 export const DEFAULT_BASELINE_PATH = {
     biome: "temperate_forest",
@@ -254,19 +255,73 @@ export const WEATHER_BASELINES = {
     }
 };
 
+function getFallbackBiome() {
+    return DEFAULT_BASELINE_PATH.biome;
+}
+
+function getFallbackClimate(biome) {
+    const climates = Object.keys(WEATHER_BASELINES[biome] ?? {});
+    return climates[0] ?? DEFAULT_BASELINE_PATH.climate;
+}
+
+function getFallbackSeason(biome, climate) {
+    const seasons = Object.keys(WEATHER_BASELINES[biome]?.[climate] ?? {});
+    return seasons[0] ?? DEFAULT_BASELINE_PATH.season;
+}
+
+function getFallbackPhase(biome, climate, season) {
+    const phases = Object.keys(WEATHER_BASELINES[biome]?.[climate]?.[season] ?? {});
+    return phases[0] ?? DEFAULT_BASELINE_PATH.phase;
+}
+
 export function getDefaultDurationWeights() {
     return { ...DEFAULT_DURATION_WEIGHTS };
 }
 
 export function getBaselineLeaf(biome, climate, season, phase) {
-    const biomeNode = WEATHER_BASELINES[biome] ?? WEATHER_BASELINES[DEFAULT_BASELINE_PATH.biome];
-    const climateNode = biomeNode?.[climate] ?? biomeNode?.[DEFAULT_BASELINE_PATH.climate];
-    const seasonNode = climateNode?.[season] ?? climateNode?.[DEFAULT_BASELINE_PATH.season];
-    const leaf = seasonNode?.[phase] ?? seasonNode?.[DEFAULT_BASELINE_PATH.phase];
+    const resolvedBiome = WEATHER_BASELINES[biome] ? biome : getFallbackBiome();
+    const resolvedClimate = WEATHER_BASELINES[resolvedBiome]?.[climate] ? climate : getFallbackClimate(resolvedBiome);
+    const resolvedSeason =
+        WEATHER_BASELINES[resolvedBiome]?.[resolvedClimate]?.[season]
+            ? season
+            : getFallbackSeason(resolvedBiome, resolvedClimate);
+    const resolvedPhase =
+        WEATHER_BASELINES[resolvedBiome]?.[resolvedClimate]?.[resolvedSeason]?.[phase]
+            ? phase
+            : getFallbackPhase(resolvedBiome, resolvedClimate, resolvedSeason);
 
-    return leaf ?? makeBaseline();
+    return (
+        WEATHER_BASELINES[resolvedBiome]?.[resolvedClimate]?.[resolvedSeason]?.[resolvedPhase] ??
+        makeBaseline()
+    );
 }
 
 export function getTempRangeForBand(leaf, band) {
     return leaf?.tempRangesC?.[band] ?? { min: 7, max: 13 };
+}
+
+export function getAvailableBiomes() {
+    return Object.keys(WEATHER_BASELINES);
+}
+
+export function getAvailableClimates(biome) {
+    const resolvedBiome = WEATHER_BASELINES[biome] ? biome : getFallbackBiome();
+    return Object.keys(WEATHER_BASELINES[resolvedBiome] ?? {});
+}
+
+export function getAvailableSeasons(biome, climate) {
+    const resolvedBiome = WEATHER_BASELINES[biome] ? biome : getFallbackBiome();
+    const resolvedClimate = WEATHER_BASELINES[resolvedBiome]?.[climate] ? climate : getFallbackClimate(resolvedBiome);
+    return Object.keys(WEATHER_BASELINES[resolvedBiome]?.[resolvedClimate] ?? {});
+}
+
+export function getAvailablePhases(biome, climate, season) {
+    const resolvedBiome = WEATHER_BASELINES[biome] ? biome : getFallbackBiome();
+    const resolvedClimate = WEATHER_BASELINES[resolvedBiome]?.[climate] ? climate : getFallbackClimate(resolvedBiome);
+    const resolvedSeason =
+        WEATHER_BASELINES[resolvedBiome]?.[resolvedClimate]?.[season]
+            ? season
+            : getFallbackSeason(resolvedBiome, resolvedClimate);
+
+    return Object.keys(WEATHER_BASELINES[resolvedBiome]?.[resolvedClimate]?.[resolvedSeason] ?? {});
 }

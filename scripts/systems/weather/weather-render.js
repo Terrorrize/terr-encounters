@@ -1,5 +1,6 @@
+// FILE: scripts/systems/weather/weather-render.js
 /**
- * terr-encounters v0.1.0-b5
+ * terr-encounters v0.1.0-b6
  * Function: converts raw weather state into a clean UI-ready view model for the
  * weather panel. This keeps rendering strings separate from controller logic.
  */
@@ -7,7 +8,7 @@
 import { getExposureLine } from "./weather-exposure.js";
 import { getMatrixAftermathLines } from "./weather-matrix.js";
 
-export const WEATHER_RENDER_VERSION = "0.1.0-b5";
+export const WEATHER_RENDER_VERSION = "0.1.0-b6";
 
 function buildTrendBlock(currentDay) {
     return Array.isArray(currentDay?.summaryLines) ? [...currentDay.summaryLines] : [];

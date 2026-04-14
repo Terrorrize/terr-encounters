@@ -1,5 +1,6 @@
+// FILE: scripts/systems/weather/weather-daily.js
 /**
- * terr-encounters v0.1.0-b4
+ * terr-encounters v0.1.0-b5
  * Function: resolves one concrete day from the active weather trend. This turns
  * the trend packet into an exact day with temperature, precip/wind activation,
  * cloud face, storm flags, and summary lines.
@@ -14,7 +15,7 @@ import {
 } from "../../data/weather/weather-language.js";
 import { cToF, clamp, randomInt } from "./weather-utils.js";
 
-export const WEATHER_DAILY_VERSION = "0.1.0-b4";
+export const WEATHER_DAILY_VERSION = "0.1.0-b5";
 
 const PRECIP_ACTIVE_CHANCES = {
     sporadic: 45,
@@ -144,9 +145,9 @@ export function resolveTrendDay(activeTrend, absoluteDay) {
     const summaryLines = [
         `${trend.durationDays} Days`,
         getConditionLine(trend.condition, trend.tempBand),
-        getPrecipLine(trend.precipType, precipIntensity, trend.precipPattern),
+        getPrecipLine(trend.precipType, trend.precipIntensity, trend.precipPattern),
         getTempMotionLine(trend.tempMotion, trend.tempMotionStrength),
-        getWindLine(windIntensity, trend.windPattern)
+        getWindLine(trend.windIntensity, trend.windPattern)
     ];
 
     return {
