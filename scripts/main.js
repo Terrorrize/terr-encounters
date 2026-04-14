@@ -1,87 +1,53 @@
-import { openWeatherPanel } from "./weather/weather-ui.js";
+/**
+ * terr-encounters v0.0.1-fix1
+ * Function: module bootstrap entry. Registers the weather system during init,
+ * runs ready hooks, and lets the weather system inject its launcher button.
+ */
+
+import { registerWeatherSystem } from "./systems/weather/weather-init.js";
 
 const MODULE_ID = "terr-encounters";
-const LAUNCHER_ID = "terr-encounters-launcher";
 
-function removeLauncher() {
-    const existing = document.getElementById(LAUNCHER_ID);
-    if (existing) existing.remove();
-}
-
-function positionLauncher(launcher) {
-    if (!launcher) return;
-
-    const controls = document.getElementById("controls");
-    if (!controls) {
-        launcher.style.left = "12px";
-        launcher.style.top = "12px";
-        return;
+function getModuleApi() {
+    if (!globalThis.TerrEncounters) {
+        globalThis.TerrEncounters = {
+            id: MODULE_ID,
+            version: "0.0.1-fix1",
+            systems: {},
+            ui: {},
+            api: {}
+        };
     }
 
-    const rect = controls.getBoundingClientRect();
-    launcher.style.left = `${Math.round(rect.left)}px`;
-    launcher.style.top = `${Math.round(rect.bottom + 6)}px`;
+    return globalThis.TerrEncounters;
 }
 
-function createLauncher() {
-    if (!game.user?.isGM) {
-        removeLauncher();
-        return;
+Hooks.once("init", async () => {
+    const terr = getModuleApi();
+
+    console.log(`${MODULE_ID} | init v${terr.version}`);
+
+    registerWeatherSystem(terr);
+
+    if (terr.systems.weather?.onInit) {
+        await terr.systems.weather.onInit();
     }
-
-    if (!document.body) return;
-
-    let launcher = document.getElementById(LAUNCHER_ID);
-    if (!launcher) {
-        launcher = document.createElement("button");
-        launcher.id = LAUNCHER_ID;
-        launcher.type = "button";
-        launcher.title = "Terr Encounters";
-        launcher.setAttribute("aria-label", "Terr Encounters");
-        launcher.textContent = "T";
-
-        launcher.addEventListener("click", async (event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            await openWeatherPanel();
-        });
-
-        document.body.appendChild(launcher);
-    }
-
-    positionLauncher(launcher);
-    return launcher;
-}
-
-function refreshLauncher() {
-    if (!game.user?.isGM) {
-        removeLauncher();
-        return;
-    }
-
-    createLauncher();
-}
-
-Hooks.once("init", () => {
-    console.log(`${MODULE_ID} | init`);
 });
 
-Hooks.once("ready", () => {
-    game.terrEncounters ??= {};
-    game.terrEncounters.openWeather = openWeatherPanel;
+Hooks.once("ready", async () => {
+    const terr = getModuleApi();
 
-    refreshLauncher();
+    console.log(`${MODULE_ID} | ready`);
 
-    window.setTimeout(refreshLauncher, 100);
-    window.setTimeout(refreshLauncher, 400);
-    window.setTimeout(refreshLauncher, 1000);
-
-    window.addEventListener("resize", refreshLauncher);
+    if (terr.systems.weather?.onReady) {
+        await terr.systems.weather.onReady();
+    }
 });
 
-Hooks.on("canvasReady", refreshLauncher);
-Hooks.on("renderSceneNavigation", refreshLauncher);
-Hooks.on("renderSidebar", refreshLauncher);
-Hooks.on("renderPlayerList", refreshLauncher);
-Hooks.on("renderHotbar", refreshLauncher);
-Hooks.on("collapseSidebar", refreshLauncher);
+Hooks.on("renderSidebarTab", (app, html) => {
+    const terr = getModuleApi();
+    const weatherSystem = terr.systems.weather;
+
+    if (!weatherSystem?.injectLauncherButton) return;
+    weatherSystem.injectLauncherButton(app, html);
+});
