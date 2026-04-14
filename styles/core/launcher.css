@@ -1,0 +1,29 @@
+/**
+ * terr-encounters v0.1.0-b7
+ * Function: styles the weather launcher button injected into the chat sidebar.
+ * Matches Foundry control sizing and keeps the button compact.
+ */
+
+.terr-encounters-launcher {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    margin: 4px 0 0 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--color-border-light-primary);
+    border-radius: 6px;
+    background: var(--color-bg-btn-minor);
+    cursor: pointer;
+}
+
+    .terr-encounters-launcher:hover,
+    .terr-encounters-launcher:focus {
+        box-shadow: 0 0 0 1px var(--color-shadow-primary);
+    }
+
+    .terr-encounters-launcher i {
+        margin: 0;
+        pointer-events: none;
+    }

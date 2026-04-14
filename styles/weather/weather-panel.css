@@ -1,0 +1,129 @@
+/**
+ * terr-encounters v0.1.0-b10
+ * Function: styles the weather panel shell, sections, text blocks, GM control
+ * row, and environment inputs. Kept compact and readable for the Foundry
+ * sidebar workflow.
+ */
+
+.terr-weather-panel .window-content {
+    padding: 8px;
+}
+
+.terr-weather-shell {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+
+.terr-weather-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.terr-weather-titleblock {
+    min-width: 0;
+}
+
+.terr-weather-title {
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+.terr-weather-subtitle {
+    margin-top: 2px;
+    font-size: 12px;
+    opacity: 0.8;
+}
+
+.terr-weather-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.terr-weather-icon-button {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.terr-weather-section {
+    border: 1px solid var(--color-border-light-primary);
+    border-radius: 6px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.terr-weather-trend {
+    gap: 2px;
+}
+
+.terr-weather-section-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    opacity: 0.75;
+    margin-bottom: 2px;
+}
+
+.terr-weather-line {
+    font-size: 13px;
+    line-height: 1.25;
+    word-break: break-word;
+}
+
+.terr-weather-trend-line:first-child {
+    font-weight: 700;
+}
+
+.terr-weather-field {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+    .terr-weather-field label {
+        font-size: 11px;
+        font-weight: 700;
+        opacity: 0.8;
+    }
+
+    .terr-weather-field select {
+        width: 100%;
+    }
+
+.terr-weather-checkbox {
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+}
+
+.terr-weather-controls {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+}
+
+    .terr-weather-controls button {
+        min-height: 30px;
+        font-size: 12px;
+    }
+
+.terr-weather-aftermath .terr-weather-line,
+.terr-weather-currentday .terr-weather-line,
+.terr-weather-exposure .terr-weather-line {
+    opacity: 0.95;
+}

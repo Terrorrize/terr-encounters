@@ -1,0 +1,112 @@
+{{
+!--
+terr-encounters v0.1.0-b10
+Function: weather panel markup for displaying trend lines, current day details,
+aftermath wording, exposure, GM controls, and environment selectors.
+--
+}}
+
+<section class="terr-weather-shell">
+    <header class="terr-weather-header">
+        <div class="terr-weather-titleblock">
+            <div class="terr-weather-title">Weather</div>
+            <div class="terr-weather-subtitle">
+                Day {{meta.absoluteDay}} · Trend Day {{meta.trendDay}} / {{meta.trendDuration}}
+            </div>
+        </div>
+
+        <div class="terr-weather-header-actions">
+            <button type="button" class="terr-weather-icon-button" data-action="weather-refresh" title="Refresh">
+                <i class="fas fa-rotate-right"></i>
+            </button>
+        </div>
+    </header>
+
+    {{#if isGM}}
+    <div class="terr-weather-section terr-weather-environment">
+        <div class="terr-weather-section-label">Environment</div>
+
+        <div class="terr-weather-field">
+            <label for="terr-weather-biome">Biome</label>
+            <select id="terr-weather-biome" data-env-key="biome">
+                {{#each environmentOptions.biomes}}
+                <option value="{{value}}" {{#if selected}} selected{{/if}}>{{label}}</option>
+                {{/each}}
+            </select>
+        </div>
+
+        <div class="terr-weather-field">
+            <label for="terr-weather-climate">Climate</label>
+            <select id="terr-weather-climate" data-env-key="climate">
+                {{#each environmentOptions.climates}}
+                <option value="{{value}}" {{#if selected}} selected{{/if}}>{{label}}</option>
+                {{/each}}
+            </select>
+        </div>
+
+        <div class="terr-weather-field">
+            <label for="terr-weather-season">Season</label>
+            <select id="terr-weather-season" data-env-key="season">
+                {{#each environmentOptions.seasons}}
+                <option value="{{value}}" {{#if selected}} selected{{/if}}>{{label}}</option>
+                {{/each}}
+            </select>
+        </div>
+
+        <div class="terr-weather-field">
+            <label for="terr-weather-phase">Phase</label>
+            <select id="terr-weather-phase" data-env-key="phase">
+                {{#each environmentOptions.phases}}
+                <option value="{{value}}" {{#if selected}} selected{{/if}}>{{label}}</option>
+                {{/each}}
+            </select>
+        </div>
+
+        <label class="terr-weather-checkbox">
+            <input type="checkbox"
+                   data-action="weather-toggle-ruins"
+                   {{#if environment.ruinsEnabled}} checked{{/if}} />
+            <span>Ruins Flavor</span>
+        </label>
+    </div>
+    {{/if}}
+
+    <div class="terr-weather-section terr-weather-trend">
+        {{#each trendLines}}
+        <div class="terr-weather-line terr-weather-trend-line">{{this}}</div>
+        {{/each}}
+    </div>
+
+    {{#if hasCurrentDay}}
+    <div class="terr-weather-section terr-weather-currentday">
+        <div class="terr-weather-section-label">Current Day</div>
+        {{#each currentDayLines}}
+        <div class="terr-weather-line">{{this}}</div>
+        {{/each}}
+    </div>
+    {{/if}}
+
+    {{#if hasAftermath}}
+    <div class="terr-weather-section terr-weather-aftermath">
+        <div class="terr-weather-section-label">Ground</div>
+        {{#each aftermathLines}}
+        <div class="terr-weather-line">{{this}}</div>
+        {{/each}}
+    </div>
+    {{/if}}
+
+    {{#if hasExposure}}
+    <div class="terr-weather-section terr-weather-exposure">
+        <div class="terr-weather-section-label">Exposure</div>
+        <div class="terr-weather-line">{{exposureLine}}</div>
+    </div>
+    {{/if}}
+
+    {{#if isGM}}
+    <footer class="terr-weather-controls">
+        <button type="button" data-action="weather-next-day">Next Day</button>
+        <button type="button" data-action="weather-reroll">Reroll</button>
+        <button type="button" data-action="weather-reset">Reset</button>
+    </footer>
+    {{/if}}
+</section>
