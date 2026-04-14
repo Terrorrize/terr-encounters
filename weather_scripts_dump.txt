@@ -1,76 +1,2545 @@
-====================================================================================================
+﻿====================================================================================================
 FILE: C:\FoundryMods\terr-encounters\module.json
 ----------------------------------------------------------------------------------------------------
+{
+  "id": "terr-encounters",
+  "title": "Terr Encounters",
+  "description": "PF2e biome, weather, and encounter generation tools.",
+  "version": "0.0.1",
+  "authors": [
+    {
+      "name": "Terrorrize"
+    }
+  ],
+  "manifest": "https://github.com/Terrorrize/terr-encounters/releases/latest/download/module.json",
+  "download": "https://github.com/Terrorrize/terr-encounters/releases/download/0.0.1/module.zip",
+  "url": "https://github.com/Terrorrize/terr-encounters",
+  "compatibility": {
+    "minimum": "13",
+    "verified": "13"
+  },
+  "relationships": {
+    "systems": [
+      {
+        "id": "pf2e",
+        "type": "system"
+      }
+    ]
+  },
+  "esmodules": [
+    "scripts/main.js"
+  ],
+  "styles": [
+    "styles/core/launcher.css",
+    "styles/weather/weather-panel.css"
+  ],
+  "socket": false
+}
 
 ====================================================================================================
 FILE: C:\FoundryMods\terr-encounters\scripts\main.js
 ----------------------------------------------------------------------------------------------------
+import { openWeatherPanel } from "./weather/weather-ui.js";
+
+const MODULE_ID = "terr-encounters";
+const LAUNCHER_ID = "terr-encounters-launcher";
+
+function removeLauncher() {
+    const existing = document.getElementById(LAUNCHER_ID);
+    if (existing) existing.remove();
+}
+
+function positionLauncher(launcher) {
+    if (!launcher) return;
+
+    const controls = document.getElementById("controls");
+    if (!controls) {
+        launcher.style.left = "12px";
+        launcher.style.top = "12px";
+        return;
+    }
+
+    const rect = controls.getBoundingClientRect();
+    launcher.style.left = `${Math.round(rect.left)}px`;
+    launcher.style.top = `${Math.round(rect.bottom + 6)}px`;
+}
+
+function createLauncher() {
+    if (!game.user?.isGM) {
+        removeLauncher();
+        return;
+    }
+
+    if (!document.body) return;
+
+    let launcher = document.getElementById(LAUNCHER_ID);
+    if (!launcher) {
+        launcher = document.createElement("button");
+        launcher.id = LAUNCHER_ID;
+        launcher.type = "button";
+        launcher.title = "Terr Encounters";
+        launcher.setAttribute("aria-label", "Terr Encounters");
+        launcher.textContent = "T";
+
+        launcher.addEventListener("click", async (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            await openWeatherPanel();
+        });
+
+        document.body.appendChild(launcher);
+    }
+
+    positionLauncher(launcher);
+    return launcher;
+}
+
+function refreshLauncher() {
+    if (!game.user?.isGM) {
+        removeLauncher();
+        return;
+    }
+
+    createLauncher();
+}
+
+Hooks.once("init", () => {
+    console.log(`${MODULE_ID} | init`);
+});
+
+Hooks.once("ready", () => {
+    game.terrEncounters ??= {};
+    game.terrEncounters.openWeather = openWeatherPanel;
+
+    refreshLauncher();
+
+    window.setTimeout(refreshLauncher, 100);
+    window.setTimeout(refreshLauncher, 400);
+    window.setTimeout(refreshLauncher, 1000);
+
+    window.addEventListener("resize", refreshLauncher);
+});
+
+Hooks.on("canvasReady", refreshLauncher);
+Hooks.on("renderSceneNavigation", refreshLauncher);
+Hooks.on("renderSidebar", refreshLauncher);
+Hooks.on("renderPlayerList", refreshLauncher);
+Hooks.on("renderHotbar", refreshLauncher);
+Hooks.on("collapseSidebar", refreshLauncher);
 
 ====================================================================================================
 FILE: C:\FoundryMods\terr-encounters\scripts\systems\weather\weather-controller.js
 ----------------------------------------------------------------------------------------------------
+/**
+ * terr-encounters v0.1.0-b12
+ * Function: orchestrates weather state flow. It seeds trends, resolves daily
+ * results, advances days, rolls new trends when needed, and exposes a stable
+ * API for the rest of the weather system.
+ */
+
+import { buildActiveTrend } from "./weather-seed.js";
+import { resolveTrendDay } from "./weather-daily.js";
+import { updateExposure } from "./weather-exposure.js";
+import { updateWordingMatrix } from "./weather-matrix.js";
+import {
+    createDefaultWeatherState,
+    getWeatherState,
+    normalizeWeatherState,
+    resetWeatherState,
+    setWeatherState,
+    updateWeatherState
+} from "./weather-state.js";
+import { getAbsoluteWeatherDay, setAbsoluteWeatherDay } from "./weather-settings.js";
+import { renderWeatherViewModel } from "./weather-render.js";
+
+export const WEATHER_CONTROLLER_VERSION = "0.1.0-b12";
+
+function buildResolvedState(state) {
+    const normalized = normalizeWeatherState(state);
+    const absoluteDay = Number(normalized.currentDay?.absoluteDay ?? getAbsoluteWeatherDay());
+    const currentDay = resolveTrendDay(normalized.activeTrend, absoluteDay);
+    const wordingMatrix = updateWordingMatrix(normalized.wordingMatrix, currentDay);
+    const exposure = updateExposure(normalized.exposure, currentDay, normalized.environment);
+
+    return {
+        ...normalized,
+        currentDay,
+        wordingMatrix,
+        exposure
+    };
+}
+
+function hasRealTrend(state) {
+    return Boolean(state?.activeTrend?.id);
+}
+
+function hasResolvedCurrentDay(state) {
+    return Number.isFinite(state?.currentDay?.tempC) && Number.isFinite(state?.currentDay?.tempF);
+}
+
+export async function initializeWeatherState() {
+    let state = getWeatherState();
+
+    if (!hasRealTrend(state)) {
+        const fresh = createDefaultWeatherState();
+        fresh.activeTrend = buildActiveTrend(fresh.environment, null);
+        fresh.currentDay.absoluteDay = getAbsoluteWeatherDay();
+        state = buildResolvedState(fresh);
+        await setWeatherState(state);
+        return state;
+    }
+
+    if (!hasResolvedCurrentDay(state)) {
+        state = buildResolvedState(state);
+        await setWeatherState(state);
+        return state;
+    }
+
+    state = normalizeWeatherState(state);
+    await setWeatherState(state);
+    return state;
+}
+
+export async function refreshWeatherState() {
+    const state = normalizeWeatherState(getWeatherState());
+    await setWeatherState(state);
+    return state;
+}
+
+export async function regenerateTrend() {
+    return updateWeatherState((state) => {
+        const previousTrend = state.activeTrend;
+        state.activeTrend = buildActiveTrend(state.environment, previousTrend);
+        state.activeTrend.dayIndex = 1;
+        state.currentDay.absoluteDay = getAbsoluteWeatherDay();
+        return buildResolvedState(state);
+    });
+}
+
+export async function advanceWeatherDay() {
+    const currentAbsoluteDay = getAbsoluteWeatherDay();
+    const nextAbsoluteDay = currentAbsoluteDay + 1;
+
+    await setAbsoluteWeatherDay(nextAbsoluteDay);
+
+    return updateWeatherState((state) => {
+        const trendDay = Number(state.activeTrend?.dayIndex ?? 1);
+        const duration = Number(state.activeTrend?.durationDays ?? 1);
+
+        if (trendDay >= duration) {
+            const previousTrend = state.activeTrend;
+            state.activeTrend = buildActiveTrend(state.environment, previousTrend);
+            state.activeTrend.dayIndex = 1;
+        } else {
+            state.activeTrend.dayIndex = trendDay + 1;
+        }
+
+        state.currentDay.absoluteDay = nextAbsoluteDay;
+        return buildResolvedState(state);
+    });
+}
+
+export async function rerollWeatherFromCurrentDay() {
+    return updateWeatherState((state) => {
+        const previousTrend = state.activeTrend;
+        state.activeTrend = buildActiveTrend(state.environment, previousTrend);
+        state.activeTrend.dayIndex = 1;
+        state.currentDay.absoluteDay = getAbsoluteWeatherDay();
+        return buildResolvedState(state);
+    });
+}
+
+export async function resetWeatherSystem() {
+    await resetWeatherState();
+    await setAbsoluteWeatherDay(1);
+
+    return updateWeatherState((state) => {
+        state.activeTrend = buildActiveTrend(state.environment, null);
+        state.activeTrend.dayIndex = 1;
+        state.currentDay.absoluteDay = 1;
+        return buildResolvedState(state);
+    });
+}
+
+export function getRenderedWeatherState() {
+    const state = normalizeWeatherState(getWeatherState());
+    return {
+        state,
+        view: renderWeatherViewModel(state)
+    };
+}
+
+export async function updateWeatherEnvironment(patch = {}) {
+    return updateWeatherState((state) => {
+        state.environment = {
+            ...state.environment,
+            ...patch
+        };
+
+        state.activeTrend = buildActiveTrend(state.environment, state.activeTrend);
+        state.activeTrend.dayIndex = 1;
+        state.currentDay.absoluteDay = getAbsoluteWeatherDay();
+
+        return buildResolvedState(state);
+    });
+}
 
 ====================================================================================================
 FILE: C:\FoundryMods\terr-encounters\scripts\systems\weather\weather-daily.js
 ----------------------------------------------------------------------------------------------------
+/**
+ * terr-encounters v0.1.0-b4
+ * Function: resolves one concrete day from the active weather trend. This turns
+ * the trend packet into an exact day with temperature, precip/wind activation,
+ * cloud face, storm flags, and summary lines.
+ */
+
+import {
+    getCloudFaceLabel,
+    getConditionLine,
+    getPrecipLine,
+    getTempMotionLine,
+    getWindLine
+} from "../../data/weather/weather-language.js";
+import { cToF, clamp, randomInt } from "./weather-utils.js";
+
+export const WEATHER_DAILY_VERSION = "0.1.0-b4";
+
+const PRECIP_ACTIVE_CHANCES = {
+    sporadic: 45,
+    frequent: 70,
+    constant: 95
+};
+
+const WIND_ACTIVE_CHANCES = {
+    sporadic: 35,
+    frequent: 70,
+    constant: 95
+};
+
+const TEMP_DRIFT_TOTALS = {
+    slight: [1, 2],
+    steady: [2, 4],
+    sharp: [4, 6]
+};
+
+function rollPercent(chance) {
+    return randomInt(1, 100) <= chance;
+}
+
+function getProgress(dayIndex, durationDays) {
+    if (durationDays <= 1) return 0;
+    return clamp((dayIndex - 1) / (durationDays - 1), 0, 1);
+}
+
+function getDriftTotal(strength) {
+    const range = TEMP_DRIFT_TOTALS[strength] ?? TEMP_DRIFT_TOTALS.slight;
+    return randomInt(range[0], range[1]);
+}
+
+function resolveTemperatureC(trend) {
+    const progress = getProgress(Number(trend.dayIndex ?? 1), Number(trend.durationDays ?? 1));
+    const wobble = randomInt(-1, 1);
+
+    if (trend.tempMotion === "holding") {
+        return clamp(trend.seedTempC + wobble, trend.tempMinC, trend.tempMaxC);
+    }
+
+    const driftTotal = getDriftTotal(trend.tempMotionStrength);
+    const signedDrift = Math.round(driftTotal * progress) * (trend.tempMotion === "rising" ? 1 : -1);
+
+    return clamp(trend.seedTempC + signedDrift + wobble, trend.tempMinC, trend.tempMaxC);
+}
+
+function getPrecipActiveChance(trend) {
+    let chance = PRECIP_ACTIVE_CHANCES[trend.precipPattern] ?? 45;
+
+    if (trend.condition === "rainy" || trend.condition === "snowy") chance += 10;
+    if (trend.precipIntensity === "hard") chance += 5;
+    if (trend.precipIntensity === "severe") chance += 10;
+
+    return clamp(chance, 0, 100);
+}
+
+function getWindActiveChance(trend) {
+    let chance = WIND_ACTIVE_CHANCES[trend.windPattern] ?? 35;
+
+    if (trend.condition === "windy") chance += 15;
+    if (trend.windIntensity === "strong") chance += 10;
+    if (trend.windIntensity === "severe") chance += 15;
+
+    return clamp(chance, 0, 100);
+}
+
+function resolveActualPrecipIntensity(trend, precipActive) {
+    if (!precipActive || trend.precipType === "none" || trend.precipIntensity === "none") {
+        return "none";
+    }
+
+    const order = ["light", "moderate", "hard", "severe"];
+    const index = Math.max(0, order.indexOf(trend.precipIntensity));
+    const shift = randomInt(-1, 1);
+    return order[clamp(index + shift, 0, order.length - 1)];
+}
+
+function resolveActualWindIntensity(trend, windActive) {
+    if (!windActive || trend.windIntensity === "calm") {
+        return "calm";
+    }
+
+    const order = ["light", "moderate", "strong", "severe"];
+    const index = Math.max(0, order.indexOf(trend.windIntensity));
+    const shift = randomInt(-1, 1);
+    return order[clamp(index + shift, 0, order.length - 1)];
+}
+
+function resolveCloudFace(trend, precipActive, windActive) {
+    if (trend.condition === "clear" && !precipActive) return "bright";
+    if (trend.condition === "overcast") return "grey";
+    if (trend.condition === "foggy") return "low";
+    if (precipActive && (trend.precipIntensity === "hard" || trend.precipIntensity === "severe")) return "storm";
+    if (windActive && (trend.windIntensity === "strong" || trend.windIntensity === "severe")) return "grey";
+    return "mixed";
+}
+
+function resolveStormFlags(trend, precipActive) {
+    const thunder =
+        precipActive &&
+        trend.precipType === "rain" &&
+        (trend.precipIntensity === "hard" || trend.precipIntensity === "severe") &&
+        rollPercent(35);
+
+    const lightning = thunder && rollPercent(45);
+
+    return { thunder, lightning };
+}
+
+export function resolveTrendDay(activeTrend, absoluteDay) {
+    const trend = {
+        ...activeTrend,
+        dayIndex: Number(activeTrend?.dayIndex ?? 1),
+        durationDays: Number(activeTrend?.durationDays ?? 1)
+    };
+
+    const tempC = resolveTemperatureC(trend);
+    const tempF = cToF(tempC);
+    const precipActive = trend.precipType === "none" ? false : rollPercent(getPrecipActiveChance(trend));
+    const windActive = trend.windIntensity === "calm" ? false : rollPercent(getWindActiveChance(trend));
+    const precipIntensity = resolveActualPrecipIntensity(trend, precipActive);
+    const windIntensity = resolveActualWindIntensity(trend, windActive);
+    const cloudFace = resolveCloudFace(trend, precipActive, windActive);
+    const stormFlags = resolveStormFlags(trend, precipActive);
+
+    const summaryLines = [
+        `${trend.durationDays} Days`,
+        getConditionLine(trend.condition, trend.tempBand),
+        getPrecipLine(trend.precipType, precipIntensity, trend.precipPattern),
+        getTempMotionLine(trend.tempMotion, trend.tempMotionStrength),
+        getWindLine(windIntensity, trend.windPattern)
+    ];
+
+    return {
+        absoluteDay: Number(absoluteDay ?? 1),
+        trendDay: trend.dayIndex,
+        tempC,
+        tempF,
+        precipActive,
+        precipType: precipActive ? trend.precipType : "none",
+        precipIntensity,
+        windActive,
+        windIntensity,
+        cloudFace,
+        cloudFaceLabel: getCloudFaceLabel(cloudFace),
+        stormFlags,
+        summaryLines
+    };
+}
 
 ====================================================================================================
 FILE: C:\FoundryMods\terr-encounters\scripts\systems\weather\weather-exposure.js
 ----------------------------------------------------------------------------------------------------
+/**
+ * terr-encounters v0.1.0-b5
+ * Function: updates the optional exposure tracker from resolved daily weather.
+ * Exposure is a separate hardship meter and does not affect weather generation.
+ */
+
+import { clamp } from "./weather-utils.js";
+
+export const WEATHER_EXPOSURE_VERSION = "0.1.0-b5";
+
+function getExposureBand(total) {
+    if (total >= 65) return "severe";
+    if (total >= 45) return "heavy";
+    if (total >= 25) return "moderate";
+    if (total >= 10) return "light";
+    return "none";
+}
+
+function getTempExposureDelta(currentDay) {
+    const tempC = Number(currentDay?.tempC ?? 0);
+
+    if (tempC <= -15) return 12;
+    if (tempC <= -8) return 9;
+    if (tempC <= -1) return 6;
+    if (tempC <= 3) return 3;
+    if (tempC >= 34) return 12;
+    if (tempC >= 29) return 9;
+    if (tempC >= 24) return 6;
+    if (tempC >= 20) return 3;
+
+    return -4;
+}
+
+function getWetExposureDelta(currentDay) {
+    if (!currentDay?.precipActive) return 0;
+
+    if (currentDay.precipType === "rain" || currentDay.precipType === "sleet") {
+        switch (currentDay.precipIntensity) {
+            case "light":
+                return 2;
+            case "moderate":
+                return 4;
+            case "hard":
+                return 6;
+            case "severe":
+                return 8;
+            default:
+                return 0;
+        }
+    }
+
+    if (currentDay.precipType === "snow") {
+        switch (currentDay.precipIntensity) {
+            case "light":
+                return 1;
+            case "moderate":
+                return 3;
+            case "hard":
+                return 5;
+            case "severe":
+                return 7;
+            default:
+                return 0;
+        }
+    }
+
+    return 0;
+}
+
+function getWindExposureDelta(currentDay) {
+    switch (currentDay?.windIntensity) {
+        case "light":
+            return 1;
+        case "moderate":
+            return 2;
+        case "strong":
+            return 4;
+        case "severe":
+            return 6;
+        default:
+            return 0;
+    }
+}
+
+export function updateExposure(exposure, currentDay, environment = {}) {
+    const enabled = Boolean(exposure?.enabled);
+    const currentTotal = clamp(Number(exposure?.total ?? 0), 0, 100);
+
+    if (!enabled) {
+        return {
+            enabled: false,
+            total: currentTotal,
+            band: getExposureBand(currentTotal)
+        };
+    }
+
+    let delta = 0;
+    delta += getTempExposureDelta(currentDay);
+    delta += getWetExposureDelta(currentDay);
+    delta += getWindExposureDelta(currentDay);
+
+    if (environment?.sheltered === true) {
+        delta -= 6;
+    }
+
+    const nextTotal = clamp(currentTotal + delta, 0, 100);
+
+    return {
+        enabled: true,
+        total: nextTotal,
+        band: getExposureBand(nextTotal)
+    };
+}
+
+export function getExposureLine(exposure) {
+    if (!exposure?.enabled) return "";
+    return `Exposure: ${exposure.band} (${Number(exposure.total ?? 0)})`;
+}
 
 ====================================================================================================
 FILE: C:\FoundryMods\terr-encounters\scripts\systems\weather\weather-init.js
 ----------------------------------------------------------------------------------------------------
+/**
+ * terr-encounters v0.1.0-b8
+ * Function: registers the weather system, settings, state, controller API, and
+ * launcher behavior. Exposes a fuller weather API for later systems to call.
+ */
+
+import {
+    advanceWeatherDay,
+    getRenderedWeatherState,
+    initializeWeatherState,
+    refreshWeatherState,
+    regenerateTrend,
+    resetWeatherSystem,
+    updateWeatherEnvironment
+} from "./weather-controller.js";
+import { registerWeatherSettings } from "./weather-settings.js";
+import { registerWeatherState } from "./weather-state.js";
+import { getWeatherPanel, openWeatherPanel, restoreWeatherPanelIfOpen } from "./weather-ui.js";
+
+const MODULE_ID = "terr-encounters";
+const WEATHER_SYSTEM_ID = "weather";
+const LAUNCHER_BUTTON_ID = "terr-weather-launcher";
+
+function ensureWeatherNamespace(terr) {
+    terr.systems ??= {};
+    terr.ui ??= {};
+    terr.api ??= {};
+
+    terr.systems[WEATHER_SYSTEM_ID] ??= {};
+    terr.ui.weather ??= {};
+    terr.api.weather ??= {};
+
+    return terr.systems[WEATHER_SYSTEM_ID];
+}
+
+function buildLauncherButton() {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.id = LAUNCHER_BUTTON_ID;
+    button.classList.add("terr-encounters-launcher");
+    button.dataset.action = "terr-weather-open";
+    button.title = "Open Weather";
+    button.innerHTML = `<i class="fas fa-cloud-sun"></i>`;
+
+    button.addEventListener("click", async () => {
+        await openWeatherPanel();
+    });
+
+    return button;
+}
+
+function findSidebarAnchor(html) {
+    const root = html?.[0] ?? html;
+    if (!root) return null;
+
+    return (
+        root.querySelector?.(".directory-footer") ||
+        root.querySelector?.(".header-actions") ||
+        root.querySelector?.(".directory-header") ||
+        root
+    );
+}
+
+export function registerWeatherSystem(terr) {
+    const weather = ensureWeatherNamespace(terr);
+
+    weather.id = WEATHER_SYSTEM_ID;
+    weather.version = "0.1.0-b8";
+
+    weather.onInit = async function onInit() {
+        registerWeatherSettings();
+        registerWeatherState();
+        console.log(`${MODULE_ID} | weather init complete`);
+    };
+
+    weather.onReady = async function onReady() {
+        await initializeWeatherState();
+        await restoreWeatherPanelIfOpen();
+        console.log(`${MODULE_ID} | weather ready`);
+    };
+
+    weather.injectLauncherButton = function injectLauncherButton(app, html) {
+        if (!app || app.tabName !== "chat") return;
+
+        const root = html?.[0] ?? html;
+        if (!root) return;
+        if (root.querySelector(`#${LAUNCHER_BUTTON_ID}`)) return;
+
+        const anchor = findSidebarAnchor(html);
+        if (!anchor) return;
+
+        const button = buildLauncherButton();
+        anchor.appendChild(button);
+    };
+
+    terr.ui.weather.getPanel = getWeatherPanel;
+
+    terr.api.weather.open = openWeatherPanel;
+    terr.api.weather.refresh = refreshWeatherState;
+    terr.api.weather.getState = getRenderedWeatherState;
+    terr.api.weather.nextDay = advanceWeatherDay;
+    terr.api.weather.reroll = regenerateTrend;
+    terr.api.weather.reset = resetWeatherSystem;
+    terr.api.weather.setEnvironment = updateWeatherEnvironment;
+
+    console.log(`${MODULE_ID} | weather registered v${weather.version}`);
+}
 
 ====================================================================================================
 FILE: C:\FoundryMods\terr-encounters\scripts\systems\weather\weather-matrix.js
 ----------------------------------------------------------------------------------------------------
+/**
+ * terr-encounters v0.1.0-b4
+ * Function: updates the wording matrix from the resolved day and extracts
+ * descriptive aftermath lines. This affects description only, not future trend
+ * generation.
+ */
+
+import { getMatrixDescriptorLines } from "../../data/weather/weather-language.js";
+import { getRuinsDescriptorLines } from "../../data/weather/weather-ruins.js";
+import { clamp } from "./weather-utils.js";
+
+export const WEATHER_MATRIX_VERSION = "0.1.0-b4";
+
+function normalizeMatrix(matrix = {}) {
+    return {
+        wetness: clamp(Number(matrix.wetness ?? 0), 0, 5),
+        mud: clamp(Number(matrix.mud ?? 0), 0, 5),
+        standingWater: clamp(Number(matrix.standingWater ?? 0), 0, 5),
+        snowCover: clamp(Number(matrix.snowCover ?? 0), 0, 5),
+        dryness: clamp(Number(matrix.dryness ?? 0), 0, 5)
+    };
+}
+
+function applyRain(matrix, intensity) {
+    switch (intensity) {
+        case "light":
+            matrix.wetness += 1;
+            break;
+        case "moderate":
+            matrix.wetness += 2;
+            matrix.mud += 1;
+            break;
+        case "hard":
+            matrix.wetness += 2;
+            matrix.mud += 2;
+            matrix.standingWater += 1;
+            break;
+        case "severe":
+            matrix.wetness += 2;
+            matrix.mud += 2;
+            matrix.standingWater += 2;
+            break;
+        default:
+            break;
+    }
+
+    matrix.dryness -= 1;
+}
+
+function applySnow(matrix, intensity) {
+    switch (intensity) {
+        case "light":
+            matrix.snowCover += 1;
+            break;
+        case "moderate":
+            matrix.snowCover += 2;
+            break;
+        case "hard":
+        case "severe":
+            matrix.snowCover += 2;
+            matrix.wetness += 1;
+            break;
+        default:
+            break;
+    }
+
+    matrix.dryness -= 1;
+}
+
+function applySleet(matrix, intensity) {
+    matrix.wetness += 1;
+    matrix.mud += 1;
+
+    if (intensity === "hard" || intensity === "severe") {
+        matrix.standingWater += 1;
+    }
+
+    matrix.dryness -= 1;
+}
+
+function applyDrying(matrix, currentDay) {
+    const warmDry = Number(currentDay.tempC ?? 0) >= 18;
+    const mildDry = Number(currentDay.tempC ?? 0) >= 12;
+    const brightSky = currentDay.cloudFace === "bright";
+    const windy = currentDay.windIntensity === "strong" || currentDay.windIntensity === "severe";
+
+    let dryPower = 0;
+
+    if (warmDry) dryPower += 2;
+    else if (mildDry) dryPower += 1;
+
+    if (brightSky) dryPower += 1;
+    if (windy) dryPower += 1;
+
+    if (dryPower <= 0) return;
+
+    matrix.wetness -= dryPower >= 2 ? 1 : 0;
+    matrix.mud -= dryPower >= 3 ? 1 : 0;
+    matrix.standingWater -= dryPower >= 4 ? 1 : 0;
+    matrix.dryness += 1;
+}
+
+function applySnowMelt(matrix, currentDay) {
+    const tempC = Number(currentDay.tempC ?? 0);
+
+    if (tempC >= 8) {
+        matrix.snowCover -= 2;
+        matrix.wetness += 1;
+    } else if (tempC >= 3) {
+        matrix.snowCover -= 1;
+        matrix.wetness += 1;
+    }
+}
+
+export function updateWordingMatrix(matrix, currentDay) {
+    const next = normalizeMatrix(matrix);
+
+    if (currentDay.precipActive) {
+        if (currentDay.precipType === "rain") {
+            applyRain(next, currentDay.precipIntensity);
+        } else if (currentDay.precipType === "snow") {
+            applySnow(next, currentDay.precipIntensity);
+        } else if (currentDay.precipType === "sleet") {
+            applySleet(next, currentDay.precipIntensity);
+        }
+    } else {
+        next.dryness += 1;
+    }
+
+    applySnowMelt(next, currentDay);
+    applyDrying(next, currentDay);
+
+    return normalizeMatrix(next);
+}
+
+export function getMatrixAftermathLines(matrix, environment = {}) {
+    const lines = [...getMatrixDescriptorLines(matrix)];
+
+    if (environment.ruinsEnabled) {
+        lines.push(...getRuinsDescriptorLines(matrix));
+    }
+
+    return lines;
+}
 
 ====================================================================================================
 FILE: C:\FoundryMods\terr-encounters\scripts\systems\weather\weather-render.js
 ----------------------------------------------------------------------------------------------------
+/**
+ * terr-encounters v0.1.0-b5
+ * Function: converts raw weather state into a clean UI-ready view model for the
+ * weather panel. This keeps rendering strings separate from controller logic.
+ */
+
+import { getExposureLine } from "./weather-exposure.js";
+import { getMatrixAftermathLines } from "./weather-matrix.js";
+
+export const WEATHER_RENDER_VERSION = "0.1.0-b5";
+
+function buildTrendBlock(currentDay) {
+    return Array.isArray(currentDay?.summaryLines) ? [...currentDay.summaryLines] : [];
+}
+
+function buildCurrentDayLines(state) {
+    const lines = [];
+    const currentDay = state?.currentDay ?? {};
+    const tempC = currentDay?.tempC;
+    const tempF = currentDay?.tempF;
+
+    if (Number.isFinite(tempC) && Number.isFinite(tempF)) {
+        lines.push(`${tempC}Â°C / ${tempF}Â°F`);
+    }
+
+    if (currentDay?.cloudFaceLabel) {
+        lines.push(currentDay.cloudFaceLabel);
+    }
+
+    if (currentDay?.stormFlags?.thunder) {
+        lines.push(currentDay.stormFlags.lightning ? "Thunderstorm risk" : "Thunder risk");
+    }
+
+    return lines;
+}
+
+function buildAftermathLines(state) {
+    return getMatrixAftermathLines(state?.wordingMatrix ?? {}, state?.environment ?? {});
+}
+
+function buildMeta(state) {
+    return {
+        absoluteDay: Number(state?.currentDay?.absoluteDay ?? 1),
+        trendDay: Number(state?.currentDay?.trendDay ?? 1),
+        trendDuration: Number(state?.activeTrend?.durationDays ?? 1),
+        condition: state?.activeTrend?.condition ?? "clear",
+        tempBand: state?.activeTrend?.tempBand ?? "mild"
+    };
+}
+
+export function renderWeatherViewModel(state) {
+    const trendLines = buildTrendBlock(state?.currentDay);
+    const currentDayLines = buildCurrentDayLines(state);
+    const aftermathLines = buildAftermathLines(state);
+    const exposureLine = getExposureLine(state?.exposure ?? {});
+
+    return {
+        meta: buildMeta(state),
+        trendLines,
+        currentDayLines,
+        aftermathLines,
+        exposureLine,
+        hasExposure: Boolean(exposureLine),
+        hasAftermath: aftermathLines.length > 0,
+        hasCurrentDay: currentDayLines.length > 0
+    };
+}
 
 ====================================================================================================
 FILE: C:\FoundryMods\terr-encounters\scripts\systems\weather\weather-seed.js
 ----------------------------------------------------------------------------------------------------
+/**
+ * terr-encounters v0.1.0-b4
+ * Function: builds a new active weather trend from biome/climate/season/phase
+ * baseline tables, with light carryover from the previous trend.
+ */
+
+import { getBaselineLeaf, getTempRangeForBand } from "../../data/weather/weather-baselines.js";
+import { createWeatherId, deepClone, weightedPick, weightedPickNumber } from "./weather-utils.js";
+
+export const WEATHER_SEED_VERSION = "0.1.0-b4";
+
+function cloneWeights(weights = {}) {
+    return deepClone(weights);
+}
+
+function addWeight(map, key, amount) {
+    if (!key || !Number.isFinite(amount) || amount === 0) return;
+    map[key] = Math.max(0, Number(map[key] ?? 0) + amount);
+}
+
+function applyConditionCarryover(conditionWeights, previousTrend) {
+    if (!previousTrend) return;
+
+    addWeight(conditionWeights, previousTrend.condition, 4);
+
+    const longRun = Number(previousTrend.durationDays ?? 0) >= 7;
+    const intensePrecip =
+        previousTrend.precipIntensity === "hard" || previousTrend.precipIntensity === "severe";
+    const intenseWind =
+        previousTrend.windIntensity === "strong" || previousTrend.windIntensity === "severe";
+
+    if (longRun || intensePrecip || intenseWind) {
+        switch (previousTrend.condition) {
+            case "rainy":
+                addWeight(conditionWeights, "clear", 6);
+                addWeight(conditionWeights, "overcast", 3);
+                break;
+            case "snowy":
+                addWeight(conditionWeights, "cold", 4);
+                addWeight(conditionWeights, "clear", 4);
+                break;
+            case "hot":
+                addWeight(conditionWeights, "warm", 4);
+                addWeight(conditionWeights, "clear", 3);
+                break;
+            case "cold":
+                addWeight(conditionWeights, "clear", 3);
+                addWeight(conditionWeights, "overcast", 2);
+                break;
+            case "windy":
+                addWeight(conditionWeights, "clear", 2);
+                addWeight(conditionWeights, "overcast", 2);
+                break;
+            default:
+                break;
+        }
+
+        addWeight(conditionWeights, previousTrend.condition, -5);
+    }
+}
+
+function applyPrecipCarryover(precipTypeWeights, precipIntensityWeights, precipPatternWeights, previousTrend) {
+    if (!previousTrend) return;
+
+    addWeight(precipTypeWeights, previousTrend.precipType, 3);
+    addWeight(precipPatternWeights, previousTrend.precipPattern, 2);
+
+    if (previousTrend.precipIntensity === "hard" || previousTrend.precipIntensity === "severe") {
+        addWeight(precipIntensityWeights, previousTrend.precipIntensity, -6);
+        addWeight(precipIntensityWeights, "light", 2);
+        addWeight(precipIntensityWeights, "moderate", 3);
+        addWeight(precipTypeWeights, "none", 4);
+    } else if (previousTrend.precipType !== "none") {
+        addWeight(precipIntensityWeights, previousTrend.precipIntensity, 2);
+    }
+}
+
+function applyWindCarryover(windIntensityWeights, windPatternWeights, previousTrend) {
+    if (!previousTrend) return;
+
+    addWeight(windIntensityWeights, previousTrend.windIntensity, 2);
+    addWeight(windPatternWeights, previousTrend.windPattern, 2);
+
+    if (previousTrend.windIntensity === "strong" || previousTrend.windIntensity === "severe") {
+        addWeight(windIntensityWeights, previousTrend.windIntensity, -5);
+        addWeight(windIntensityWeights, "light", 2);
+        addWeight(windIntensityWeights, "moderate", 3);
+    }
+}
+
+function applyDurationAdjustments(durationWeights, precipPattern, windPattern, condition) {
+    if (precipPattern === "constant" || windPattern === "constant") {
+        addWeight(durationWeights, 8, -2);
+        addWeight(durationWeights, 9, -3);
+        addWeight(durationWeights, 10, -4);
+        addWeight(durationWeights, 3, 2);
+        addWeight(durationWeights, 4, 2);
+        addWeight(durationWeights, 5, 1);
+    }
+
+    if (condition === "clear" || condition === "warm" || condition === "cold" || condition === "overcast") {
+        addWeight(durationWeights, 6, 1);
+        addWeight(durationWeights, 7, 1);
+        addWeight(durationWeights, 8, 1);
+    }
+}
+
+export function buildActiveTrend(environment, previousTrend = null) {
+    const leaf = getBaselineLeaf(
+        environment?.biome,
+        environment?.climate,
+        environment?.season,
+        environment?.phase
+    );
+
+    const conditionWeights = cloneWeights(leaf.conditions);
+    const tempBandWeights = cloneWeights(leaf.tempBands);
+    const tempMotionWeights = cloneWeights(leaf.tempMotion);
+    const tempMotionStrengthWeights = cloneWeights(leaf.tempMotionStrength);
+    const precipTypeWeights = cloneWeights(leaf.precipTypes);
+    const precipIntensityWeights = cloneWeights(leaf.precipIntensity);
+    const precipPatternWeights = cloneWeights(leaf.precipPattern);
+    const windIntensityWeights = cloneWeights(leaf.windIntensity);
+    const windPatternWeights = cloneWeights(leaf.windPattern);
+    const durationWeights = cloneWeights(leaf.durationWeights);
+
+    applyConditionCarryover(conditionWeights, previousTrend);
+    applyPrecipCarryover(precipTypeWeights, precipIntensityWeights, precipPatternWeights, previousTrend);
+    applyWindCarryover(windIntensityWeights, windPatternWeights, previousTrend);
+
+    const condition = weightedPick(conditionWeights) ?? "clear";
+    const tempBand = weightedPick(tempBandWeights) ?? "mild";
+    const tempMotion = weightedPick(tempMotionWeights) ?? "holding";
+    const tempMotionStrength = weightedPick(tempMotionStrengthWeights) ?? "slight";
+    const precipType = weightedPick(precipTypeWeights) ?? "none";
+    const precipIntensity =
+        precipType === "none" ? "none" : (weightedPick(precipIntensityWeights) ?? "light");
+    const precipPattern =
+        precipType === "none" ? "sporadic" : (weightedPick(precipPatternWeights) ?? "sporadic");
+    const windIntensity = weightedPick(windIntensityWeights) ?? "calm";
+    const windPattern = windIntensity === "calm" ? "sporadic" : (weightedPick(windPatternWeights) ?? "sporadic");
+
+    applyDurationAdjustments(durationWeights, precipPattern, windPattern, condition);
+
+    const durationDays = weightedPickNumber(durationWeights) ?? 3;
+    const tempRange = getTempRangeForBand(leaf, tempBand);
+    const seedTempC = Math.round((tempRange.min + tempRange.max) / 2);
+
+    return {
+        id: createWeatherId("trend"),
+        durationDays,
+        dayIndex: 1,
+        condition,
+        tempBand,
+        seedTempC,
+        tempMinC: tempRange.min,
+        tempMaxC: tempRange.max,
+        tempMotion,
+        tempMotionStrength,
+        precipType,
+        precipIntensity,
+        precipPattern,
+        windIntensity,
+        windPattern
+    };
+}
 
 ====================================================================================================
 FILE: C:\FoundryMods\terr-encounters\scripts\systems\weather\weather-settings.js
 ----------------------------------------------------------------------------------------------------
+/**
+ * terr-encounters v0.1.0-b11
+ * Function: registers world and client weather settings used by the controller,
+ * UI, and optional exposure tracking.
+ */
+
+const MODULE_ID = "terr-encounters";
+
+export const WEATHER_SETTING_KEYS = {
+    ENABLED: "weatherEnabled",
+    PANEL_OPEN: "weatherPanelOpen",
+    EXPOSURE_ENABLED: "weatherExposureEnabled",
+    DEFAULT_BIOME: "weatherDefaultBiome",
+    DEFAULT_CLIMATE: "weatherDefaultClimate",
+    DEFAULT_SEASON: "weatherDefaultSeason",
+    DEFAULT_PHASE: "weatherDefaultPhase",
+    DEFAULT_RUINS_ENABLED: "weatherDefaultRuinsEnabled",
+    ABSOLUTE_DAY: "weatherAbsoluteDay"
+};
+
+export function registerWeatherSettings() {
+    game.settings.register(MODULE_ID, WEATHER_SETTING_KEYS.ENABLED, {
+        name: "Enable Weather System",
+        hint: "Master toggle for the Terr Encounters weather system.",
+        scope: "world",
+        config: true,
+        type: Boolean,
+        default: true
+    });
+
+    game.settings.register(MODULE_ID, WEATHER_SETTING_KEYS.EXPOSURE_ENABLED, {
+        name: "Enable Exposure Tracker",
+        hint: "Turns on the optional exposure hardship tracker.",
+        scope: "world",
+        config: true,
+        type: Boolean,
+        default: false
+    });
+
+    game.settings.register(MODULE_ID, WEATHER_SETTING_KEYS.DEFAULT_BIOME, {
+        name: "Default Biome",
+        hint: "Default biome used when a new weather state is created.",
+        scope: "world",
+        config: true,
+        type: String,
+        default: "temperate_forest"
+    });
+
+    game.settings.register(MODULE_ID, WEATHER_SETTING_KEYS.DEFAULT_CLIMATE, {
+        name: "Default Climate",
+        hint: "Default climate used when a new weather state is created.",
+        scope: "world",
+        config: true,
+        type: String,
+        default: "temperate"
+    });
+
+    game.settings.register(MODULE_ID, WEATHER_SETTING_KEYS.DEFAULT_SEASON, {
+        name: "Default Season",
+        hint: "Default season used when a new weather state is created.",
+        scope: "world",
+        config: true,
+        type: String,
+        default: "spring"
+    });
+
+    game.settings.register(MODULE_ID, WEATHER_SETTING_KEYS.DEFAULT_PHASE, {
+        name: "Default Phase",
+        hint: "Default seasonal phase used when a new weather state is created.",
+        scope: "world",
+        config: true,
+        type: String,
+        default: "mid"
+    });
+
+    game.settings.register(MODULE_ID, WEATHER_SETTING_KEYS.DEFAULT_RUINS_ENABLED, {
+        name: "Default Ruins Flavor",
+        hint: "Default ruins flavor flag used when a new weather state is created.",
+        scope: "world",
+        config: true,
+        type: Boolean,
+        default: false
+    });
+
+    game.settings.register(MODULE_ID, WEATHER_SETTING_KEYS.ABSOLUTE_DAY, {
+        name: "Absolute Weather Day",
+        hint: "Persistent day counter for the weather system.",
+        scope: "world",
+        config: false,
+        type: Number,
+        default: 1
+    });
+
+    game.settings.register(MODULE_ID, WEATHER_SETTING_KEYS.PANEL_OPEN, {
+        name: "Weather Panel Open",
+        hint: "Remembers whether the weather panel is open for this user.",
+        scope: "client",
+        config: false,
+        type: Boolean,
+        default: false
+    });
+}
+
+export function isWeatherEnabled() {
+    return game.settings.get(MODULE_ID, WEATHER_SETTING_KEYS.ENABLED);
+}
+
+export function isExposureEnabled() {
+    return game.settings.get(MODULE_ID, WEATHER_SETTING_KEYS.EXPOSURE_ENABLED);
+}
+
+export function getWeatherDefaults() {
+    return {
+        biome: game.settings.get(MODULE_ID, WEATHER_SETTING_KEYS.DEFAULT_BIOME),
+        climate: game.settings.get(MODULE_ID, WEATHER_SETTING_KEYS.DEFAULT_CLIMATE),
+        season: game.settings.get(MODULE_ID, WEATHER_SETTING_KEYS.DEFAULT_SEASON),
+        phase: game.settings.get(MODULE_ID, WEATHER_SETTING_KEYS.DEFAULT_PHASE),
+        ruinsEnabled: game.settings.get(MODULE_ID, WEATHER_SETTING_KEYS.DEFAULT_RUINS_ENABLED)
+    };
+}
+
+export function getAbsoluteWeatherDay() {
+    return game.settings.get(MODULE_ID, WEATHER_SETTING_KEYS.ABSOLUTE_DAY);
+}
+
+export async function setAbsoluteWeatherDay(day) {
+    return game.settings.set(MODULE_ID, WEATHER_SETTING_KEYS.ABSOLUTE_DAY, Number(day) || 1);
+}
+
+export function getWeatherPanelOpen() {
+    return game.settings.get(MODULE_ID, WEATHER_SETTING_KEYS.PANEL_OPEN);
+}
+
+export async function setWeatherPanelOpen(isOpen) {
+    return game.settings.set(MODULE_ID, WEATHER_SETTING_KEYS.PANEL_OPEN, Boolean(isOpen));
+}
 
 ====================================================================================================
 FILE: C:\FoundryMods\terr-encounters\scripts\systems\weather\weather-state.js
 ----------------------------------------------------------------------------------------------------
+/**
+ * terr-encounters v0.1.0-b11
+ * Function: owns the persistent weather state document stored in world settings.
+ * This includes environment context, active trend, current day, wording matrix,
+ * and optional exposure data.
+ */
+
+import { createWeatherId, deepClone } from "./weather-utils.js";
+import { getAbsoluteWeatherDay, getWeatherDefaults, isExposureEnabled } from "./weather-settings.js";
+
+const MODULE_ID = "terr-encounters";
+const WEATHER_STATE_KEY = "weatherState";
+
+function buildDefaultEnvironment() {
+    const defaults = getWeatherDefaults();
+
+    return {
+        biome: defaults.biome,
+        climate: defaults.climate,
+        season: defaults.season,
+        phase: defaults.phase,
+        ruinsEnabled: Boolean(defaults.ruinsEnabled)
+    };
+}
+
+function buildDefaultWordingMatrix() {
+    return {
+        wetness: 0,
+        mud: 0,
+        standingWater: 0,
+        snowCover: 0,
+        dryness: 0
+    };
+}
+
+function buildDefaultExposure() {
+    return {
+        enabled: isExposureEnabled(),
+        total: 0,
+        band: "none"
+    };
+}
+
+function buildDefaultCurrentDay() {
+    return {
+        absoluteDay: getAbsoluteWeatherDay(),
+        trendDay: 1,
+        tempC: null,
+        tempF: null,
+        precipActive: false,
+        precipType: "none",
+        precipIntensity: "none",
+        windActive: false,
+        windIntensity: "calm",
+        cloudFace: "neutral",
+        stormFlags: {
+            thunder: false,
+            lightning: false
+        },
+        summaryLines: []
+    };
+}
+
+function buildDefaultActiveTrend() {
+    return {
+        id: createWeatherId("trend"),
+        durationDays: 1,
+        dayIndex: 1,
+        condition: "clear",
+        tempBand: "mild",
+        seedTempC: 10,
+        tempMinC: 7,
+        tempMaxC: 13,
+        tempMotion: "holding",
+        tempMotionStrength: "slight",
+        precipType: "none",
+        precipIntensity: "none",
+        precipPattern: "sporadic",
+        windIntensity: "calm",
+        windPattern: "sporadic"
+    };
+}
+
+export function createDefaultWeatherState() {
+    return {
+        version: "0.1.0-b11",
+        environment: buildDefaultEnvironment(),
+        activeTrend: buildDefaultActiveTrend(),
+        currentDay: buildDefaultCurrentDay(),
+        wordingMatrix: buildDefaultWordingMatrix(),
+        exposure: buildDefaultExposure()
+    };
+}
+
+export function normalizeWeatherState(state) {
+    const base = createDefaultWeatherState();
+    const source = state && typeof state === "object" ? state : {};
+
+    return {
+        ...base,
+        ...source,
+        environment: {
+            ...base.environment,
+            ...(source.environment ?? {})
+        },
+        activeTrend: {
+            ...base.activeTrend,
+            ...(source.activeTrend ?? {})
+        },
+        currentDay: {
+            ...base.currentDay,
+            ...(source.currentDay ?? {}),
+            stormFlags: {
+                ...base.currentDay.stormFlags,
+                ...(source.currentDay?.stormFlags ?? {})
+            },
+            summaryLines: Array.isArray(source.currentDay?.summaryLines)
+                ? [...source.currentDay.summaryLines]
+                : [...base.currentDay.summaryLines]
+        },
+        wordingMatrix: {
+            ...base.wordingMatrix,
+            ...(source.wordingMatrix ?? {})
+        },
+        exposure: {
+            ...base.exposure,
+            ...(source.exposure ?? {})
+        }
+    };
+}
+
+export async function registerWeatherState() {
+    game.settings.register(MODULE_ID, WEATHER_STATE_KEY, {
+        name: "Weather State",
+        hint: "Persistent Terr Encounters weather state blob.",
+        scope: "world",
+        config: false,
+        type: Object,
+        default: createDefaultWeatherState()
+    });
+}
+
+export function getWeatherState() {
+    const stored = game.settings.get(MODULE_ID, WEATHER_STATE_KEY);
+    return normalizeWeatherState(stored);
+}
+
+export async function setWeatherState(nextState) {
+    const normalized = normalizeWeatherState(nextState);
+    return game.settings.set(MODULE_ID, WEATHER_STATE_KEY, normalized);
+}
+
+export async function updateWeatherState(mutator) {
+    const current = getWeatherState();
+    const working = deepClone(current);
+
+    const result = typeof mutator === "function" ? mutator(working) : working;
+    const nextState = result && typeof result === "object" ? result : working;
+
+    return setWeatherState(nextState);
+}
+
+export async function resetWeatherState() {
+    return setWeatherState(createDefaultWeatherState());
+}
 
 ====================================================================================================
 FILE: C:\FoundryMods\terr-encounters\scripts\systems\weather\weather-ui.js
 ----------------------------------------------------------------------------------------------------
+/**
+ * terr-encounters v0.1.0-b10
+ * Function: renders the weather panel, displays current trend/day data, and
+ * wires the panel controls for refresh, next day, reroll, reset, and
+ * environment selection actions.
+ */
+
+import {
+    getAvailableBiomes,
+    getAvailableClimates,
+    getAvailablePhases,
+    getAvailableSeasons
+} from "../../data/weather/weather-baselines.js";
+import {
+    advanceWeatherDay,
+    getRenderedWeatherState,
+    refreshWeatherState,
+    regenerateTrend,
+    resetWeatherSystem,
+    updateWeatherEnvironment
+} from "./weather-controller.js";
+import { getWeatherPanelOpen, setWeatherPanelOpen } from "./weather-settings.js";
+
+const MODULE_ID = "terr-encounters";
+const PANEL_ID = "terr-weather-panel";
+const PANEL_TEMPLATE = "modules/terr-encounters/templates/weather/weather-panel.hbs";
+
+function prettyLabel(value) {
+    return String(value ?? "")
+        .split("_")
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(" ");
+}
+
+function buildSelectOptions(values, selectedValue) {
+    return values.map((value) => ({
+        value,
+        label: prettyLabel(value),
+        selected: value === selectedValue
+    }));
+}
+
+function resolveEnvironmentSelection(environment, key, value) {
+    const next = {
+        biome: environment?.biome ?? "temperate_forest",
+        climate: environment?.climate ?? "temperate",
+        season: environment?.season ?? "spring",
+        phase: environment?.phase ?? "mid",
+        ruinsEnabled: Boolean(environment?.ruinsEnabled)
+    };
+
+    next[key] = value;
+
+    if (key === "biome") {
+        next.climate = getAvailableClimates(next.biome)[0] ?? next.climate;
+        next.season = getAvailableSeasons(next.biome, next.climate)[0] ?? next.season;
+        next.phase = getAvailablePhases(next.biome, next.climate, next.season)[0] ?? next.phase;
+        return next;
+    }
+
+    if (key === "climate") {
+        next.season = getAvailableSeasons(next.biome, next.climate)[0] ?? next.season;
+        next.phase = getAvailablePhases(next.biome, next.climate, next.season)[0] ?? next.phase;
+        return next;
+    }
+
+    if (key === "season") {
+        next.phase = getAvailablePhases(next.biome, next.climate, next.season)[0] ?? next.phase;
+        return next;
+    }
+
+    return next;
+}
+
+function buildEnvironmentOptions(environment) {
+    const biome = environment?.biome ?? "temperate_forest";
+    const climate = environment?.climate ?? "temperate";
+    const season = environment?.season ?? "spring";
+    const phase = environment?.phase ?? "mid";
+
+    return {
+        biomes: buildSelectOptions(getAvailableBiomes(), biome),
+        climates: buildSelectOptions(getAvailableClimates(biome), climate),
+        seasons: buildSelectOptions(getAvailableSeasons(biome, climate), season),
+        phases: buildSelectOptions(getAvailablePhases(biome, climate, season), phase)
+    };
+}
+
+export class TerrWeatherPanel extends Application {
+    static get defaultOptions() {
+        return foundry.utils.mergeObject(super.defaultOptions, {
+            id: PANEL_ID,
+            template: PANEL_TEMPLATE,
+            popOut: true,
+            minimizable: true,
+            resizable: false,
+            width: 360,
+            height: "auto",
+            title: "Weather",
+            classes: ["terr-encounters", "terr-weather-panel"]
+        });
+    }
+
+    async getData() {
+        const { state, view } = getRenderedWeatherState();
+
+        return {
+            moduleId: MODULE_ID,
+            meta: view.meta,
+            trendLines: view.trendLines,
+            currentDayLines: view.currentDayLines,
+            aftermathLines: view.aftermathLines,
+            exposureLine: view.exposureLine,
+            hasExposure: view.hasExposure,
+            hasAftermath: view.hasAftermath,
+            hasCurrentDay: view.hasCurrentDay,
+            isGM: game.user?.isGM === true,
+            state,
+            environment: state.environment,
+            environmentOptions: buildEnvironmentOptions(state.environment)
+        };
+    }
+
+    async _render(force = false, options = {}) {
+        const rendered = await super._render(force, options);
+        await setWeatherPanelOpen(true);
+        return rendered;
+    }
+
+    async close(options = {}) {
+        await setWeatherPanelOpen(false);
+        return super.close(options);
+    }
+
+    activateListeners(html) {
+        super.activateListeners(html);
+
+        html.find("[data-action='weather-refresh']").on("click", async (event) => {
+            event.preventDefault();
+            await refreshWeatherState();
+            await this.refreshPanel();
+        });
+
+        html.find("[data-action='weather-next-day']").on("click", async (event) => {
+            event.preventDefault();
+            if (!game.user?.isGM) return;
+            await advanceWeatherDay();
+            ui.notifications?.info("Weather advanced to next day.");
+            await this.refreshPanel();
+        });
+
+        html.find("[data-action='weather-reroll']").on("click", async (event) => {
+            event.preventDefault();
+            if (!game.user?.isGM) return;
+            await regenerateTrend();
+            ui.notifications?.info("Weather trend rerolled.");
+            await this.refreshPanel();
+        });
+
+        html.find("[data-action='weather-reset']").on("click", async (event) => {
+            event.preventDefault();
+            if (!game.user?.isGM) return;
+            await resetWeatherSystem();
+            ui.notifications?.warn("Weather system reset.");
+            await this.refreshPanel();
+        });
+
+        html.find("[data-env-key]").on("change", async (event) => {
+            event.preventDefault();
+            if (!game.user?.isGM) return;
+
+            const key = event.currentTarget.dataset.envKey;
+            const value = event.currentTarget.value;
+            const current = getRenderedWeatherState().state.environment;
+            const patch = resolveEnvironmentSelection(current, key, value);
+
+            await updateWeatherEnvironment(patch);
+            ui.notifications?.info("Weather environment updated.");
+            await this.refreshPanel();
+        });
+
+        html.find("[data-action='weather-toggle-ruins']").on("change", async (event) => {
+            event.preventDefault();
+            if (!game.user?.isGM) return;
+
+            await updateWeatherEnvironment({
+                ruinsEnabled: Boolean(event.currentTarget.checked)
+            });
+
+            ui.notifications?.info("Ruins flavor updated.");
+            await this.refreshPanel();
+        });
+    }
+
+    async refreshPanel() {
+        return this.render(true);
+    }
+}
+
+let weatherPanelInstance = null;
+
+export function getWeatherPanel() {
+    if (!weatherPanelInstance) {
+        weatherPanelInstance = new TerrWeatherPanel();
+    }
+
+    return weatherPanelInstance;
+}
+
+export async function openWeatherPanel() {
+    const panel = getWeatherPanel();
+    await refreshWeatherState();
+    await panel.render(true);
+    return panel;
+}
+
+export async function restoreWeatherPanelIfOpen() {
+    if (!getWeatherPanelOpen()) return null;
+    return openWeatherPanel();
+}
 
 ====================================================================================================
 FILE: C:\FoundryMods\terr-encounters\scripts\systems\weather\weather-utils.js
 ----------------------------------------------------------------------------------------------------
+/**
+ * terr-encounters v0.1.0-b2
+ * Function: shared weather helpers for weighted rolls, clamping, random ranges,
+ * ids, deep cloning, and temperature conversion.
+ */
+
+export const WEATHER_UTILS_VERSION = "0.1.0-b2";
+
+export function clamp(value, min, max) {
+    return Math.max(min, Math.min(max, value));
+}
+
+export function randomInt(min, max) {
+    const low = Math.ceil(Math.min(min, max));
+    const high = Math.floor(Math.max(min, max));
+    return Math.floor(Math.random() * (high - low + 1)) + low;
+}
+
+export function randomFloat(min, max) {
+    const low = Math.min(min, max);
+    const high = Math.max(min, max);
+    return Math.random() * (high - low) + low;
+}
+
+export function cToF(celsius) {
+    return Math.round((celsius * 9) / 5 + 32);
+}
+
+export function fToC(fahrenheit) {
+    return Math.round(((fahrenheit - 32) * 5) / 9);
+}
+
+export function roundTo(value, places = 0) {
+    const factor = 10 ** places;
+    return Math.round(value * factor) / factor;
+}
+
+export function pickOne(items = []) {
+    if (!Array.isArray(items) || items.length === 0) return null;
+    return items[randomInt(0, items.length - 1)];
+}
+
+export function weightedPick(weightMap = {}) {
+    const entries = Object.entries(weightMap).filter(([, weight]) => Number(weight) > 0);
+
+    if (!entries.length) return null;
+
+    const total = entries.reduce((sum, [, weight]) => sum + Number(weight), 0);
+    let roll = randomFloat(0, total);
+
+    for (const [key, weight] of entries) {
+        roll -= Number(weight);
+        if (roll <= 0) {
+            return key;
+        }
+    }
+
+    return entries[entries.length - 1][0];
+}
+
+export function weightedPickNumber(weightMap = {}) {
+    const result = weightedPick(weightMap);
+    return result === null ? null : Number(result);
+}
+
+export function deepClone(value) {
+    if (typeof structuredClone === "function") {
+        return structuredClone(value);
+    }
+
+    return JSON.parse(JSON.stringify(value));
+}
+
+export function mergeObjectsShallow(base = {}, extra = {}) {
+    return {
+        ...base,
+        ...extra
+    };
+}
+
+export function createWeatherId(prefix = "weather") {
+    const stamp = Date.now().toString(36);
+    const rand = Math.random().toString(36).slice(2, 8);
+    return `${prefix}-${stamp}-${rand}`;
+}
+
+export function safeGetProperty(object, path, fallback = null) {
+    if (!object || !path) return fallback;
+
+    const keys = Array.isArray(path) ? path : String(path).split(".");
+    let current = object;
+
+    for (const key of keys) {
+        if (current == null || !(key in current)) {
+            return fallback;
+        }
+        current = current[key];
+    }
+
+    return current;
+}
+
+export function ensureNumber(value, fallback = 0) {
+    const num = Number(value);
+    return Number.isFinite(num) ? num : fallback;
+}
+
+export function normalizeWeightMap(weightMap = {}) {
+    const normalized = {};
+    for (const [key, value] of Object.entries(weightMap)) {
+        const weight = ensureNumber(value, 0);
+        if (weight > 0) {
+            normalized[key] = weight;
+        }
+    }
+    return normalized;
+}
 
 ====================================================================================================
 FILE: C:\FoundryMods\terr-encounters\scripts\data\weather\weather-baselines.js
 ----------------------------------------------------------------------------------------------------
+/**
+ * terr-encounters v0.1.0-b3
+ * Function: baseline weather tables keyed by biome -> climate -> season -> phase.
+ * These tables drive weighted trend generation for condition, temperature,
+ * precipitation, wind, and duration.
+ */
+
+export const WEATHER_BASELINES_VERSION = "0.1.0-b3";
+
+export const DEFAULT_BASELINE_PATH = {
+    biome: "temperate_forest",
+    climate: "temperate",
+    season: "spring",
+    phase: "mid"
+};
+
+const DEFAULT_DURATION_WEIGHTS = {
+    1: 8,
+    2: 12,
+    3: 14,
+    4: 14,
+    5: 14,
+    6: 12,
+    7: 10,
+    8: 8,
+    9: 5,
+    10: 3
+};
+
+function makeBaseline(overrides = {}) {
+    return {
+        conditions: {
+            clear: 12,
+            overcast: 18,
+            foggy: 10,
+            rainy: 20,
+            snowy: 0,
+            warm: 14,
+            hot: 2,
+            cold: 12,
+            windy: 12
+        },
+        tempBands: {
+            freezing: 0,
+            cold: 20,
+            cool: 30,
+            mild: 30,
+            warm: 16,
+            hot: 4,
+            severe_heat: 0
+        },
+        tempMotion: {
+            rising: 30,
+            holding: 45,
+            falling: 25
+        },
+        tempMotionStrength: {
+            slight: 50,
+            steady: 35,
+            sharp: 15
+        },
+        precipTypes: {
+            none: 24,
+            rain: 64,
+            snow: 0,
+            sleet: 12
+        },
+        precipIntensity: {
+            none: 0,
+            light: 28,
+            moderate: 44,
+            hard: 20,
+            severe: 8
+        },
+        precipPattern: {
+            sporadic: 45,
+            frequent: 40,
+            constant: 15
+        },
+        windIntensity: {
+            calm: 16,
+            light: 36,
+            moderate: 32,
+            strong: 12,
+            severe: 4
+        },
+        windPattern: {
+            sporadic: 45,
+            frequent: 40,
+            constant: 15
+        },
+        durationWeights: { ...DEFAULT_DURATION_WEIGHTS },
+        tempRangesC: {
+            freezing: { min: -12, max: 0 },
+            cold: { min: 1, max: 6 },
+            cool: { min: 4, max: 9 },
+            mild: { min: 7, max: 13 },
+            warm: { min: 12, max: 18 },
+            hot: { min: 18, max: 26 },
+            severe_heat: { min: 27, max: 38 }
+        },
+        ...overrides
+    };
+}
+
+export const WEATHER_BASELINES = {
+    temperate_forest: {
+        temperate: {
+            spring: {
+                early: makeBaseline({
+                    conditions: { clear: 10, overcast: 20, foggy: 12, rainy: 22, snowy: 4, warm: 10, hot: 0, cold: 14, windy: 8 },
+                    tempBands: { freezing: 2, cold: 22, cool: 34, mild: 26, warm: 14, hot: 2, severe_heat: 0 },
+                    tempMotion: { rising: 40, holding: 40, falling: 20 },
+                    precipTypes: { none: 20, rain: 58, snow: 8, sleet: 14 },
+                    tempRangesC: {
+                        freezing: { min: -10, max: 0 },
+                        cold: { min: 0, max: 5 },
+                        cool: { min: 3, max: 8 },
+                        mild: { min: 6, max: 12 },
+                        warm: { min: 11, max: 16 },
+                        hot: { min: 16, max: 23 },
+                        severe_heat: { min: 24, max: 34 }
+                    }
+                }),
+                mid: makeBaseline(),
+                late: makeBaseline({
+                    conditions: { clear: 14, overcast: 16, foggy: 8, rainy: 20, snowy: 0, warm: 20, hot: 4, cold: 8, windy: 10 },
+                    tempBands: { freezing: 0, cold: 10, cool: 24, mild: 34, warm: 24, hot: 8, severe_heat: 0 },
+                    tempMotion: { rising: 42, holding: 38, falling: 20 },
+                    precipTypes: { none: 24, rain: 66, snow: 0, sleet: 10 },
+                    tempRangesC: {
+                        freezing: { min: -8, max: 0 },
+                        cold: { min: 2, max: 7 },
+                        cool: { min: 6, max: 11 },
+                        mild: { min: 10, max: 16 },
+                        warm: { min: 15, max: 21 },
+                        hot: { min: 20, max: 28 },
+                        severe_heat: { min: 29, max: 37 }
+                    }
+                })
+            },
+            summer: {
+                early: makeBaseline({
+                    conditions: { clear: 16, overcast: 14, foggy: 6, rainy: 18, snowy: 0, warm: 24, hot: 8, cold: 2, windy: 12 },
+                    tempBands: { freezing: 0, cold: 2, cool: 18, mild: 34, warm: 30, hot: 14, severe_heat: 2 },
+                    tempMotion: { rising: 24, holding: 50, falling: 26 },
+                    precipTypes: { none: 28, rain: 64, snow: 0, sleet: 8 },
+                    windIntensity: { calm: 20, light: 38, moderate: 26, strong: 12, severe: 4 },
+                    tempRangesC: {
+                        freezing: { min: -5, max: 0 },
+                        cold: { min: 5, max: 9 },
+                        cool: { min: 10, max: 15 },
+                        mild: { min: 14, max: 20 },
+                        warm: { min: 19, max: 25 },
+                        hot: { min: 24, max: 31 },
+                        severe_heat: { min: 32, max: 40 }
+                    }
+                }),
+                mid: makeBaseline({
+                    conditions: { clear: 20, overcast: 10, foggy: 4, rainy: 14, snowy: 0, warm: 22, hot: 14, cold: 0, windy: 16 },
+                    tempBands: { freezing: 0, cold: 0, cool: 10, mild: 28, warm: 34, hot: 22, severe_heat: 6 },
+                    tempMotion: { rising: 18, holding: 56, falling: 26 },
+                    tempMotionStrength: { slight: 54, steady: 32, sharp: 14 },
+                    precipTypes: { none: 34, rain: 62, snow: 0, sleet: 4 },
+                    precipIntensity: { none: 0, light: 24, moderate: 42, hard: 24, severe: 10 },
+                    windIntensity: { calm: 20, light: 34, moderate: 28, strong: 14, severe: 4 },
+                    tempRangesC: {
+                        freezing: { min: -4, max: 0 },
+                        cold: { min: 7, max: 10 },
+                        cool: { min: 12, max: 17 },
+                        mild: { min: 17, max: 22 },
+                        warm: { min: 21, max: 28 },
+                        hot: { min: 27, max: 34 },
+                        severe_heat: { min: 35, max: 42 }
+                    }
+                }),
+                late: makeBaseline({
+                    conditions: { clear: 18, overcast: 10, foggy: 5, rainy: 14, snowy: 0, warm: 20, hot: 12, cold: 2, windy: 19 },
+                    tempBands: { freezing: 0, cold: 0, cool: 12, mild: 30, warm: 32, hot: 20, severe_heat: 6 },
+                    tempMotion: { rising: 10, holding: 40, falling: 50 },
+                    precipTypes: { none: 30, rain: 62, snow: 0, sleet: 8 }
+                })
+            },
+            autumn: {
+                early: makeBaseline({
+                    conditions: { clear: 16, overcast: 16, foggy: 10, rainy: 20, snowy: 0, warm: 16, hot: 2, cold: 10, windy: 10 },
+                    tempBands: { freezing: 0, cold: 10, cool: 22, mild: 34, warm: 24, hot: 10, severe_heat: 0 },
+                    tempMotion: { rising: 10, holding: 36, falling: 54 },
+                    precipTypes: { none: 24, rain: 66, snow: 0, sleet: 10 }
+                }),
+                mid: makeBaseline({
+                    conditions: { clear: 12, overcast: 20, foggy: 12, rainy: 20, snowy: 4, warm: 10, hot: 0, cold: 12, windy: 10 },
+                    tempBands: { freezing: 2, cold: 18, cool: 32, mild: 30, warm: 16, hot: 2, severe_heat: 0 },
+                    tempMotion: { rising: 8, holding: 34, falling: 58 },
+                    precipTypes: { none: 22, rain: 58, snow: 6, sleet: 14 }
+                }),
+                late: makeBaseline({
+                    conditions: { clear: 10, overcast: 18, foggy: 12, rainy: 18, snowy: 10, warm: 4, hot: 0, cold: 18, windy: 10 },
+                    tempBands: { freezing: 10, cold: 28, cool: 30, mild: 20, warm: 10, hot: 2, severe_heat: 0 },
+                    tempMotion: { rising: 6, holding: 32, falling: 62 },
+                    precipTypes: { none: 20, rain: 42, snow: 20, sleet: 18 },
+                    tempRangesC: {
+                        freezing: { min: -14, max: 0 },
+                        cold: { min: -1, max: 4 },
+                        cool: { min: 2, max: 7 },
+                        mild: { min: 5, max: 11 },
+                        warm: { min: 10, max: 16 },
+                        hot: { min: 16, max: 23 },
+                        severe_heat: { min: 24, max: 32 }
+                    }
+                })
+            },
+            winter: {
+                early: makeBaseline({
+                    conditions: { clear: 10, overcast: 18, foggy: 10, rainy: 8, snowy: 24, warm: 0, hot: 0, cold: 20, windy: 10 },
+                    tempBands: { freezing: 24, cold: 30, cool: 24, mild: 12, warm: 10, hot: 0, severe_heat: 0 },
+                    tempMotion: { rising: 10, holding: 44, falling: 46 },
+                    precipTypes: { none: 20, rain: 12, snow: 52, sleet: 16 },
+                    precipIntensity: { none: 0, light: 32, moderate: 40, hard: 20, severe: 8 },
+                    tempRangesC: {
+                        freezing: { min: -22, max: -1 },
+                        cold: { min: -4, max: 2 },
+                        cool: { min: 1, max: 5 },
+                        mild: { min: 4, max: 9 },
+                        warm: { min: 8, max: 14 },
+                        hot: { min: 15, max: 22 },
+                        severe_heat: { min: 23, max: 30 }
+                    }
+                }),
+                mid: makeBaseline({
+                    conditions: { clear: 10, overcast: 20, foggy: 10, rainy: 2, snowy: 30, warm: 0, hot: 0, cold: 18, windy: 10 },
+                    tempBands: { freezing: 34, cold: 30, cool: 20, mild: 10, warm: 6, hot: 0, severe_heat: 0 },
+                    tempMotion: { rising: 12, holding: 52, falling: 36 },
+                    precipTypes: { none: 18, rain: 4, snow: 62, sleet: 16 },
+                    windIntensity: { calm: 14, light: 30, moderate: 34, strong: 16, severe: 6 },
+                    tempRangesC: {
+                        freezing: { min: -28, max: -3 },
+                        cold: { min: -8, max: 0 },
+                        cool: { min: -1, max: 4 },
+                        mild: { min: 3, max: 8 },
+                        warm: { min: 7, max: 12 },
+                        hot: { min: 13, max: 20 },
+                        severe_heat: { min: 21, max: 28 }
+                    }
+                }),
+                late: makeBaseline({
+                    conditions: { clear: 10, overcast: 20, foggy: 12, rainy: 6, snowy: 22, warm: 2, hot: 0, cold: 18, windy: 10 },
+                    tempBands: { freezing: 24, cold: 28, cool: 24, mild: 14, warm: 10, hot: 0, severe_heat: 0 },
+                    tempMotion: { rising: 30, holding: 42, falling: 28 },
+                    precipTypes: { none: 20, rain: 10, snow: 54, sleet: 16 }
+                })
+            }
+        }
+    }
+};
+
+export function getDefaultDurationWeights() {
+    return { ...DEFAULT_DURATION_WEIGHTS };
+}
+
+export function getBaselineLeaf(biome, climate, season, phase) {
+    const biomeNode = WEATHER_BASELINES[biome] ?? WEATHER_BASELINES[DEFAULT_BASELINE_PATH.biome];
+    const climateNode = biomeNode?.[climate] ?? biomeNode?.[DEFAULT_BASELINE_PATH.climate];
+    const seasonNode = climateNode?.[season] ?? climateNode?.[DEFAULT_BASELINE_PATH.season];
+    const leaf = seasonNode?.[phase] ?? seasonNode?.[DEFAULT_BASELINE_PATH.phase];
+
+    return leaf ?? makeBaseline();
+}
+
+export function getTempRangeForBand(leaf, band) {
+    return leaf?.tempRangesC?.[band] ?? { min: 7, max: 13 };
+}
 
 ====================================================================================================
 FILE: C:\FoundryMods\terr-encounters\scripts\data\weather\weather-language.js
 ----------------------------------------------------------------------------------------------------
+/**
+ * terr-encounters v0.1.0-b3
+ * Function: central wording tables for condition lines, precipitation,
+ * temperature motion, wind phrasing, cloud faces, and wording matrix descriptors.
+ */
+
+export const WEATHER_LANGUAGE_VERSION = "0.1.0-b3";
+
+export const WEATHER_LANGUAGE = {
+    conditionLabels: {
+        clear: "Clear",
+        overcast: "Overcast",
+        foggy: "Foggy",
+        rainy: "Rainy",
+        snowy: "Snowy",
+        warm: "Warm",
+        hot: "Hot",
+        cold: "Cold",
+        windy: "Windy"
+    },
+
+    tempBandLabels: {
+        freezing: "Freezing",
+        cold: "Cold",
+        cool: "Cool",
+        mild: "Mild",
+        warm: "Warm",
+        hot: "Hot",
+        severe_heat: "Severe Heat"
+    },
+
+    precipTypeLabels: {
+        none: "No precipitation",
+        rain: "rain",
+        snow: "snow",
+        sleet: "sleet"
+    },
+
+    precipIntensityLabels: {
+        none: "No",
+        light: "Light",
+        moderate: "Moderate",
+        hard: "Hard",
+        severe: "Severe"
+    },
+
+    precipPatternLabels: {
+        sporadic: "sporadic",
+        frequent: "frequent",
+        constant: "constant"
+    },
+
+    windIntensityLabels: {
+        calm: "Calm",
+        light: "Light",
+        moderate: "Moderate",
+        strong: "Strong",
+        severe: "Severe"
+    },
+
+    windPatternLabels: {
+        sporadic: "sporadic",
+        frequent: "frequent",
+        constant: "constant"
+    },
+
+    cloudFaces: {
+        bright: "Bright skies",
+        mixed: "Broken cloud cover",
+        grey: "Grey cloud cover",
+        low: "Low hanging cloud",
+        storm: "Storm front building"
+    },
+
+    matrixDescriptors: {
+        wetness: {
+            0: "",
+            1: "The ground is lightly damp.",
+            2: "The ground is damp underfoot.",
+            3: "The ground is wet and slick in places.",
+            4: "The ground is heavily soaked.",
+            5: "The ground is saturated."
+        },
+        mud: {
+            0: "",
+            1: "Light mud clings to boots.",
+            2: "Mud is building in softer ground.",
+            3: "Mud is thick in common footpaths.",
+            4: "Heavy mud slows footing.",
+            5: "Deep mud dominates the ground."
+        },
+        standingWater: {
+            0: "",
+            1: "Small puddles collect in dips.",
+            2: "Puddles are common.",
+            3: "Standing water spreads across low ground.",
+            4: "Pools of water linger broadly.",
+            5: "Low ground is waterlogged."
+        },
+        snowCover: {
+            0: "",
+            1: "A light dusting of snow remains.",
+            2: "Snow cover is visible across the ground.",
+            3: "Snow cover is building steadily.",
+            4: "Deep snow covers most surfaces.",
+            5: "Heavy snowpack defines the landscape."
+        },
+        dryness: {
+            0: "",
+            1: "The air and ground are starting to dry.",
+            2: "Conditions feel notably dry.",
+            3: "The ground is dry and firming up.",
+            4: "Dry conditions dominate the area.",
+            5: "The area feels parched."
+        }
+    }
+};
+
+export function getConditionLine(condition, tempBand) {
+    const conditionLabel = WEATHER_LANGUAGE.conditionLabels[condition] ?? "Unsettled";
+    const tempLabel = WEATHER_LANGUAGE.tempBandLabels[tempBand] ?? "Mild";
+
+    if (condition === "clear" || condition === "overcast" || condition === "foggy" || condition === "windy") {
+        return `${conditionLabel} and ${tempLabel}`;
+    }
+
+    if (condition === "warm" || condition === "hot" || condition === "cold") {
+        return `${conditionLabel} conditions`;
+    }
+
+    return `${conditionLabel} and ${tempLabel}`;
+}
+
+export function getPrecipLine(precipType, precipIntensity, precipPattern) {
+    if (precipType === "none" || precipIntensity === "none") {
+        return "No precipitation";
+    }
+
+    const intensity = WEATHER_LANGUAGE.precipIntensityLabels[precipIntensity] ?? "Moderate";
+    const pattern = WEATHER_LANGUAGE.precipPatternLabels[precipPattern] ?? "sporadic";
+    const type = WEATHER_LANGUAGE.precipTypeLabels[precipType] ?? "rain";
+
+    return `${intensity} ${pattern} ${type}`;
+}
+
+export function getTempMotionLine(tempMotion, tempMotionStrength) {
+    if (tempMotion === "holding") {
+        return "Temperature holding";
+    }
+
+    const strengthWord = {
+        slight: "slightly",
+        steady: "steadily",
+        sharp: "sharply"
+    }[tempMotionStrength] ?? "steadily";
+
+    const directionWord = tempMotion === "rising" ? "rising" : "dropping";
+    return `Temperature ${strengthWord} ${directionWord}`;
+}
+
+export function getWindLine(windIntensity, windPattern) {
+    if (windIntensity === "calm") {
+        return "Calm air";
+    }
+
+    const intensity = WEATHER_LANGUAGE.windIntensityLabels[windIntensity] ?? "Light";
+    const pattern = WEATHER_LANGUAGE.windPatternLabels[windPattern] ?? "sporadic";
+
+    return `${intensity} ${pattern} winds`;
+}
+
+export function getCloudFaceLabel(cloudFace) {
+    return WEATHER_LANGUAGE.cloudFaces[cloudFace] ?? WEATHER_LANGUAGE.cloudFaces.mixed;
+}
+
+export function getMatrixDescriptorLines(matrix = {}) {
+    const lines = [];
+
+    for (const key of ["wetness", "mud", "standingWater", "snowCover", "dryness"]) {
+        const level = Number(matrix[key] ?? 0);
+        const entry = WEATHER_LANGUAGE.matrixDescriptors[key]?.[level] ?? "";
+        if (entry) {
+            lines.push(entry);
+        }
+    }
+
+    return lines;
+}
 
 ====================================================================================================
 FILE: C:\FoundryMods\terr-encounters\scripts\data\weather\weather-ruins.js
 ----------------------------------------------------------------------------------------------------
+/**
+ * terr-encounters v0.1.0-b3
+ * Function: holds optional ruins-facing weather flavor hooks. These are
+ * descriptive modifiers only and do not alter the core weather math yet.
+ */
 
-====================================================================================================
-FILE: C:\FoundryMods\terr-encounters\templates\weather\weather-panel.hbs
-----------------------------------------------------------------------------------------------------
+export const WEATHER_RUINS_VERSION = "0.1.0-b3";
 
-====================================================================================================
-FILE: C:\FoundryMods\terr-encounters\styles\weather\weather-panel.css
-----------------------------------------------------------------------------------------------------
+export const WEATHER_RUINS = {
+    wetness: {
+        2: ["Old stone darkens with damp patches."],
+        3: ["Water beads on old stone and gathers in cracks."],
+        4: ["Ruined floors are slick with damp grime."],
+        5: ["Ruins drip steadily from soaked stone and broken ceilings."]
+    },
+    mud: {
+        2: ["Entryways and collapsed paths are turning muddy."],
+        3: ["Mud churns through broken corridors and low approaches."],
+        4: ["Ruined approaches are thick with clinging mud."],
+        5: ["Deep mud pools around collapsed masonry and low passages."]
+    },
+    standingWater: {
+        2: ["Shallow runoff gathers in broken stone depressions."],
+        3: ["Pools collect in cracked chambers and collapsed floors."],
+        4: ["Standing water fills low ruin sections."],
+        5: ["Flooded pockets dominate the lowest parts of the ruins."]
+    },
+    snowCover: {
+        1: ["Snow dusts exposed stone and broken walls."],
+        2: ["Snow lingers across exposed ruin surfaces."],
+        3: ["Snow drifts gather against broken masonry."],
+        4: ["Deep snow presses into open ruin courtyards and breaches."],
+        5: ["Heavy snowpack buries much of the exposed ruin detail."]
+    },
+    dryness: {
+        2: ["Old mortar looks dry and brittle."],
+        3: ["Dry wind strips loose grit across the stone."],
+        4: ["The ruins feel baked dry and brittle."],
+        5: ["The ruin stones feel parched, cracked, and dust-choked."]
+    }
+};
+
+export function getRuinsDescriptorLines(matrix = {}) {
+    const lines = [];
+
+    for (const key of ["wetness", "mud", "standingWater", "snowCover", "dryness"]) {
+        const level = Number(matrix[key] ?? 0);
+        const bucket = WEATHER_RUINS[key];
+        if (!bucket) continue;
+
+        const entries = bucket[level];
+        if (Array.isArray(entries)) {
+            lines.push(...entries);
+        }
+    }
+
+    return lines;
+}
 
 ====================================================================================================
 FILE: C:\FoundryMods\terr-encounters\styles\core\launcher.css
 ----------------------------------------------------------------------------------------------------
+/**
+ * terr-encounters v0.1.0-b7
+ * Function: styles the weather launcher button injected into the chat sidebar.
+ * Matches Foundry control sizing and keeps the button compact.
+ */
+
+.terr-encounters-launcher {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    margin: 4px 0 0 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--color-border-light-primary);
+    border-radius: 6px;
+    background: var(--color-bg-btn-minor);
+    cursor: pointer;
+}
+
+    .terr-encounters-launcher:hover,
+    .terr-encounters-launcher:focus {
+        box-shadow: 0 0 0 1px var(--color-shadow-primary);
+    }
+
+    .terr-encounters-launcher i {
+        margin: 0;
+        pointer-events: none;
+    }
+
+====================================================================================================
+FILE: C:\FoundryMods\terr-encounters\styles\weather\weather-panel.css
+----------------------------------------------------------------------------------------------------
+/**
+ * terr-encounters v0.1.0-b10
+ * Function: styles the weather panel shell, sections, text blocks, GM control
+ * row, and environment inputs. Kept compact and readable for the Foundry
+ * sidebar workflow.
+ */
+
+.terr-weather-panel .window-content {
+    padding: 8px;
+}
+
+.terr-weather-shell {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+
+.terr-weather-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.terr-weather-titleblock {
+    min-width: 0;
+}
+
+.terr-weather-title {
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+.terr-weather-subtitle {
+    margin-top: 2px;
+    font-size: 12px;
+    opacity: 0.8;
+}
+
+.terr-weather-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.terr-weather-icon-button {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.terr-weather-section {
+    border: 1px solid var(--color-border-light-primary);
+    border-radius: 6px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.terr-weather-trend {
+    gap: 2px;
+}
+
+.terr-weather-section-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    opacity: 0.75;
+    margin-bottom: 2px;
+}
+
+.terr-weather-line {
+    font-size: 13px;
+    line-height: 1.25;
+    word-break: break-word;
+}
+
+.terr-weather-trend-line:first-child {
+    font-weight: 700;
+}
+
+.terr-weather-field {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+    .terr-weather-field label {
+        font-size: 11px;
+        font-weight: 700;
+        opacity: 0.8;
+    }
+
+    .terr-weather-field select {
+        width: 100%;
+    }
+
+.terr-weather-checkbox {
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+}
+
+.terr-weather-controls {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+}
+
+    .terr-weather-controls button {
+        min-height: 30px;
+        font-size: 12px;
+    }
+
+.terr-weather-aftermath .terr-weather-line,
+.terr-weather-currentday .terr-weather-line,
+.terr-weather-exposure .terr-weather-line {
+    opacity: 0.95;
+}
+
+====================================================================================================
+FILE: C:\FoundryMods\terr-encounters\templates\weather\weather-panel.hbs
+----------------------------------------------------------------------------------------------------
+{{
+!--
+terr-encounters v0.1.0-b10
+Function: weather panel markup for displaying trend lines, current day details,
+aftermath wording, exposure, GM controls, and environment selectors.
+--
+}}
+
+<section class="terr-weather-shell">
+    <header class="terr-weather-header">
+        <div class="terr-weather-titleblock">
+            <div class="terr-weather-title">Weather</div>
+            <div class="terr-weather-subtitle">
+                Day {{meta.absoluteDay}} Â· Trend Day {{meta.trendDay}} / {{meta.trendDuration}}
+            </div>
+        </div>
+
+        <div class="terr-weather-header-actions">
+            <button type="button" class="terr-weather-icon-button" data-action="weather-refresh" title="Refresh">
+                <i class="fas fa-rotate-right"></i>
+            </button>
+        </div>
+    </header>
+
+    {{#if isGM}}
+    <div class="terr-weather-section terr-weather-environment">
+        <div class="terr-weather-section-label">Environment</div>
+
+        <div class="terr-weather-field">
+            <label for="terr-weather-biome">Biome</label>
+            <select id="terr-weather-biome" data-env-key="biome">
+                {{#each environmentOptions.biomes}}
+                <option value="{{value}}" {{#if selected}} selected{{/if}}>{{label}}</option>
+                {{/each}}
+            </select>
+        </div>
+
+        <div class="terr-weather-field">
+            <label for="terr-weather-climate">Climate</label>
+            <select id="terr-weather-climate" data-env-key="climate">
+                {{#each environmentOptions.climates}}
+                <option value="{{value}}" {{#if selected}} selected{{/if}}>{{label}}</option>
+                {{/each}}
+            </select>
+        </div>
+
+        <div class="terr-weather-field">
+            <label for="terr-weather-season">Season</label>
+            <select id="terr-weather-season" data-env-key="season">
+                {{#each environmentOptions.seasons}}
+                <option value="{{value}}" {{#if selected}} selected{{/if}}>{{label}}</option>
+                {{/each}}
+            </select>
+        </div>
+
+        <div class="terr-weather-field">
+            <label for="terr-weather-phase">Phase</label>
+            <select id="terr-weather-phase" data-env-key="phase">
+                {{#each environmentOptions.phases}}
+                <option value="{{value}}" {{#if selected}} selected{{/if}}>{{label}}</option>
+                {{/each}}
+            </select>
+        </div>
+
+        <label class="terr-weather-checkbox">
+            <input type="checkbox"
+                   data-action="weather-toggle-ruins"
+                   {{#if environment.ruinsEnabled}} checked{{/if}} />
+            <span>Ruins Flavor</span>
+        </label>
+    </div>
+    {{/if}}
+
+    <div class="terr-weather-section terr-weather-trend">
+        {{#each trendLines}}
+        <div class="terr-weather-line terr-weather-trend-line">{{this}}</div>
+        {{/each}}
+    </div>
+
+    {{#if hasCurrentDay}}
+    <div class="terr-weather-section terr-weather-currentday">
+        <div class="terr-weather-section-label">Current Day</div>
+        {{#each currentDayLines}}
+        <div class="terr-weather-line">{{this}}</div>
+        {{/each}}
+    </div>
+    {{/if}}
+
+    {{#if hasAftermath}}
+    <div class="terr-weather-section terr-weather-aftermath">
+        <div class="terr-weather-section-label">Ground</div>
+        {{#each aftermathLines}}
+        <div class="terr-weather-line">{{this}}</div>
+        {{/each}}
+    </div>
+    {{/if}}
+
+    {{#if hasExposure}}
+    <div class="terr-weather-section terr-weather-exposure">
+        <div class="terr-weather-section-label">Exposure</div>
+        <div class="terr-weather-line">{{exposureLine}}</div>
+    </div>
+    {{/if}}
+
+    {{#if isGM}}
+    <footer class="terr-weather-controls">
+        <button type="button" data-action="weather-next-day">Next Day</button>
+        <button type="button" data-action="weather-reroll">Reroll</button>
+        <button type="button" data-action="weather-reset">Reset</button>
+    </footer>
+    {{/if}}
+</section>
 
