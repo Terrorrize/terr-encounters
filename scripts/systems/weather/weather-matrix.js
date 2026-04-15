@@ -1,14 +1,15 @@
 /**
- * terr-encounters v0.1.0-b6
+ * terr-encounters v0.1.0-b7
  * Function: updates the wording matrix from the resolved day and extracts
- * descriptive aftermath lines. Drying and descriptor selection now enforce
- * exclusivity so wet and dry extremes do not present together.
+ * descriptive aftermath lines. This revision improves recovery, prevents wet
+ * escalation from sticking too long, and keeps swamp/coast identity without
+ * letting most biomes stay muddy forever.
  */
 
 import { getRuinsDescriptorLines } from "../../data/weather/weather-ruins.js";
 import { clamp } from "./weather-utils.js";
 
-export const WEATHER_MATRIX_VERSION = "0.1.0-b6";
+export const WEATHER_MATRIX_VERSION = "0.1.0-b7";
 
 function normalizeMatrix(matrix = {}) {
     return {
@@ -26,12 +27,12 @@ function applyRain(matrix, intensity) {
             matrix.wetness += 1;
             break;
         case "moderate":
-            matrix.wetness += 2;
+            matrix.wetness += 1;
             matrix.mud += 1;
             break;
         case "hard":
             matrix.wetness += 2;
-            matrix.mud += 2;
+            matrix.mud += 1;
             matrix.standingWater += 1;
             break;
         case "severe":
@@ -55,6 +56,9 @@ function applySnow(matrix, intensity) {
             matrix.snowCover += 2;
             break;
         case "hard":
+            matrix.snowCover += 2;
+            matrix.wetness += 1;
+            break;
         case "severe":
             matrix.snowCover += 2;
             matrix.wetness += 1;
@@ -68,9 +72,13 @@ function applySnow(matrix, intensity) {
 
 function applySleet(matrix, intensity) {
     matrix.wetness += 1;
-    matrix.mud += 1;
+
+    if (intensity === "moderate") {
+        matrix.mud += 1;
+    }
 
     if (intensity === "hard" || intensity === "severe") {
+        matrix.mud += 1;
         matrix.standingWater += 1;
     }
 
@@ -86,9 +94,6 @@ function getDryBias(environment = {}) {
             break;
         case "tropical":
             dryBias -= 1;
-            break;
-        case "continental":
-            dryBias += 0;
             break;
         case "polar":
             dryBias -= 3;
@@ -107,10 +112,9 @@ function getDryBias(environment = {}) {
         case "swamp":
             dryBias -= 2;
             break;
-        case "forest":
         case "coast":
-        case "mountains":
-        case "tundra":
+            dryBias -= 1;
+            break;
         default:
             break;
     }
@@ -137,11 +141,13 @@ function applySnowMelt(matrix, currentDay) {
     const tempC = Number(currentDay?.tempC ?? 0);
 
     if (tempC >= 8) {
-        matrix.snowCover -= 2;
-        matrix.wetness += 1;
+        const melt = Math.min(2, matrix.snowCover);
+        matrix.snowCover -= melt;
+        matrix.wetness += melt > 0 ? 1 : 0;
     } else if (tempC >= 3) {
-        matrix.snowCover -= 1;
-        matrix.wetness += 1;
+        const melt = Math.min(1, matrix.snowCover);
+        matrix.snowCover -= melt;
+        matrix.wetness += melt > 0 ? 1 : 0;
     }
 }
 
@@ -162,38 +168,61 @@ function applyDrying(matrix, currentDay, environment = {}) {
     if (brightSky) dryPower += 2;
     else if (mixedSky) dryPower += 1;
 
-    if (windy) dryPower += 2;
+    if (windy) dryPower += 1;
     else if (breezy) dryPower += 1;
 
     dryPower += dryBias;
 
     if (dryPower <= 0) return;
 
-    matrix.dryness += 1;
+    matrix.dryness += dryPower >= 4 ? 2 : 1;
 
     if (dryPower >= 2) {
         matrix.wetness -= 1;
     }
 
     if (dryPower >= 3) {
-        matrix.standingWater -= 1;
+        matrix.mud -= 1;
     }
 
     if (dryPower >= 4) {
-        matrix.mud -= 1;
+        matrix.standingWater -= 1;
+        matrix.wetness -= 1;
     }
 
     if (dryPower >= 5) {
-        matrix.wetness -= 1;
-        matrix.standingWater -= 1;
+        matrix.mud -= 1;
     }
 
     if (dryPower >= 6) {
-        matrix.mud -= 1;
+        matrix.standingWater -= 1;
+    }
+}
+
+function applyNaturalSettling(matrix, currentDay, environment = {}) {
+    if (currentDay?.precipActive) return;
+
+    matrix.wetness -= 1;
+
+    if (environment.biome !== "swamp" && environment.biome !== "coast") {
+        if (matrix.standingWater > 0) {
+            matrix.standingWater -= 1;
+        }
+    }
+
+    if (environment.biome !== "swamp") {
+        if (matrix.mud > 0 && matrix.dryness >= 1) {
+            matrix.mud -= 1;
+        }
     }
 }
 
 function reconcileContradictions(matrix, environment = {}) {
+    if (matrix.snowCover >= 2) {
+        matrix.standingWater = Math.max(0, matrix.standingWater - 1);
+        matrix.dryness = Math.max(0, matrix.dryness - 1);
+    }
+
     if (matrix.standingWater >= 3) {
         matrix.dryness = Math.min(matrix.dryness, 1);
     } else if (matrix.standingWater >= 1) {
@@ -212,15 +241,26 @@ function reconcileContradictions(matrix, environment = {}) {
 
     if (matrix.dryness >= 4) {
         matrix.standingWater -= 1;
+    }
+
+    if (matrix.dryness >= 5) {
         matrix.mud -= 1;
     }
 
-    if ((environment.climate === "dry" || environment.biome === "desert" || environment.biome === "hills") && matrix.dryness >= 2) {
+    if (
+        (environment.climate === "dry" || environment.biome === "desert" || environment.biome === "hills") &&
+        matrix.dryness >= 2
+    ) {
         matrix.standingWater -= 1;
     }
 
-    if (matrix.snowCover >= 2) {
-        matrix.dryness = Math.max(0, matrix.dryness - 1);
+    if (matrix.wetness <= 1) {
+        matrix.standingWater = Math.min(matrix.standingWater, 2);
+    }
+
+    if (matrix.wetness === 0) {
+        matrix.standingWater = Math.min(matrix.standingWater, 1);
+        matrix.mud = Math.min(matrix.mud, 2);
     }
 }
 
@@ -240,6 +280,7 @@ export function updateWordingMatrix(matrix, currentDay, environment = {}) {
     }
 
     applySnowMelt(next, currentDay);
+    applyNaturalSettling(next, currentDay, environment);
     applyDrying(next, currentDay, environment);
     reconcileContradictions(next, environment);
 

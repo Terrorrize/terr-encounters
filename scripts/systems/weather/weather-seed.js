@@ -1,13 +1,14 @@
 /**
- * terr-encounters v0.1.0-b4
+ * terr-encounters v0.1.0-b6
  * Function: builds a new active weather trend from biome/climate/season/phase
- * baseline tables, with light carryover from the previous trend.
+ * baseline tables, with light carryover from the previous trend and stronger
+ * coherence between condition, precipitation, wind, and temperature.
  */
 
 import { getBaselineLeaf, getTempRangeForBand } from "../../data/weather/weather-baselines.js";
 import { createWeatherId, deepClone, weightedPick, weightedPickNumber } from "./weather-utils.js";
 
-export const WEATHER_SEED_VERSION = "0.1.0-b4";
+export const WEATHER_SEED_VERSION = "0.1.0-b6";
 
 function cloneWeights(weights = {}) {
     return deepClone(weights);
@@ -21,7 +22,7 @@ function addWeight(map, key, amount) {
 function applyConditionCarryover(conditionWeights, previousTrend) {
     if (!previousTrend) return;
 
-    addWeight(conditionWeights, previousTrend.condition, 4);
+    addWeight(conditionWeights, previousTrend.condition, 3);
 
     const longRun = Number(previousTrend.durationDays ?? 0) >= 7;
     const intensePrecip =
@@ -32,12 +33,14 @@ function applyConditionCarryover(conditionWeights, previousTrend) {
     if (longRun || intensePrecip || intenseWind) {
         switch (previousTrend.condition) {
             case "rainy":
-                addWeight(conditionWeights, "clear", 6);
-                addWeight(conditionWeights, "overcast", 3);
+                addWeight(conditionWeights, "clear", 7);
+                addWeight(conditionWeights, "overcast", 4);
+                addWeight(conditionWeights, "foggy", 2);
                 break;
             case "snowy":
                 addWeight(conditionWeights, "cold", 4);
                 addWeight(conditionWeights, "clear", 4);
+                addWeight(conditionWeights, "overcast", 2);
                 break;
             case "hot":
                 addWeight(conditionWeights, "warm", 4);
@@ -62,16 +65,23 @@ function applyConditionCarryover(conditionWeights, previousTrend) {
 function applyPrecipCarryover(precipTypeWeights, precipIntensityWeights, precipPatternWeights, previousTrend) {
     if (!previousTrend) return;
 
-    addWeight(precipTypeWeights, previousTrend.precipType, 3);
+    addWeight(precipTypeWeights, previousTrend.precipType, 2);
     addWeight(precipPatternWeights, previousTrend.precipPattern, 2);
 
     if (previousTrend.precipIntensity === "hard" || previousTrend.precipIntensity === "severe") {
-        addWeight(precipIntensityWeights, previousTrend.precipIntensity, -6);
-        addWeight(precipIntensityWeights, "light", 2);
+        addWeight(precipIntensityWeights, previousTrend.precipIntensity, -8);
+        addWeight(precipIntensityWeights, "light", 4);
         addWeight(precipIntensityWeights, "moderate", 3);
-        addWeight(precipTypeWeights, "none", 4);
+        addWeight(precipTypeWeights, "none", 5);
     } else if (previousTrend.precipType !== "none") {
-        addWeight(precipIntensityWeights, previousTrend.precipIntensity, 2);
+        addWeight(precipIntensityWeights, previousTrend.precipIntensity, 1);
+        addWeight(precipTypeWeights, "none", 2);
+    }
+
+    if (previousTrend.precipPattern === "constant") {
+        addWeight(precipPatternWeights, "constant", -6);
+        addWeight(precipPatternWeights, "sporadic", 3);
+        addWeight(precipPatternWeights, "frequent", 2);
     }
 }
 
@@ -105,6 +115,155 @@ function applyDurationAdjustments(durationWeights, precipPattern, windPattern, c
     }
 }
 
+function enforceConditionTempBand(condition, tempBand) {
+    if (condition === "hot" && (tempBand === "freezing" || tempBand === "cold" || tempBand === "cool")) {
+        return "warm";
+    }
+
+    if (condition === "warm" && (tempBand === "freezing" || tempBand === "cold")) {
+        return "mild";
+    }
+
+    if (condition === "cold" && (tempBand === "warm" || tempBand === "hot" || tempBand === "severe_heat")) {
+        return "cool";
+    }
+
+    if (condition === "snowy" && (tempBand === "warm" || tempBand === "hot" || tempBand === "severe_heat")) {
+        return "cold";
+    }
+
+    return tempBand;
+}
+
+function enforceTemperaturePrecipCoherence(tempBand, precipType, precipIntensity) {
+    let nextType = precipType;
+    let nextIntensity = precipIntensity;
+
+    if (tempBand === "freezing") {
+        if (nextType === "rain") nextType = "snow";
+        if (nextType === "sleet") nextType = "snow";
+    }
+
+    if (tempBand === "cold") {
+        if (nextType === "rain") nextType = "sleet";
+    }
+
+    if (tempBand === "warm" || tempBand === "hot" || tempBand === "severe_heat") {
+        if (nextType === "snow") nextType = "rain";
+        if (nextType === "sleet") nextType = "rain";
+    }
+
+    if (nextType === "none") {
+        nextIntensity = "none";
+    }
+
+    return {
+        precipType: nextType,
+        precipIntensity: nextIntensity
+    };
+}
+
+function enforceConditionPrecip(condition, tempBand, precipType, precipIntensity, precipPattern) {
+    let nextType = precipType;
+    let nextIntensity = precipIntensity;
+    let nextPattern = precipPattern;
+
+    if (condition === "rainy") {
+        if (nextType === "none" || nextType === "snow") {
+            nextType = tempBand === "freezing" || tempBand === "cold" ? "sleet" : "rain";
+        }
+
+        if (nextIntensity === "none") {
+            nextIntensity = "light";
+        }
+
+        if (nextPattern === "sporadic") {
+            nextPattern = "frequent";
+        }
+    }
+
+    if (condition === "snowy") {
+        nextType = tempBand === "warm" || tempBand === "hot" || tempBand === "severe_heat" ? "sleet" : "snow";
+
+        if (nextIntensity === "none") {
+            nextIntensity = "light";
+        }
+
+        if (nextPattern === "sporadic") {
+            nextPattern = "frequent";
+        }
+    }
+
+    if (condition === "clear") {
+        nextType = "none";
+        nextIntensity = "none";
+        nextPattern = "sporadic";
+    }
+
+    if (condition === "foggy") {
+        if (nextType === "snow") {
+            nextType = tempBand === "freezing" ? "snow" : "none";
+        }
+
+        if (nextType !== "none" && nextIntensity !== "none") {
+            if (nextIntensity === "hard" || nextIntensity === "severe") {
+                nextIntensity = "light";
+            }
+            if (nextPattern === "constant") {
+                nextPattern = "sporadic";
+            }
+        }
+    }
+
+    if (condition === "overcast") {
+        if (nextType !== "none" && nextIntensity !== "none") {
+            if (nextIntensity === "hard" || nextIntensity === "severe") {
+                nextIntensity = "moderate";
+            }
+        }
+    }
+
+    if (nextType === "none") {
+        nextIntensity = "none";
+        nextPattern = "sporadic";
+    }
+
+    const tempCoherent = enforceTemperaturePrecipCoherence(tempBand, nextType, nextIntensity);
+
+    return {
+        precipType: tempCoherent.precipType,
+        precipIntensity: tempCoherent.precipIntensity,
+        precipPattern: nextType === "none" ? "sporadic" : nextPattern
+    };
+}
+
+function enforceConditionWind(condition, windIntensity, windPattern) {
+    let nextIntensity = windIntensity;
+    let nextPattern = windPattern;
+
+    if (condition === "windy") {
+        if (nextIntensity === "calm" || nextIntensity === "light") {
+            nextIntensity = "moderate";
+        }
+        if (nextPattern === "sporadic") {
+            nextPattern = "frequent";
+        }
+    }
+
+    if (condition === "foggy" && nextIntensity === "severe") {
+        nextIntensity = "strong";
+    }
+
+    if (nextIntensity === "calm") {
+        nextPattern = "sporadic";
+    }
+
+    return {
+        windIntensity: nextIntensity,
+        windPattern: nextPattern
+    };
+}
+
 export function buildActiveTrend(environment, previousTrend = null) {
     const leaf = getBaselineLeaf(
         environment?.biome,
@@ -129,16 +288,30 @@ export function buildActiveTrend(environment, previousTrend = null) {
     applyWindCarryover(windIntensityWeights, windPatternWeights, previousTrend);
 
     const condition = weightedPick(conditionWeights) ?? "clear";
-    const tempBand = weightedPick(tempBandWeights) ?? "mild";
+
+    let tempBand = weightedPick(tempBandWeights) ?? "mild";
+    tempBand = enforceConditionTempBand(condition, tempBand);
+
     const tempMotion = weightedPick(tempMotionWeights) ?? "holding";
     const tempMotionStrength = weightedPick(tempMotionStrengthWeights) ?? "slight";
-    const precipType = weightedPick(precipTypeWeights) ?? "none";
-    const precipIntensity =
+
+    let precipType = weightedPick(precipTypeWeights) ?? "none";
+    let precipIntensity =
         precipType === "none" ? "none" : (weightedPick(precipIntensityWeights) ?? "light");
-    const precipPattern =
+    let precipPattern =
         precipType === "none" ? "sporadic" : (weightedPick(precipPatternWeights) ?? "sporadic");
-    const windIntensity = weightedPick(windIntensityWeights) ?? "calm";
-    const windPattern = windIntensity === "calm" ? "sporadic" : (weightedPick(windPatternWeights) ?? "sporadic");
+
+    const precipResult = enforceConditionPrecip(condition, tempBand, precipType, precipIntensity, precipPattern);
+    precipType = precipResult.precipType;
+    precipIntensity = precipResult.precipIntensity;
+    precipPattern = precipResult.precipPattern;
+
+    let windIntensity = weightedPick(windIntensityWeights) ?? "calm";
+    let windPattern = windIntensity === "calm" ? "sporadic" : (weightedPick(windPatternWeights) ?? "sporadic");
+
+    const windResult = enforceConditionWind(condition, windIntensity, windPattern);
+    windIntensity = windResult.windIntensity;
+    windPattern = windResult.windPattern;
 
     applyDurationAdjustments(durationWeights, precipPattern, windPattern, condition);
 

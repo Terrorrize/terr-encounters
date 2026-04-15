@@ -1,5 +1,5 @@
 /**
- * terr-encounters v0.1.0-b8
+ * terr-encounters v0.1.0-b9
  * Function: converts raw weather state into a clean UI-ready view model for the
  * weather panel. Trend stays trend-level. Current Day reports the resolved
  * daily specifics: temperature, sky, precipitation, wind, and storm risk.
@@ -8,7 +8,7 @@
 import { getExposureLine } from "./weather-exposure.js";
 import { getMatrixAftermathLines } from "./weather-matrix.js";
 
-export const WEATHER_RENDER_VERSION = "0.1.0-b8";
+export const WEATHER_RENDER_VERSION = "0.1.0-b9";
 
 function buildTrendBlock(currentDay) {
     return Array.isArray(currentDay?.summaryLines) ? [...currentDay.summaryLines] : [];
@@ -39,7 +39,7 @@ function getDailyPrecipLine(currentDay) {
         return `${intensity} ${type} today`;
     }
 
-    if (currentDay?.cloudFace === "low" || currentDay?.cloudFace === "fog") {
+    if (currentDay?.cloudFace === "low") {
         return "Mist / fog today";
     }
 

@@ -1,9 +1,10 @@
 // FILE: scripts/systems/weather/weather-daily.js
 /**
- * terr-encounters v0.1.0-b5
- * Function: resolves one concrete day from the active weather trend. This turns
- * the trend packet into an exact day with temperature, precip/wind activation,
- * cloud face, storm flags, and summary lines.
+ * terr-encounters v0.1.0-b6
+ * Function: resolves one concrete day from the active weather trend. This
+ * revision makes overcast/fog drier more often, reduces rain frequency inside
+ * trends, compresses intensity toward light, and improves snow/rain coherence
+ * by temperature band.
  */
 
 import {
@@ -15,12 +16,12 @@ import {
 } from "../../data/weather/weather-language.js";
 import { cToF, clamp, randomInt } from "./weather-utils.js";
 
-export const WEATHER_DAILY_VERSION = "0.1.0-b5";
+export const WEATHER_DAILY_VERSION = "0.1.0-b6";
 
 const PRECIP_ACTIVE_CHANCES = {
-    sporadic: 45,
-    frequent: 70,
-    constant: 95
+    sporadic: 25,
+    frequent: 52,
+    constant: 78
 };
 
 const WIND_ACTIVE_CHANCES = {
@@ -63,12 +64,26 @@ function resolveTemperatureC(trend) {
     return clamp(trend.seedTempC + signedDrift + wobble, trend.tempMinC, trend.tempMaxC);
 }
 
-function getPrecipActiveChance(trend) {
-    let chance = PRECIP_ACTIVE_CHANCES[trend.precipPattern] ?? 45;
+function getPrecipActiveChance(trend, resolvedTempC) {
+    let chance = PRECIP_ACTIVE_CHANCES[trend.precipPattern] ?? 25;
 
-    if (trend.condition === "rainy" || trend.condition === "snowy") chance += 10;
-    if (trend.precipIntensity === "hard") chance += 5;
-    if (trend.precipIntensity === "severe") chance += 10;
+    if (trend.condition === "rainy" || trend.condition === "snowy") chance += 12;
+    if (trend.condition === "overcast") chance -= 8;
+    if (trend.condition === "foggy") chance -= 14;
+
+    if (trend.precipIntensity === "hard") chance += 3;
+    if (trend.precipIntensity === "severe") chance += 6;
+
+    if (trend.precipType === "snow") chance += 4;
+    if (trend.precipType === "none") chance = 0;
+
+    if (trend.precipPattern === "constant" && trend.condition !== "rainy" && trend.condition !== "snowy") {
+        chance -= 8;
+    }
+
+    if (resolvedTempC <= 0 && trend.precipType === "rain") {
+        chance -= 10;
+    }
 
     return clamp(chance, 0, 100);
 }
@@ -83,15 +98,62 @@ function getWindActiveChance(trend) {
     return clamp(chance, 0, 100);
 }
 
-function resolveActualPrecipIntensity(trend, precipActive) {
-    if (!precipActive || trend.precipType === "none" || trend.precipIntensity === "none") {
+function normalizePrecipTypeForTemp(baseType, tempC) {
+    if (baseType === "none") return "none";
+
+    if (tempC <= 0) {
+        if (baseType === "rain" || baseType === "sleet") return "snow";
+        return baseType;
+    }
+
+    if (tempC <= 3) {
+        if (baseType === "rain") return "sleet";
+        return baseType;
+    }
+
+    if (tempC >= 8) {
+        if (baseType === "snow" || baseType === "sleet") return "rain";
+    }
+
+    return baseType;
+}
+
+function resolveActualPrecipIntensity(trend, precipType, precipActive) {
+    if (!precipActive || precipType === "none" || trend.precipIntensity === "none") {
         return "none";
     }
 
-    const order = ["light", "moderate", "hard", "severe"];
-    const index = Math.max(0, order.indexOf(trend.precipIntensity));
-    const shift = randomInt(-1, 1);
-    return order[clamp(index + shift, 0, order.length - 1)];
+    const roll = randomInt(1, 100);
+    const base = trend.precipIntensity;
+
+    if (base === "light") {
+        if (roll <= 78) return "light";
+        if (roll <= 97) return "moderate";
+        return "hard";
+    }
+
+    if (base === "moderate") {
+        if (roll <= 58) return "light";
+        if (roll <= 92) return "moderate";
+        if (roll <= 99) return "hard";
+        return "severe";
+    }
+
+    if (base === "hard") {
+        if (roll <= 52) return "light";
+        if (roll <= 84) return "moderate";
+        if (roll <= 98) return "hard";
+        return "severe";
+    }
+
+    if (base === "severe") {
+        if (roll <= 40) return "light";
+        if (roll <= 75) return "moderate";
+        if (roll <= 94) return "hard";
+        return "severe";
+    }
+
+    return "light";
 }
 
 function resolveActualWindIntensity(trend, windActive) {
@@ -105,23 +167,22 @@ function resolveActualWindIntensity(trend, windActive) {
     return order[clamp(index + shift, 0, order.length - 1)];
 }
 
-function resolveCloudFace(trend, precipActive, windActive) {
+function resolveCloudFace(trend, precipActive, actualPrecipIntensity, windActive) {
     if (trend.condition === "clear" && !precipActive) return "bright";
-    if (trend.condition === "overcast") return "grey";
+    if (trend.condition === "overcast") return actualPrecipIntensity === "hard" || actualPrecipIntensity === "severe" ? "storm" : "grey";
     if (trend.condition === "foggy") return "low";
-    if (precipActive && (trend.precipIntensity === "hard" || trend.precipIntensity === "severe")) return "storm";
+    if (precipActive && (actualPrecipIntensity === "hard" || actualPrecipIntensity === "severe")) return "storm";
     if (windActive && (trend.windIntensity === "strong" || trend.windIntensity === "severe")) return "grey";
     return "mixed";
 }
 
-function resolveStormFlags(trend, precipActive) {
+function resolveStormFlags(precipType, actualPrecipIntensity, windIntensity) {
     const thunder =
-        precipActive &&
-        trend.precipType === "rain" &&
-        (trend.precipIntensity === "hard" || trend.precipIntensity === "severe") &&
-        rollPercent(35);
+        precipType === "rain" &&
+        (actualPrecipIntensity === "hard" || actualPrecipIntensity === "severe") &&
+        rollPercent(windIntensity === "strong" || windIntensity === "severe" ? 40 : 28);
 
-    const lightning = thunder && rollPercent(45);
+    const lightning = thunder && rollPercent(40);
 
     return { thunder, lightning };
 }
@@ -135,12 +196,15 @@ export function resolveTrendDay(activeTrend, absoluteDay) {
 
     const tempC = resolveTemperatureC(trend);
     const tempF = cToF(tempC);
-    const precipActive = trend.precipType === "none" ? false : rollPercent(getPrecipActiveChance(trend));
+
+    const precipBaseType = normalizePrecipTypeForTemp(trend.precipType, tempC);
+    const precipActive = precipBaseType === "none" ? false : rollPercent(getPrecipActiveChance(trend, tempC));
     const windActive = trend.windIntensity === "calm" ? false : rollPercent(getWindActiveChance(trend));
-    const precipIntensity = resolveActualPrecipIntensity(trend, precipActive);
+
+    const precipIntensity = resolveActualPrecipIntensity(trend, precipBaseType, precipActive);
     const windIntensity = resolveActualWindIntensity(trend, windActive);
-    const cloudFace = resolveCloudFace(trend, precipActive, windActive);
-    const stormFlags = resolveStormFlags(trend, precipActive);
+    const cloudFace = resolveCloudFace(trend, precipActive, precipIntensity, windActive);
+    const stormFlags = resolveStormFlags(precipActive ? precipBaseType : "none", precipIntensity, windIntensity);
 
     const summaryLines = [
         `${trend.durationDays} Days`,
@@ -156,7 +220,7 @@ export function resolveTrendDay(activeTrend, absoluteDay) {
         tempC,
         tempF,
         precipActive,
-        precipType: precipActive ? trend.precipType : "none",
+        precipType: precipActive ? precipBaseType : "none",
         precipIntensity,
         windActive,
         windIntensity,
