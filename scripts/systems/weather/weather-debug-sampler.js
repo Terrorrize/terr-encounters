@@ -1,9 +1,9 @@
 /**
- * terr-encounters v0.1.0-b2
+ * terr-encounters v0.1.0-b3
  * Function: standalone weather sampler/exporter for debugging. This file is not
  * wired into the live module. Import it manually from console to generate large
- * grouped sample sets by biome/climate/season/phase, print them to console, or
- * download them as .txt / .json files.
+ * grouped sample sets by biome/climate/season/phase and save them using
+ * Foundry's saveDataToFile utility.
  */
 
 import { getAvailableBiomes, getAvailableClimates } from "../../data/weather/weather-baselines.js";
@@ -37,6 +37,27 @@ function createEmptyMatrix() {
         snowCover: 0,
         dryness: 0
     };
+}
+
+function buildTimestamp() {
+    const now = new Date();
+    const yyyy = String(now.getFullYear());
+    const mm = String(now.getMonth() + 1).padStart(2, "0");
+    const dd = String(now.getDate()).padStart(2, "0");
+    const hh = String(now.getHours()).padStart(2, "0");
+    const mi = String(now.getMinutes()).padStart(2, "0");
+    const ss = String(now.getSeconds()).padStart(2, "0");
+    return `${yyyy}${mm}${dd}-${hh}${mi}${ss}`;
+}
+
+function saveTextFile(text, filename) {
+    foundry.utils.saveDataToFile(text, "text/plain;charset=utf-8", filename);
+    return filename;
+}
+
+function saveJsonFile(data, filename) {
+    foundry.utils.saveDataToFile(JSON.stringify(data, null, 2), "application/json;charset=utf-8", filename);
+    return filename;
 }
 
 function sampleOne(environment, absoluteDay = 1, previousTrend = null, priorMatrix = null) {
@@ -156,45 +177,16 @@ export function sampleAllBiomeClimateText(options = {}) {
     }).join("\n\n\n");
 }
 
-function triggerDownload(filename, content, mimeType) {
-    const blob = new Blob([content], { type: mimeType });
-    const url = URL.createObjectURL(blob);
-
-    try {
-        const anchor = document.createElement("a");
-        anchor.href = url;
-        anchor.download = filename;
-        document.body.appendChild(anchor);
-        anchor.click();
-        anchor.remove();
-    } finally {
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
-    }
-}
-
-function buildTimestamp() {
-    const now = new Date();
-    const yyyy = String(now.getFullYear());
-    const mm = String(now.getMonth() + 1).padStart(2, "0");
-    const dd = String(now.getDate()).padStart(2, "0");
-    const hh = String(now.getHours()).padStart(2, "0");
-    const mi = String(now.getMinutes()).padStart(2, "0");
-    const ss = String(now.getSeconds()).padStart(2, "0");
-    return `${yyyy}${mm}${dd}-${hh}${mi}${ss}`;
-}
-
-export function downloadAllBiomeClimateText(options = {}) {
+export function exportAllBiomeClimateText(options = {}) {
     const text = sampleAllBiomeClimateText(options);
     const filename = options.filename || `weather-samples-${buildTimestamp()}.txt`;
-    triggerDownload(filename, text, "text/plain;charset=utf-8");
-    return filename;
+    return saveTextFile(text, filename);
 }
 
-export function downloadAllBiomeClimateJson(options = {}) {
+export function exportAllBiomeClimateJson(options = {}) {
     const data = sampleAllBiomeClimateBatches(options);
     const filename = options.filename || `weather-samples-${buildTimestamp()}.json`;
-    triggerDownload(filename, JSON.stringify(data, null, 2), "application/json;charset=utf-8");
-    return filename;
+    return saveJsonFile(data, filename);
 }
 
 export async function sampleCurrentEnvironmentText(count = 25) {
@@ -211,7 +203,7 @@ export async function sampleCurrentEnvironmentText(count = 25) {
     return sampleWeatherText(count, environment);
 }
 
-export async function downloadCurrentEnvironmentText(count = 100) {
+export async function exportCurrentEnvironmentText(count = 100) {
     const environment =
         globalThis.TerrEncounters?.api?.weather?.getState?.().state?.environment ??
         {
@@ -224,6 +216,21 @@ export async function downloadCurrentEnvironmentText(count = 100) {
 
     const text = sampleWeatherText(count, environment);
     const filename = `weather-current-env-${buildTimestamp()}.txt`;
-    triggerDownload(filename, text, "text/plain;charset=utf-8");
-    return filename;
+    return saveTextFile(text, filename);
+}
+
+export async function exportCurrentEnvironmentJson(count = 100) {
+    const environment =
+        globalThis.TerrEncounters?.api?.weather?.getState?.().state?.environment ??
+        {
+            biome: "forest",
+            climate: "temperate",
+            season: "spring",
+            phase: "mid",
+            ruinsEnabled: false
+        };
+
+    const data = sampleWeatherBatch(count, environment);
+    const filename = `weather-current-env-${buildTimestamp()}.json`;
+    return saveJsonFile(data, filename);
 }
