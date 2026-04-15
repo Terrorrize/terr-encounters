@@ -1,15 +1,25 @@
 // FILE: scripts/data/weather/weather-baselines.js
 /**
- * terr-encounters v0.1.0-b4
- * Function: baseline weather tables keyed by biome -> climate -> season -> phase.
- * These tables drive weighted trend generation for condition, temperature,
- * precipitation, wind, and duration. Also exposes selector helpers for the UI.
+ * terr-encounters v0.1.0-b6
+ * Function: live weighted weather baselines keyed by biome -> climate ->
+ * season -> phase. Biome identity comes from weather-biomes.js. This file
+ * builds the actual roll tables consumed by the weather system.
  */
 
-export const WEATHER_BASELINES_VERSION = "0.1.0-b4";
+import {
+    WEATHER_BIOMES,
+    WEATHER_CLIMATES,
+    WEATHER_PHASES,
+    WEATHER_SEASONS,
+    biomeExists,
+    climateExists,
+    getBiomeDefinition
+} from "../weather-biomes.js";
+
+export const WEATHER_BASELINES_VERSION = "0.1.0-b6";
 
 export const DEFAULT_BASELINE_PATH = {
-    biome: "temperate_forest",
+    biome: "forest",
     climate: "temperate",
     season: "spring",
     phase: "mid"
@@ -28,7 +38,25 @@ const DEFAULT_DURATION_WEIGHTS = {
     10: 3
 };
 
-function makeBaseline(overrides = {}) {
+const BASE_TEMP_RANGES_C = {
+    freezing: { min: -12, max: 0 },
+    cold: { min: 1, max: 6 },
+    cool: { min: 4, max: 9 },
+    mild: { min: 7, max: 13 },
+    warm: { min: 12, max: 18 },
+    hot: { min: 18, max: 26 },
+    severe_heat: { min: 27, max: 38 }
+};
+
+function deepClone(value) {
+    if (typeof structuredClone === "function") {
+        return structuredClone(value);
+    }
+
+    return JSON.parse(JSON.stringify(value));
+}
+
+function makeBaseline() {
     return {
         conditions: {
             clear: 12,
@@ -91,187 +119,267 @@ function makeBaseline(overrides = {}) {
             constant: 15
         },
         durationWeights: { ...DEFAULT_DURATION_WEIGHTS },
-        tempRangesC: {
-            freezing: { min: -12, max: 0 },
-            cold: { min: 1, max: 6 },
-            cool: { min: 4, max: 9 },
-            mild: { min: 7, max: 13 },
-            warm: { min: 12, max: 18 },
-            hot: { min: 18, max: 26 },
-            severe_heat: { min: 27, max: 38 }
-        },
-        ...overrides
+        tempRangesC: deepClone(BASE_TEMP_RANGES_C)
     };
 }
 
-export const WEATHER_BASELINES = {
-    temperate_forest: {
-        temperate: {
-            spring: {
-                early: makeBaseline({
-                    conditions: { clear: 10, overcast: 20, foggy: 12, rainy: 22, snowy: 4, warm: 10, hot: 0, cold: 14, windy: 8 },
-                    tempBands: { freezing: 2, cold: 22, cool: 34, mild: 26, warm: 14, hot: 2, severe_heat: 0 },
-                    tempMotion: { rising: 40, holding: 40, falling: 20 },
-                    precipTypes: { none: 20, rain: 58, snow: 8, sleet: 14 },
-                    tempRangesC: {
-                        freezing: { min: -10, max: 0 },
-                        cold: { min: 0, max: 5 },
-                        cool: { min: 3, max: 8 },
-                        mild: { min: 6, max: 12 },
-                        warm: { min: 11, max: 16 },
-                        hot: { min: 16, max: 23 },
-                        severe_heat: { min: 24, max: 34 }
-                    }
-                }),
-                mid: makeBaseline(),
-                late: makeBaseline({
-                    conditions: { clear: 14, overcast: 16, foggy: 8, rainy: 20, snowy: 0, warm: 20, hot: 4, cold: 8, windy: 10 },
-                    tempBands: { freezing: 0, cold: 10, cool: 24, mild: 34, warm: 24, hot: 8, severe_heat: 0 },
-                    tempMotion: { rising: 42, holding: 38, falling: 20 },
-                    precipTypes: { none: 24, rain: 66, snow: 0, sleet: 10 },
-                    tempRangesC: {
-                        freezing: { min: -8, max: 0 },
-                        cold: { min: 2, max: 7 },
-                        cool: { min: 6, max: 11 },
-                        mild: { min: 10, max: 16 },
-                        warm: { min: 15, max: 21 },
-                        hot: { min: 20, max: 28 },
-                        severe_heat: { min: 29, max: 37 }
-                    }
-                })
-            },
-            summer: {
-                early: makeBaseline({
-                    conditions: { clear: 16, overcast: 14, foggy: 6, rainy: 18, snowy: 0, warm: 24, hot: 8, cold: 2, windy: 12 },
-                    tempBands: { freezing: 0, cold: 2, cool: 18, mild: 34, warm: 30, hot: 14, severe_heat: 2 },
-                    tempMotion: { rising: 24, holding: 50, falling: 26 },
-                    precipTypes: { none: 28, rain: 64, snow: 0, sleet: 8 },
-                    windIntensity: { calm: 20, light: 38, moderate: 26, strong: 12, severe: 4 },
-                    tempRangesC: {
-                        freezing: { min: -5, max: 0 },
-                        cold: { min: 5, max: 9 },
-                        cool: { min: 10, max: 15 },
-                        mild: { min: 14, max: 20 },
-                        warm: { min: 19, max: 25 },
-                        hot: { min: 24, max: 31 },
-                        severe_heat: { min: 32, max: 40 }
-                    }
-                }),
-                mid: makeBaseline({
-                    conditions: { clear: 20, overcast: 10, foggy: 4, rainy: 14, snowy: 0, warm: 22, hot: 14, cold: 0, windy: 16 },
-                    tempBands: { freezing: 0, cold: 0, cool: 10, mild: 28, warm: 34, hot: 22, severe_heat: 6 },
-                    tempMotion: { rising: 18, holding: 56, falling: 26 },
-                    tempMotionStrength: { slight: 54, steady: 32, sharp: 14 },
-                    precipTypes: { none: 34, rain: 62, snow: 0, sleet: 4 },
-                    precipIntensity: { none: 0, light: 24, moderate: 42, hard: 24, severe: 10 },
-                    windIntensity: { calm: 20, light: 34, moderate: 28, strong: 14, severe: 4 },
-                    tempRangesC: {
-                        freezing: { min: -4, max: 0 },
-                        cold: { min: 7, max: 10 },
-                        cool: { min: 12, max: 17 },
-                        mild: { min: 17, max: 22 },
-                        warm: { min: 21, max: 28 },
-                        hot: { min: 27, max: 34 },
-                        severe_heat: { min: 35, max: 42 }
-                    }
-                }),
-                late: makeBaseline({
-                    conditions: { clear: 18, overcast: 10, foggy: 5, rainy: 14, snowy: 0, warm: 20, hot: 12, cold: 2, windy: 19 },
-                    tempBands: { freezing: 0, cold: 0, cool: 12, mild: 30, warm: 32, hot: 20, severe_heat: 6 },
-                    tempMotion: { rising: 10, holding: 40, falling: 50 },
-                    precipTypes: { none: 30, rain: 62, snow: 0, sleet: 8 }
-                })
-            },
-            autumn: {
-                early: makeBaseline({
-                    conditions: { clear: 16, overcast: 16, foggy: 10, rainy: 20, snowy: 0, warm: 16, hot: 2, cold: 10, windy: 10 },
-                    tempBands: { freezing: 0, cold: 10, cool: 22, mild: 34, warm: 24, hot: 10, severe_heat: 0 },
-                    tempMotion: { rising: 10, holding: 36, falling: 54 },
-                    precipTypes: { none: 24, rain: 66, snow: 0, sleet: 10 }
-                }),
-                mid: makeBaseline({
-                    conditions: { clear: 12, overcast: 20, foggy: 12, rainy: 20, snowy: 4, warm: 10, hot: 0, cold: 12, windy: 10 },
-                    tempBands: { freezing: 2, cold: 18, cool: 32, mild: 30, warm: 16, hot: 2, severe_heat: 0 },
-                    tempMotion: { rising: 8, holding: 34, falling: 58 },
-                    precipTypes: { none: 22, rain: 58, snow: 6, sleet: 14 }
-                }),
-                late: makeBaseline({
-                    conditions: { clear: 10, overcast: 18, foggy: 12, rainy: 18, snowy: 10, warm: 4, hot: 0, cold: 18, windy: 10 },
-                    tempBands: { freezing: 10, cold: 28, cool: 30, mild: 20, warm: 10, hot: 2, severe_heat: 0 },
-                    tempMotion: { rising: 6, holding: 32, falling: 62 },
-                    precipTypes: { none: 20, rain: 42, snow: 20, sleet: 18 },
-                    tempRangesC: {
-                        freezing: { min: -14, max: 0 },
-                        cold: { min: -1, max: 4 },
-                        cool: { min: 2, max: 7 },
-                        mild: { min: 5, max: 11 },
-                        warm: { min: 10, max: 16 },
-                        hot: { min: 16, max: 23 },
-                        severe_heat: { min: 24, max: 32 }
-                    }
-                })
-            },
-            winter: {
-                early: makeBaseline({
-                    conditions: { clear: 10, overcast: 18, foggy: 10, rainy: 8, snowy: 24, warm: 0, hot: 0, cold: 20, windy: 10 },
-                    tempBands: { freezing: 24, cold: 30, cool: 24, mild: 12, warm: 10, hot: 0, severe_heat: 0 },
-                    tempMotion: { rising: 10, holding: 44, falling: 46 },
-                    precipTypes: { none: 20, rain: 12, snow: 52, sleet: 16 },
-                    precipIntensity: { none: 0, light: 32, moderate: 40, hard: 20, severe: 8 },
-                    tempRangesC: {
-                        freezing: { min: -22, max: -1 },
-                        cold: { min: -4, max: 2 },
-                        cool: { min: 1, max: 5 },
-                        mild: { min: 4, max: 9 },
-                        warm: { min: 8, max: 14 },
-                        hot: { min: 15, max: 22 },
-                        severe_heat: { min: 23, max: 30 }
-                    }
-                }),
-                mid: makeBaseline({
-                    conditions: { clear: 10, overcast: 20, foggy: 10, rainy: 2, snowy: 30, warm: 0, hot: 0, cold: 18, windy: 10 },
-                    tempBands: { freezing: 34, cold: 30, cool: 20, mild: 10, warm: 6, hot: 0, severe_heat: 0 },
-                    tempMotion: { rising: 12, holding: 52, falling: 36 },
-                    precipTypes: { none: 18, rain: 4, snow: 62, sleet: 16 },
-                    windIntensity: { calm: 14, light: 30, moderate: 34, strong: 16, severe: 6 },
-                    tempRangesC: {
-                        freezing: { min: -28, max: -3 },
-                        cold: { min: -8, max: 0 },
-                        cool: { min: -1, max: 4 },
-                        mild: { min: 3, max: 8 },
-                        warm: { min: 7, max: 12 },
-                        hot: { min: 13, max: 20 },
-                        severe_heat: { min: 21, max: 28 }
-                    }
-                }),
-                late: makeBaseline({
-                    conditions: { clear: 10, overcast: 20, foggy: 12, rainy: 6, snowy: 22, warm: 2, hot: 0, cold: 18, windy: 10 },
-                    tempBands: { freezing: 24, cold: 28, cool: 24, mild: 14, warm: 10, hot: 0, severe_heat: 0 },
-                    tempMotion: { rising: 30, holding: 42, falling: 28 },
-                    precipTypes: { none: 20, rain: 10, snow: 54, sleet: 16 }
-                })
+function clampWeightMap(map) {
+    const next = {};
+    for (const [key, value] of Object.entries(map)) {
+        next[key] = Math.max(0, Math.round(Number(value) || 0));
+    }
+    return next;
+}
+
+function shiftTempRanges(tempRangesC, deltaC) {
+    const next = {};
+    for (const [band, range] of Object.entries(tempRangesC)) {
+        next[band] = {
+            min: Math.round(range.min + deltaC),
+            max: Math.round(range.max + deltaC)
+        };
+    }
+    return next;
+}
+
+function addMap(target, patch) {
+    for (const [key, value] of Object.entries(patch)) {
+        target[key] = (target[key] ?? 0) + value;
+    }
+}
+
+function applySeasonPhaseAdjustments(leaf, season, phase) {
+    if (season === "spring") {
+        addMap(leaf.conditions, { rainy: 2, overcast: 1, cold: 1, warm: 0, hot: -1, snowy: phase === "early" ? 2 : 0 });
+        addMap(leaf.tempBands, { freezing: phase === "early" ? 2 : 0, cold: 3, cool: 4, mild: 1, warm: phase === "late" ? 2 : 0, hot: -2 });
+        addMap(leaf.tempMotion, { rising: 12, holding: 0, falling: -6 });
+        addMap(leaf.precipTypes, { rain: 4, snow: phase === "early" ? 2 : 0, sleet: 2 });
+    }
+
+    if (season === "summer") {
+        addMap(leaf.conditions, { clear: 2, rainy: 0, warm: 4, hot: 4, cold: -6, snowy: -4 });
+        addMap(leaf.tempBands, { freezing: -4, cold: -8, cool: phase === "early" ? 2 : -2, mild: 2, warm: 6, hot: 6, severe_heat: phase === "mid" || phase === "late" ? 3 : 1 });
+        addMap(leaf.tempMotion, { rising: phase === "early" ? 4 : -4, holding: 6, falling: phase === "late" ? 8 : -2 });
+        addMap(leaf.precipIntensity, { moderate: 2, hard: 2, severe: 1 });
+    }
+
+    if (season === "autumn") {
+        addMap(leaf.conditions, { clear: 1, rainy: 1, warm: -2, hot: -4, cold: 4, snowy: phase === "late" ? 4 : 0 });
+        addMap(leaf.tempBands, { freezing: phase === "late" ? 4 : 0, cold: 5, cool: 4, mild: -1, warm: -3, hot: -4 });
+        addMap(leaf.tempMotion, { rising: -8, holding: 0, falling: 12 });
+        addMap(leaf.precipTypes, { rain: 2, snow: phase === "late" ? 4 : 0, sleet: 2 });
+    }
+
+    if (season === "winter") {
+        addMap(leaf.conditions, { clear: 0, rainy: -8, warm: -8, hot: -10, cold: 10, snowy: 12 });
+        addMap(leaf.tempBands, { freezing: 12, cold: 8, cool: 0, mild: -6, warm: -8, hot: -8, severe_heat: -4 });
+        addMap(leaf.tempMotion, { rising: phase === "late" ? 6 : -4, holding: 6, falling: phase === "early" ? 6 : 0 });
+        addMap(leaf.precipTypes, { none: 0, rain: -10, snow: 16, sleet: 3 });
+        addMap(leaf.precipIntensity, { light: 4, moderate: 2, hard: 0, severe: -2 });
+    }
+
+    if (phase === "early") {
+        addMap(leaf.tempMotionStrength, { slight: 2, steady: 1, sharp: 0 });
+    }
+
+    if (phase === "mid") {
+        addMap(leaf.tempMotionStrength, { slight: 0, steady: 2, sharp: 1 });
+        addMap(leaf.durationWeights, { 4: 1, 5: 1, 6: 1 });
+    }
+
+    if (phase === "late") {
+        addMap(leaf.tempMotionStrength, { slight: 1, steady: 1, sharp: 2 });
+    }
+}
+
+function applyClimateAdjustments(leaf, climate, season) {
+    if (climate === "tropical") {
+        addMap(leaf.conditions, { clear: -2, overcast: 3, foggy: 2, rainy: 8, snowy: -20, warm: 8, hot: 10, cold: -20, windy: 0 });
+        addMap(leaf.tempBands, { freezing: -20, cold: -16, cool: -6, mild: 2, warm: 10, hot: 10, severe_heat: 8 });
+        addMap(leaf.tempMotion, { rising: -2, holding: 8, falling: -2 });
+        addMap(leaf.precipTypes, { none: -6, rain: 18, snow: -20, sleet: -10 });
+        addMap(leaf.precipIntensity, { light: -2, moderate: 4, hard: 5, severe: 3 });
+        addMap(leaf.precipPattern, { sporadic: -4, frequent: 4, constant: 2 });
+        leaf.tempRangesC = shiftTempRanges(leaf.tempRangesC, 12);
+
+        if (season === "winter") {
+            addMap(leaf.conditions, { rainy: -2, clear: 2 });
+            addMap(leaf.precipTypes, { none: 4, rain: -4 });
+        }
+    }
+
+    if (climate === "dry") {
+        addMap(leaf.conditions, { clear: 8, overcast: -4, foggy: -5, rainy: -8, snowy: -4, warm: 2, hot: 5, cold: -1, windy: 4 });
+        addMap(leaf.tempBands, { freezing: -4, cold: -6, cool: -3, mild: -1, warm: 4, hot: 7, severe_heat: 5 });
+        addMap(leaf.tempMotionStrength, { slight: -6, steady: 2, sharp: 6 });
+        addMap(leaf.precipTypes, { none: 18, rain: -16, snow: -5, sleet: -4 });
+        addMap(leaf.precipIntensity, { light: -6, moderate: -2, hard: 3, severe: 2 });
+        addMap(leaf.precipPattern, { sporadic: 10, frequent: -8, constant: -6 });
+        addMap(leaf.windIntensity, { calm: -2, light: 0, moderate: 3, strong: 3, severe: 1 });
+        leaf.tempRangesC = shiftTempRanges(leaf.tempRangesC, 5);
+
+        if (season === "winter") {
+            leaf.tempRangesC = shiftTempRanges(leaf.tempRangesC, -5);
+            addMap(leaf.tempBands, { cold: 4, cool: 2, hot: -6, severe_heat: -4 });
+        }
+    }
+
+    if (climate === "temperate") {
+        addMap(leaf.conditions, { clear: 0, overcast: 0, rainy: 0, snowy: 0, warm: 0, hot: 0, cold: 0, windy: 0 });
+    }
+
+    if (climate === "continental") {
+        addMap(leaf.conditions, { clear: 1, overcast: 1, rainy: -1, snowy: 6, warm: -1, hot: 2, cold: 8, windy: 2 });
+        addMap(leaf.tempBands, { freezing: 8, cold: 8, cool: 2, mild: -4, warm: -2, hot: 2, severe_heat: 1 });
+        addMap(leaf.tempMotionStrength, { slight: -4, steady: 2, sharp: 4 });
+        addMap(leaf.precipTypes, { none: 1, rain: -4, snow: 8, sleet: 2 });
+        addMap(leaf.windIntensity, { calm: -1, light: 0, moderate: 2, strong: 2, severe: 1 });
+        leaf.tempRangesC = shiftTempRanges(leaf.tempRangesC, -6);
+
+        if (season === "summer") {
+            leaf.tempRangesC = shiftTempRanges(leaf.tempRangesC, 7);
+            addMap(leaf.tempBands, { freezing: -8, cold: -4, warm: 4, hot: 6, severe_heat: 3 });
+        }
+
+        if (season === "winter") {
+            leaf.tempRangesC = shiftTempRanges(leaf.tempRangesC, -8);
+            addMap(leaf.tempBands, { freezing: 8, cold: 6, warm: -6, hot: -8, severe_heat: -4 });
+        }
+    }
+
+    if (climate === "polar") {
+        addMap(leaf.conditions, { clear: 1, overcast: 3, foggy: 0, rainy: -10, snowy: 14, warm: -10, hot: -12, cold: 14, windy: 4 });
+        addMap(leaf.tempBands, { freezing: 18, cold: 10, cool: -2, mild: -8, warm: -10, hot: -10, severe_heat: -8 });
+        addMap(leaf.tempMotion, { rising: -2, holding: 8, falling: 2 });
+        addMap(leaf.tempMotionStrength, { slight: 2, steady: 2, sharp: 1 });
+        addMap(leaf.precipTypes, { none: 2, rain: -14, snow: 18, sleet: 2 });
+        addMap(leaf.precipIntensity, { light: 6, moderate: 2, hard: -2, severe: -4 });
+        addMap(leaf.windIntensity, { calm: -3, light: -1, moderate: 3, strong: 3, severe: 2 });
+        leaf.tempRangesC = shiftTempRanges(leaf.tempRangesC, -14);
+
+        if (season === "summer") {
+            leaf.tempRangesC = shiftTempRanges(leaf.tempRangesC, 8);
+            addMap(leaf.tempBands, { freezing: -6, cold: 4, cool: 6, mild: 2, warm: -2, hot: -6, severe_heat: -8 });
+            addMap(leaf.precipTypes, { rain: 4, snow: -4, sleet: 2 });
+        }
+    }
+}
+
+function applyBiomeAdjustments(leaf, biome) {
+    const modifiers = getBiomeDefinition(biome).modifiers;
+
+    addMap(leaf.conditions, {
+        clear: modifiers.clear,
+        overcast: modifiers.overcast,
+        foggy: modifiers.foggy,
+        rainy: modifiers.rainy,
+        snowy: modifiers.snowy,
+        warm: modifiers.warm,
+        hot: modifiers.hot,
+        cold: modifiers.cold,
+        windy: modifiers.windy
+    });
+
+    addMap(leaf.precipTypes, {
+        none: modifiers.precipNone,
+        rain: modifiers.precipRain,
+        snow: modifiers.precipSnow,
+        sleet: modifiers.precipSleet
+    });
+
+    addMap(leaf.precipPattern, {
+        frequent: modifiers.precipFrequent,
+        constant: modifiers.precipConstant
+    });
+
+    addMap(leaf.windIntensity, {
+        calm: modifiers.windCalm,
+        light: modifiers.windLight,
+        moderate: modifiers.windModerate,
+        strong: modifiers.windStrong,
+        severe: modifiers.windSevere
+    });
+
+    leaf.tempRangesC = shiftTempRanges(leaf.tempRangesC, modifiers.tempShiftC);
+}
+
+function finalizeLeaf(leaf) {
+    leaf.conditions = clampWeightMap(leaf.conditions);
+    leaf.tempBands = clampWeightMap(leaf.tempBands);
+    leaf.tempMotion = clampWeightMap(leaf.tempMotion);
+    leaf.tempMotionStrength = clampWeightMap(leaf.tempMotionStrength);
+    leaf.precipTypes = clampWeightMap(leaf.precipTypes);
+    leaf.precipIntensity = clampWeightMap(leaf.precipIntensity);
+    leaf.precipPattern = clampWeightMap(leaf.precipPattern);
+    leaf.windIntensity = clampWeightMap(leaf.windIntensity);
+    leaf.windPattern = clampWeightMap(leaf.windPattern);
+    leaf.durationWeights = clampWeightMap(leaf.durationWeights);
+
+    if (leaf.precipTypes.snow === 0 && leaf.conditions.snowy > 0) {
+        leaf.conditions.snowy = 0;
+    }
+
+    if (leaf.precipTypes.rain === 0 && leaf.conditions.rainy > 0) {
+        leaf.conditions.rainy = Math.max(0, leaf.conditions.rainy - 6);
+    }
+
+    return leaf;
+}
+
+function buildLeaf(biome, climate, season, phase) {
+    const leaf = makeBaseline();
+    applySeasonPhaseAdjustments(leaf, season, phase);
+    applyClimateAdjustments(leaf, climate, season);
+    applyBiomeAdjustments(leaf, biome);
+    return finalizeLeaf(leaf);
+}
+
+function buildWeatherBaselines() {
+    const baselines = {};
+
+    for (const biome of Object.keys(WEATHER_BIOMES)) {
+        baselines[biome] = {};
+
+        for (const climate of Object.keys(WEATHER_CLIMATES)) {
+            baselines[biome][climate] = {};
+
+            for (const season of WEATHER_SEASONS) {
+                baselines[biome][climate][season] = {};
+
+                for (const phase of WEATHER_PHASES) {
+                    baselines[biome][climate][season][phase] = buildLeaf(biome, climate, season, phase);
+                }
             }
         }
     }
-};
+
+    return baselines;
+}
+
+export const WEATHER_BASELINES = buildWeatherBaselines();
 
 function getFallbackBiome() {
-    return DEFAULT_BASELINE_PATH.biome;
+    return biomeExists(DEFAULT_BASELINE_PATH.biome) ? DEFAULT_BASELINE_PATH.biome : "forest";
 }
 
 function getFallbackClimate(biome) {
-    const climates = Object.keys(WEATHER_BASELINES[biome] ?? {});
-    return climates[0] ?? DEFAULT_BASELINE_PATH.climate;
+    if (climateExists(DEFAULT_BASELINE_PATH.climate) && WEATHER_BASELINES[biome]?.[DEFAULT_BASELINE_PATH.climate]) {
+        return DEFAULT_BASELINE_PATH.climate;
+    }
+
+    return Object.keys(WEATHER_BASELINES[biome] ?? {})[0] ?? "temperate";
 }
 
 function getFallbackSeason(biome, climate) {
-    const seasons = Object.keys(WEATHER_BASELINES[biome]?.[climate] ?? {});
-    return seasons[0] ?? DEFAULT_BASELINE_PATH.season;
+    return WEATHER_BASELINES[biome]?.[climate]?.[DEFAULT_BASELINE_PATH.season]
+        ? DEFAULT_BASELINE_PATH.season
+        : WEATHER_SEASONS[0];
 }
 
 function getFallbackPhase(biome, climate, season) {
-    const phases = Object.keys(WEATHER_BASELINES[biome]?.[climate]?.[season] ?? {});
-    return phases[0] ?? DEFAULT_BASELINE_PATH.phase;
+    return WEATHER_BASELINES[biome]?.[climate]?.[season]?.[DEFAULT_BASELINE_PATH.phase]
+        ? DEFAULT_BASELINE_PATH.phase
+        : WEATHER_PHASES[0];
 }
 
 export function getDefaultDurationWeights() {
@@ -281,19 +389,14 @@ export function getDefaultDurationWeights() {
 export function getBaselineLeaf(biome, climate, season, phase) {
     const resolvedBiome = WEATHER_BASELINES[biome] ? biome : getFallbackBiome();
     const resolvedClimate = WEATHER_BASELINES[resolvedBiome]?.[climate] ? climate : getFallbackClimate(resolvedBiome);
-    const resolvedSeason =
-        WEATHER_BASELINES[resolvedBiome]?.[resolvedClimate]?.[season]
-            ? season
-            : getFallbackSeason(resolvedBiome, resolvedClimate);
-    const resolvedPhase =
-        WEATHER_BASELINES[resolvedBiome]?.[resolvedClimate]?.[resolvedSeason]?.[phase]
-            ? phase
-            : getFallbackPhase(resolvedBiome, resolvedClimate, resolvedSeason);
+    const resolvedSeason = WEATHER_BASELINES[resolvedBiome]?.[resolvedClimate]?.[season]
+        ? season
+        : getFallbackSeason(resolvedBiome, resolvedClimate);
+    const resolvedPhase = WEATHER_BASELINES[resolvedBiome]?.[resolvedClimate]?.[resolvedSeason]?.[phase]
+        ? phase
+        : getFallbackPhase(resolvedBiome, resolvedClimate, resolvedSeason);
 
-    return (
-        WEATHER_BASELINES[resolvedBiome]?.[resolvedClimate]?.[resolvedSeason]?.[resolvedPhase] ??
-        makeBaseline()
-    );
+    return WEATHER_BASELINES[resolvedBiome]?.[resolvedClimate]?.[resolvedSeason]?.[resolvedPhase] ?? makeBaseline();
 }
 
 export function getTempRangeForBand(leaf, band) {
@@ -318,10 +421,9 @@ export function getAvailableSeasons(biome, climate) {
 export function getAvailablePhases(biome, climate, season) {
     const resolvedBiome = WEATHER_BASELINES[biome] ? biome : getFallbackBiome();
     const resolvedClimate = WEATHER_BASELINES[resolvedBiome]?.[climate] ? climate : getFallbackClimate(resolvedBiome);
-    const resolvedSeason =
-        WEATHER_BASELINES[resolvedBiome]?.[resolvedClimate]?.[season]
-            ? season
-            : getFallbackSeason(resolvedBiome, resolvedClimate);
+    const resolvedSeason = WEATHER_BASELINES[resolvedBiome]?.[resolvedClimate]?.[season]
+        ? season
+        : getFallbackSeason(resolvedBiome, resolvedClimate);
 
     return Object.keys(WEATHER_BASELINES[resolvedBiome]?.[resolvedClimate]?.[resolvedSeason] ?? {});
 }

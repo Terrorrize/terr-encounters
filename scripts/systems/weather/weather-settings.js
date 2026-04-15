@@ -1,5 +1,6 @@
+// FILE: scripts/systems/weather/weather-settings.js
 /**
- * terr-encounters v0.1.0-b11
+ * terr-encounters v0.1.0-b12
  * Function: registers world and client weather settings used by the controller,
  * UI, and optional exposure tracking.
  */
@@ -43,7 +44,7 @@ export function registerWeatherSettings() {
         scope: "world",
         config: true,
         type: String,
-        default: "temperate_forest"
+        default: "forest"
     });
 
     game.settings.register(MODULE_ID, WEATHER_SETTING_KEYS.DEFAULT_CLIMATE, {

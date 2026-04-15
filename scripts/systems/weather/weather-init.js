@@ -1,7 +1,8 @@
+// FILE: scripts/systems/weather/weather-init.js
 /**
- * terr-encounters v0.1.0-b8
- * Function: registers the weather system, settings, state, controller API, and
- * launcher behavior. Exposes a fuller weather API for later systems to call.
+ * terr-encounters v0.1.0-b9
+ * Function: registers the weather system, settings, state, controller API,
+ * launcher behavior, and the Alt+T weather panel keybinding.
  */
 
 import {
@@ -20,6 +21,7 @@ import { getWeatherPanel, openWeatherPanel, restoreWeatherPanelIfOpen } from "./
 const MODULE_ID = "terr-encounters";
 const WEATHER_SYSTEM_ID = "weather";
 const LAUNCHER_BUTTON_ID = "terr-weather-launcher";
+const OPEN_WEATHER_KEYBIND = "openWeatherPanel";
 
 function ensureWeatherNamespace(terr) {
     terr.systems ??= {};
@@ -61,15 +63,35 @@ function findSidebarAnchor(html) {
     );
 }
 
+function registerWeatherKeybindings() {
+    game.keybindings.register(MODULE_ID, OPEN_WEATHER_KEYBIND, {
+        name: "Open Weather Panel",
+        hint: "Opens the Terr Encounters weather panel.",
+        editable: [
+            {
+                key: "KeyT",
+                modifiers: ["Alt"]
+            }
+        ],
+        onDown: () => {
+            void openWeatherPanel();
+            return true;
+        },
+        precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL,
+        restricted: false
+    });
+}
+
 export function registerWeatherSystem(terr) {
     const weather = ensureWeatherNamespace(terr);
 
     weather.id = WEATHER_SYSTEM_ID;
-    weather.version = "0.1.0-b8";
+    weather.version = "0.1.0-b9";
 
     weather.onInit = async function onInit() {
         registerWeatherSettings();
         registerWeatherState();
+        registerWeatherKeybindings();
         console.log(`${MODULE_ID} | weather init complete`);
     };
 
