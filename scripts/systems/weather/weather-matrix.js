@@ -1,15 +1,16 @@
 /**
- * terr-encounters v0.1.0-b7
- * Function: updates the wording matrix from the resolved day and extracts
- * descriptive aftermath lines. This revision improves recovery, prevents wet
- * escalation from sticking too long, and keeps swamp/coast identity without
- * letting most biomes stay muddy forever.
+ * terr-encounters v0.1.0-b9
+ * Function: updates the wording matrix from resolved daily weather and produces
+ * concise ground aftermath lines. This revision makes wet-state recovery driven
+ * mostly by temperature band and sky state, clears ground in the order
+ * standing water -> mud -> surface wetness -> dryness, and treats dryness as a
+ * later-stage dry band instead of the direct opposite of wetness.
  */
 
 import { getRuinsDescriptorLines } from "../../data/weather/weather-ruins.js";
 import { clamp } from "./weather-utils.js";
 
-export const WEATHER_MATRIX_VERSION = "0.1.0-b7";
+export const WEATHER_MATRIX_VERSION = "0.1.0-b9";
 
 function normalizeMatrix(matrix = {}) {
     return {
@@ -21,199 +22,262 @@ function normalizeMatrix(matrix = {}) {
     };
 }
 
+function getDrynessCap(environment = {}) {
+    switch (environment.biome) {
+        case "swamp":
+            return 1;
+        case "coast":
+        case "forest":
+            return 2;
+        case "tundra":
+        case "mountains":
+        case "plains":
+        case "urban_fringe":
+            return 3;
+        case "hills":
+            return environment.climate === "dry" ? 4 : 3;
+        case "desert":
+            return 5;
+        default:
+            return 3;
+    }
+}
+
+function getDryingScore(currentDay, environment = {}) {
+    const tempC = Number(currentDay?.tempC ?? 0);
+    const cloudFace = currentDay?.cloudFace ?? "mixed";
+    const highWind =
+        currentDay?.windIntensity === "strong" || currentDay?.windIntensity === "severe";
+
+    let score = 0;
+
+    if (tempC <= 3) score = 0;
+    else if (tempC <= 10) score = 1;
+    else if (tempC <= 17) score = 2;
+    else if (tempC <= 24) score = 3;
+    else if (tempC <= 34) score = 4;
+    else score = 5;
+
+    if (cloudFace === "low" || cloudFace === "grey" || cloudFace === "storm") {
+        score -= 1;
+    } else if (cloudFace === "bright") {
+        score += 1;
+    }
+
+    switch (environment.biome) {
+        case "swamp":
+            score -= 2;
+            break;
+        case "coast":
+        case "forest":
+            score -= 1;
+            break;
+        case "desert":
+            score += 1;
+            break;
+        default:
+            break;
+    }
+
+    if (environment.climate === "dry") score += 1;
+    if (environment.season === "winter") score -= 1;
+    if (environment.season === "summer" && environment.phase === "late") score += 1;
+
+    if (highWind && score < 2) {
+        score += 1;
+    }
+
+    return clamp(score, 0, 5);
+}
+
 function applyRain(matrix, intensity) {
     switch (intensity) {
         case "light":
             matrix.wetness += 1;
             break;
         case "moderate":
-            matrix.wetness += 1;
+            matrix.wetness += 2;
             matrix.mud += 1;
+            matrix.dryness -= 1;
             break;
         case "hard":
             matrix.wetness += 2;
-            matrix.mud += 1;
+            matrix.mud += 2;
             matrix.standingWater += 1;
+            matrix.dryness -= 2;
             break;
         case "severe":
             matrix.wetness += 2;
             matrix.mud += 2;
             matrix.standingWater += 2;
+            matrix.dryness -= 3;
             break;
         default:
             break;
     }
-
-    matrix.dryness -= 2;
 }
 
 function applySnow(matrix, intensity) {
     switch (intensity) {
         case "light":
             matrix.snowCover += 1;
+            matrix.dryness -= 1;
             break;
         case "moderate":
             matrix.snowCover += 2;
+            matrix.dryness -= 1;
             break;
         case "hard":
             matrix.snowCover += 2;
             matrix.wetness += 1;
+            matrix.dryness -= 2;
             break;
         case "severe":
             matrix.snowCover += 2;
             matrix.wetness += 1;
+            matrix.dryness -= 2;
             break;
         default:
             break;
     }
-
-    matrix.dryness -= 1;
 }
 
 function applySleet(matrix, intensity) {
-    matrix.wetness += 1;
-
-    if (intensity === "moderate") {
-        matrix.mud += 1;
-    }
-
-    if (intensity === "hard" || intensity === "severe") {
-        matrix.mud += 1;
-        matrix.standingWater += 1;
-    }
-
-    matrix.dryness -= 2;
-}
-
-function getDryBias(environment = {}) {
-    let dryBias = 0;
-
-    switch (environment.climate) {
-        case "dry":
-            dryBias += 2;
+    switch (intensity) {
+        case "light":
+            matrix.wetness += 1;
+            matrix.mud += 1;
+            matrix.dryness -= 1;
             break;
-        case "tropical":
-            dryBias -= 1;
+        case "moderate":
+            matrix.wetness += 1;
+            matrix.mud += 1;
+            matrix.dryness -= 1;
             break;
-        case "polar":
-            dryBias -= 3;
+        case "hard":
+            matrix.wetness += 2;
+            matrix.mud += 2;
+            matrix.standingWater += 1;
+            matrix.dryness -= 2;
+            break;
+        case "severe":
+            matrix.wetness += 2;
+            matrix.mud += 2;
+            matrix.standingWater += 1;
+            matrix.dryness -= 2;
             break;
         default:
             break;
     }
-
-    switch (environment.biome) {
-        case "desert":
-        case "plains":
-        case "hills":
-        case "urban_fringe":
-            dryBias += 1;
-            break;
-        case "swamp":
-            dryBias -= 2;
-            break;
-        case "coast":
-            dryBias -= 1;
-            break;
-        default:
-            break;
-    }
-
-    switch (environment.season) {
-        case "summer":
-            dryBias += 1;
-            break;
-        case "winter":
-            dryBias -= 2;
-            break;
-        default:
-            break;
-    }
-
-    if (environment.season === "summer" && environment.phase === "late") {
-        dryBias += 1;
-    }
-
-    return dryBias;
 }
 
 function applySnowMelt(matrix, currentDay) {
     const tempC = Number(currentDay?.tempC ?? 0);
 
+    if (matrix.snowCover <= 0) return;
+
     if (tempC >= 8) {
         const melt = Math.min(2, matrix.snowCover);
         matrix.snowCover -= melt;
-        matrix.wetness += melt > 0 ? 1 : 0;
+        matrix.wetness += 1;
     } else if (tempC >= 3) {
         const melt = Math.min(1, matrix.snowCover);
         matrix.snowCover -= melt;
-        matrix.wetness += melt > 0 ? 1 : 0;
+        matrix.wetness += 1;
     }
 }
 
-function applyDrying(matrix, currentDay, environment = {}) {
-    const tempC = Number(currentDay?.tempC ?? 0);
-    const brightSky = currentDay?.cloudFace === "bright";
-    const mixedSky = currentDay?.cloudFace === "mixed";
-    const breezy = currentDay?.windIntensity === "moderate";
-    const windy = currentDay?.windIntensity === "strong" || currentDay?.windIntensity === "severe";
-    const dryBias = getDryBias(environment);
+function decayStandingWater(matrix, score, environment = {}) {
+    if (matrix.standingWater <= 0) return;
 
-    let dryPower = 0;
+    let decay = 0;
 
-    if (tempC >= 24) dryPower += 3;
-    else if (tempC >= 18) dryPower += 2;
-    else if (tempC >= 12) dryPower += 1;
+    if (score >= 3) decay = 1;
+    if (score >= 5) decay = 2;
 
-    if (brightSky) dryPower += 2;
-    else if (mixedSky) dryPower += 1;
+    if (environment.biome === "swamp") decay -= 1;
+    if (environment.biome === "coast") decay -= 1;
+    if (environment.biome === "desert") decay += 1;
+    if (environment.climate === "dry") decay += 1;
 
-    if (windy) dryPower += 1;
-    else if (breezy) dryPower += 1;
-
-    dryPower += dryBias;
-
-    if (dryPower <= 0) return;
-
-    matrix.dryness += dryPower >= 4 ? 2 : 1;
-
-    if (dryPower >= 2) {
-        matrix.wetness -= 1;
-    }
-
-    if (dryPower >= 3) {
-        matrix.mud -= 1;
-    }
-
-    if (dryPower >= 4) {
-        matrix.standingWater -= 1;
-        matrix.wetness -= 1;
-    }
-
-    if (dryPower >= 5) {
-        matrix.mud -= 1;
-    }
-
-    if (dryPower >= 6) {
-        matrix.standingWater -= 1;
-    }
+    decay = Math.max(0, decay);
+    matrix.standingWater -= decay;
 }
 
-function applyNaturalSettling(matrix, currentDay, environment = {}) {
-    if (currentDay?.precipActive) return;
+function decayMud(matrix, score, environment = {}) {
+    if (matrix.mud <= 0) return;
+    if (matrix.standingWater > 0) return;
 
-    matrix.wetness -= 1;
+    let decay = 0;
 
-    if (environment.biome !== "swamp" && environment.biome !== "coast") {
-        if (matrix.standingWater > 0) {
-            matrix.standingWater -= 1;
-        }
+    if (score >= 2) decay = 1;
+    if (score >= 4) decay = 2;
+
+    if (environment.biome === "swamp") decay -= 1;
+    if (environment.biome === "forest" || environment.biome === "coast") decay -= 1;
+    if (environment.biome === "desert") decay += 1;
+    if (environment.climate === "dry") decay += 1;
+
+    decay = Math.max(0, decay);
+    matrix.mud -= decay;
+}
+
+function decaySurfaceWetness(matrix, score, environment = {}) {
+    if (matrix.wetness <= 0) return;
+    if (matrix.standingWater > 0) return;
+    if (matrix.mud > 1) return;
+
+    let decay = 0;
+
+    if (score >= 1) decay = 1;
+    if (score >= 4) decay = 2;
+
+    if (environment.biome === "swamp") decay -= 1;
+    if (environment.biome === "forest" || environment.biome === "coast") decay -= 1;
+    if (environment.biome === "desert") decay += 1;
+    if (environment.climate === "dry") decay += 1;
+
+    decay = Math.max(0, decay);
+    matrix.wetness -= decay;
+}
+
+function growDryness(matrix, score, environment = {}) {
+    if (matrix.standingWater > 0) return;
+    if (matrix.mud > 0) return;
+    if (matrix.wetness > 1) return;
+    if (matrix.snowCover > 0) return;
+
+    const cap = getDrynessCap(environment);
+
+    if (score >= 2) {
+        matrix.dryness += 1;
     }
 
-    if (environment.biome !== "swamp") {
-        if (matrix.mud > 0 && matrix.dryness >= 1) {
-            matrix.mud -= 1;
-        }
+    if (score >= 5 && matrix.dryness >= 2 && cap >= 4) {
+        matrix.dryness += 1;
+    }
+
+    matrix.dryness = Math.min(matrix.dryness, cap);
+}
+
+function softenDrynessAgainstWetStates(matrix) {
+    if (matrix.standingWater >= 1) {
+        matrix.dryness = 0;
+        return;
+    }
+
+    if (matrix.mud >= 2) {
+        matrix.dryness = Math.min(matrix.dryness, 0);
+        return;
+    }
+
+    if (matrix.mud >= 1 || matrix.wetness >= 3) {
+        matrix.dryness = Math.min(matrix.dryness, 1);
+        return;
+    }
+
+    if (matrix.wetness >= 2) {
+        matrix.dryness = Math.min(matrix.dryness, 2);
     }
 }
 
@@ -223,45 +287,18 @@ function reconcileContradictions(matrix, environment = {}) {
         matrix.dryness = Math.max(0, matrix.dryness - 1);
     }
 
-    if (matrix.standingWater >= 3) {
-        matrix.dryness = Math.min(matrix.dryness, 1);
-    } else if (matrix.standingWater >= 1) {
-        matrix.dryness = Math.min(matrix.dryness, 2);
+    softenDrynessAgainstWetStates(matrix);
+
+    if (matrix.wetness === 0 && matrix.standingWater === 0) {
+        matrix.mud = Math.min(matrix.mud, 4);
     }
 
-    if (matrix.mud >= 3) {
-        matrix.dryness = Math.min(matrix.dryness, 2);
-    } else if (matrix.mud >= 1) {
-        matrix.dryness = Math.min(matrix.dryness, 3);
+    if (matrix.wetness === 0 && matrix.mud === 0 && matrix.standingWater === 0) {
+        matrix.snowCover = Math.max(0, matrix.snowCover);
     }
 
-    if (matrix.dryness >= 3) {
-        matrix.wetness -= 1;
-    }
-
-    if (matrix.dryness >= 4) {
-        matrix.standingWater -= 1;
-    }
-
-    if (matrix.dryness >= 5) {
-        matrix.mud -= 1;
-    }
-
-    if (
-        (environment.climate === "dry" || environment.biome === "desert" || environment.biome === "hills") &&
-        matrix.dryness >= 2
-    ) {
-        matrix.standingWater -= 1;
-    }
-
-    if (matrix.wetness <= 1) {
-        matrix.standingWater = Math.min(matrix.standingWater, 2);
-    }
-
-    if (matrix.wetness === 0) {
-        matrix.standingWater = Math.min(matrix.standingWater, 1);
-        matrix.mud = Math.min(matrix.mud, 2);
-    }
+    const drynessCap = getDrynessCap(environment);
+    matrix.dryness = Math.min(matrix.dryness, drynessCap);
 }
 
 export function updateWordingMatrix(matrix, currentDay, environment = {}) {
@@ -275,13 +312,18 @@ export function updateWordingMatrix(matrix, currentDay, environment = {}) {
         } else if (currentDay.precipType === "sleet") {
             applySleet(next, currentDay.precipIntensity);
         }
-    } else {
-        next.dryness += 1;
     }
 
     applySnowMelt(next, currentDay);
-    applyNaturalSettling(next, currentDay, environment);
-    applyDrying(next, currentDay, environment);
+
+    if (!currentDay?.precipActive) {
+        const dryingScore = getDryingScore(currentDay, environment);
+        decayStandingWater(next, dryingScore, environment);
+        decayMud(next, dryingScore, environment);
+        decaySurfaceWetness(next, dryingScore, environment);
+        growDryness(next, dryingScore, environment);
+    }
+
     reconcileContradictions(next, environment);
 
     return normalizeMatrix(next);
@@ -330,10 +372,16 @@ function buildGroundLines(matrix) {
     }
 
     if (standingWater === 0 && mud === 0 && wetness <= 1) {
-        if (dryness >= 4) {
-            lines.push("Dry conditions dominate the area.");
+        if (dryness >= 5) {
+            lines.push("The area feels parched.");
+        } else if (dryness >= 4) {
+            lines.push("The ground has baked hard.");
+        } else if (dryness >= 3) {
+            lines.push("The ground is notably dry.");
         } else if (dryness >= 2) {
-            lines.push("The air and ground are starting to dry.");
+            lines.push("The ground is dry and firm.");
+        } else if (dryness >= 1) {
+            lines.push("The ground is starting to firm.");
         }
     }
 
