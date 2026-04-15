@@ -1,5 +1,5 @@
 /**
- * terr-encounters v0.1.0-b10
+ * terr-encounters v0.1.0-b11
  * Function: renders the weather panel, displays current trend/day data, and
  * wires the panel controls for refresh, next day, reroll, reset, and
  * environment selection actions.
@@ -42,7 +42,7 @@ function buildSelectOptions(values, selectedValue) {
 
 function resolveEnvironmentSelection(environment, key, value) {
     const next = {
-        biome: environment?.biome ?? "temperate_forest",
+        biome: environment?.biome ?? "forest",
         climate: environment?.climate ?? "temperate",
         season: environment?.season ?? "spring",
         phase: environment?.phase ?? "mid",
@@ -73,7 +73,7 @@ function resolveEnvironmentSelection(environment, key, value) {
 }
 
 function buildEnvironmentOptions(environment) {
-    const biome = environment?.biome ?? "temperate_forest";
+    const biome = environment?.biome ?? "forest";
     const climate = environment?.climate ?? "temperate";
     const season = environment?.season ?? "spring";
     const phase = environment?.phase ?? "mid";
@@ -145,7 +145,6 @@ export class TerrWeatherPanel extends Application {
             event.preventDefault();
             if (!game.user?.isGM) return;
             await advanceWeatherDay();
-            ui.notifications?.info("Weather advanced to next day.");
             await this.refreshPanel();
         });
 
@@ -153,7 +152,6 @@ export class TerrWeatherPanel extends Application {
             event.preventDefault();
             if (!game.user?.isGM) return;
             await regenerateTrend();
-            ui.notifications?.info("Weather trend rerolled.");
             await this.refreshPanel();
         });
 
@@ -161,7 +159,6 @@ export class TerrWeatherPanel extends Application {
             event.preventDefault();
             if (!game.user?.isGM) return;
             await resetWeatherSystem();
-            ui.notifications?.warn("Weather system reset.");
             await this.refreshPanel();
         });
 
@@ -175,7 +172,6 @@ export class TerrWeatherPanel extends Application {
             const patch = resolveEnvironmentSelection(current, key, value);
 
             await updateWeatherEnvironment(patch);
-            ui.notifications?.info("Weather environment updated.");
             await this.refreshPanel();
         });
 
@@ -187,7 +183,6 @@ export class TerrWeatherPanel extends Application {
                 ruinsEnabled: Boolean(event.currentTarget.checked)
             });
 
-            ui.notifications?.info("Ruins flavor updated.");
             await this.refreshPanel();
         });
     }
@@ -209,6 +204,25 @@ export function getWeatherPanel() {
 
 export async function openWeatherPanel() {
     const panel = getWeatherPanel();
+    await refreshWeatherState();
+    await panel.render(true);
+    return panel;
+}
+
+export async function closeWeatherPanel() {
+    if (!weatherPanelInstance?.rendered) return null;
+    await weatherPanelInstance.close();
+    return null;
+}
+
+export async function toggleWeatherPanel() {
+    const panel = getWeatherPanel();
+
+    if (panel.rendered) {
+        await panel.close();
+        return null;
+    }
+
     await refreshWeatherState();
     await panel.render(true);
     return panel;

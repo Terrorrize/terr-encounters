@@ -1,5 +1,5 @@
 /**
- * terr-encounters v0.1.0-b12
+ * terr-encounters v0.1.0-b14
  * Function: orchestrates weather state flow. It seeds trends, resolves daily
  * results, advances days, rolls new trends when needed, and exposes a stable
  * API for the rest of the weather system.
@@ -20,13 +20,13 @@ import {
 import { getAbsoluteWeatherDay, setAbsoluteWeatherDay } from "./weather-settings.js";
 import { renderWeatherViewModel } from "./weather-render.js";
 
-export const WEATHER_CONTROLLER_VERSION = "0.1.0-b12";
+export const WEATHER_CONTROLLER_VERSION = "0.1.0-b14";
 
 function buildResolvedState(state) {
     const normalized = normalizeWeatherState(state);
     const absoluteDay = Number(normalized.currentDay?.absoluteDay ?? getAbsoluteWeatherDay());
     const currentDay = resolveTrendDay(normalized.activeTrend, absoluteDay);
-    const wordingMatrix = updateWordingMatrix(normalized.wordingMatrix, currentDay);
+    const wordingMatrix = updateWordingMatrix(normalized.wordingMatrix, currentDay, normalized.environment);
     const exposure = updateExposure(normalized.exposure, currentDay, normalized.environment);
 
     return {
@@ -45,13 +45,49 @@ function hasResolvedCurrentDay(state) {
     return Number.isFinite(state?.currentDay?.tempC) && Number.isFinite(state?.currentDay?.tempF);
 }
 
+function forceOpeningAdventureSeed(state) {
+    state.environment = {
+        ...state.environment,
+        season: "spring",
+        phase: "late"
+    };
+
+    state.activeTrend = {
+        id: `trend-opening-${Date.now()}`,
+        durationDays: 3,
+        dayIndex: 1,
+        condition: "clear",
+        tempBand: "warm",
+        seedTempC: 18,
+        tempMinC: 15,
+        tempMaxC: 21,
+        tempMotion: "holding",
+        tempMotionStrength: "slight",
+        precipType: "none",
+        precipIntensity: "none",
+        precipPattern: "sporadic",
+        windIntensity: "calm",
+        windPattern: "sporadic"
+    };
+
+    state.currentDay.absoluteDay = 1;
+    state.wordingMatrix = {
+        wetness: 0,
+        mud: 0,
+        standingWater: 0,
+        snowCover: 0,
+        dryness: 0
+    };
+
+    return state;
+}
+
 export async function initializeWeatherState() {
     let state = getWeatherState();
 
     if (!hasRealTrend(state)) {
         const fresh = createDefaultWeatherState();
-        fresh.activeTrend = buildActiveTrend(fresh.environment, null);
-        fresh.currentDay.absoluteDay = getAbsoluteWeatherDay();
+        forceOpeningAdventureSeed(fresh);
         state = buildResolvedState(fresh);
         await setWeatherState(state);
         return state;
@@ -122,9 +158,7 @@ export async function resetWeatherSystem() {
     await setAbsoluteWeatherDay(1);
 
     return updateWeatherState((state) => {
-        state.activeTrend = buildActiveTrend(state.environment, null);
-        state.activeTrend.dayIndex = 1;
-        state.currentDay.absoluteDay = 1;
+        forceOpeningAdventureSeed(state);
         return buildResolvedState(state);
     });
 }

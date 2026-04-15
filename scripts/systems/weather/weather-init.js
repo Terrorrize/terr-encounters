@@ -1,8 +1,7 @@
-// FILE: scripts/systems/weather/weather-init.js
 /**
- * terr-encounters v0.1.0-b9
+ * terr-encounters v0.1.0-b10
  * Function: registers the weather system, settings, state, controller API,
- * launcher behavior, and the Alt+T weather panel keybinding.
+ * launcher behavior, and the Alt+T weather panel toggle keybinding.
  */
 
 import {
@@ -16,7 +15,13 @@ import {
 } from "./weather-controller.js";
 import { registerWeatherSettings } from "./weather-settings.js";
 import { registerWeatherState } from "./weather-state.js";
-import { getWeatherPanel, openWeatherPanel, restoreWeatherPanelIfOpen } from "./weather-ui.js";
+import {
+    closeWeatherPanel,
+    getWeatherPanel,
+    openWeatherPanel,
+    restoreWeatherPanelIfOpen,
+    toggleWeatherPanel
+} from "./weather-ui.js";
 
 const MODULE_ID = "terr-encounters";
 const WEATHER_SYSTEM_ID = "weather";
@@ -45,7 +50,7 @@ function buildLauncherButton() {
     button.innerHTML = `<i class="fas fa-cloud-sun"></i>`;
 
     button.addEventListener("click", async () => {
-        await openWeatherPanel();
+        await toggleWeatherPanel();
     });
 
     return button;
@@ -65,8 +70,8 @@ function findSidebarAnchor(html) {
 
 function registerWeatherKeybindings() {
     game.keybindings.register(MODULE_ID, OPEN_WEATHER_KEYBIND, {
-        name: "Open Weather Panel",
-        hint: "Opens the Terr Encounters weather panel.",
+        name: "Toggle Weather Panel",
+        hint: "Opens or closes the Terr Encounters weather panel.",
         editable: [
             {
                 key: "KeyT",
@@ -74,7 +79,7 @@ function registerWeatherKeybindings() {
             }
         ],
         onDown: () => {
-            void openWeatherPanel();
+            void toggleWeatherPanel();
             return true;
         },
         precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL,
@@ -86,7 +91,7 @@ export function registerWeatherSystem(terr) {
     const weather = ensureWeatherNamespace(terr);
 
     weather.id = WEATHER_SYSTEM_ID;
-    weather.version = "0.1.0-b9";
+    weather.version = "0.1.0-b10";
 
     weather.onInit = async function onInit() {
         registerWeatherSettings();
@@ -118,6 +123,8 @@ export function registerWeatherSystem(terr) {
     terr.ui.weather.getPanel = getWeatherPanel;
 
     terr.api.weather.open = openWeatherPanel;
+    terr.api.weather.close = closeWeatherPanel;
+    terr.api.weather.toggle = toggleWeatherPanel;
     terr.api.weather.refresh = refreshWeatherState;
     terr.api.weather.getState = getRenderedWeatherState;
     terr.api.weather.nextDay = advanceWeatherDay;
