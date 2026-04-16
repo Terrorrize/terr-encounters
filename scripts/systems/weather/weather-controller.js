@@ -1,8 +1,9 @@
 /**
- * terr-encounters v0.1.0-b14
+ * terr-encounters v0.1.0-b15
  * Function: orchestrates weather state flow. It seeds trends, resolves daily
- * results, advances days, rolls new trends when needed, and exposes a stable
- * API for the rest of the weather system.
+ * results, advances days, rolls new trends when needed, and now applies a
+ * light calendar-driven season/phase model using 30-day months and 3-month
+ * seasons unless the GM manually overrides season/phase.
  */
 
 import { buildActiveTrend } from "./weather-seed.js";
@@ -20,20 +21,66 @@ import {
 import { getAbsoluteWeatherDay, setAbsoluteWeatherDay } from "./weather-settings.js";
 import { renderWeatherViewModel } from "./weather-render.js";
 
-export const WEATHER_CONTROLLER_VERSION = "0.1.0-b14";
+export const WEATHER_CONTROLLER_VERSION = "0.1.0-b15";
+
+const DAYS_PER_MONTH = 30;
+const MONTHS_PER_SEASON = 3;
+const DAYS_PER_SEASON = DAYS_PER_MONTH * MONTHS_PER_SEASON;
+const SEASON_ORDER = ["spring", "summer", "autumn", "winter"];
+const PHASE_ORDER = ["early", "mid", "late"];
+
+function getCalendarSeasonPhase(absoluteDay) {
+    const safeDay = Math.max(1, Number(absoluteDay) || 1);
+    const zeroBasedDay = safeDay - 1;
+    const monthIndex = Math.floor(zeroBasedDay / DAYS_PER_MONTH);
+    const seasonIndex = Math.floor(monthIndex / MONTHS_PER_SEASON) % SEASON_ORDER.length;
+    const phaseIndex = monthIndex % MONTHS_PER_SEASON;
+
+    return {
+        season: SEASON_ORDER[seasonIndex],
+        phase: PHASE_ORDER[phaseIndex],
+        monthNumber: monthIndex + 1,
+        dayOfMonth: (zeroBasedDay % DAYS_PER_MONTH) + 1,
+        dayOfSeason: (zeroBasedDay % DAYS_PER_SEASON) + 1
+    };
+}
+
+function syncEnvironmentToCalendar(state, absoluteDay) {
+    const normalized = normalizeWeatherState(state);
+    const followCalendar = normalized.environment?.followCalendar !== false;
+
+    if (!followCalendar) {
+        normalized.environment.followCalendar = false;
+        return normalized;
+    }
+
+    const calendar = getCalendarSeasonPhase(absoluteDay);
+
+    normalized.environment = {
+        ...normalized.environment,
+        season: calendar.season,
+        phase: calendar.phase,
+        followCalendar: true
+    };
+
+    return normalized;
+}
 
 function buildResolvedState(state) {
-    const normalized = normalizeWeatherState(state);
-    const absoluteDay = Number(normalized.currentDay?.absoluteDay ?? getAbsoluteWeatherDay());
+    const absoluteDay = Number(state?.currentDay?.absoluteDay ?? getAbsoluteWeatherDay());
+    const calendarSynced = syncEnvironmentToCalendar(state, absoluteDay);
+    const normalized = normalizeWeatherState(calendarSynced);
     const currentDay = resolveTrendDay(normalized.activeTrend, absoluteDay);
     const wordingMatrix = updateWordingMatrix(normalized.wordingMatrix, currentDay, normalized.environment);
     const exposure = updateExposure(normalized.exposure, currentDay, normalized.environment);
+    const calendar = getCalendarSeasonPhase(absoluteDay);
 
     return {
         ...normalized,
         currentDay,
         wordingMatrix,
-        exposure
+        exposure,
+        calendar
     };
 }
 
@@ -49,7 +96,8 @@ function forceOpeningAdventureSeed(state) {
     state.environment = {
         ...state.environment,
         season: "spring",
-        phase: "late"
+        phase: "late",
+        followCalendar: true
     };
 
     state.activeTrend = {
@@ -99,24 +147,28 @@ export async function initializeWeatherState() {
         return state;
     }
 
-    state = normalizeWeatherState(state);
+    state = buildResolvedState(state);
     await setWeatherState(state);
     return state;
 }
 
 export async function refreshWeatherState() {
-    const state = normalizeWeatherState(getWeatherState());
+    const state = buildResolvedState(getWeatherState());
     await setWeatherState(state);
     return state;
 }
 
 export async function regenerateTrend() {
     return updateWeatherState((state) => {
-        const previousTrend = state.activeTrend;
-        state.activeTrend = buildActiveTrend(state.environment, previousTrend);
-        state.activeTrend.dayIndex = 1;
-        state.currentDay.absoluteDay = getAbsoluteWeatherDay();
-        return buildResolvedState(state);
+        const absoluteDay = getAbsoluteWeatherDay();
+        const synced = syncEnvironmentToCalendar(state, absoluteDay);
+        const previousTrend = synced.activeTrend;
+
+        synced.activeTrend = buildActiveTrend(synced.environment, previousTrend);
+        synced.activeTrend.dayIndex = 1;
+        synced.currentDay.absoluteDay = absoluteDay;
+
+        return buildResolvedState(synced);
     });
 }
 
@@ -127,29 +179,34 @@ export async function advanceWeatherDay() {
     await setAbsoluteWeatherDay(nextAbsoluteDay);
 
     return updateWeatherState((state) => {
-        const trendDay = Number(state.activeTrend?.dayIndex ?? 1);
-        const duration = Number(state.activeTrend?.durationDays ?? 1);
+        const synced = syncEnvironmentToCalendar(state, nextAbsoluteDay);
+        const trendDay = Number(synced.activeTrend?.dayIndex ?? 1);
+        const duration = Number(synced.activeTrend?.durationDays ?? 1);
 
         if (trendDay >= duration) {
-            const previousTrend = state.activeTrend;
-            state.activeTrend = buildActiveTrend(state.environment, previousTrend);
-            state.activeTrend.dayIndex = 1;
+            const previousTrend = synced.activeTrend;
+            synced.activeTrend = buildActiveTrend(synced.environment, previousTrend);
+            synced.activeTrend.dayIndex = 1;
         } else {
-            state.activeTrend.dayIndex = trendDay + 1;
+            synced.activeTrend.dayIndex = trendDay + 1;
         }
 
-        state.currentDay.absoluteDay = nextAbsoluteDay;
-        return buildResolvedState(state);
+        synced.currentDay.absoluteDay = nextAbsoluteDay;
+        return buildResolvedState(synced);
     });
 }
 
 export async function rerollWeatherFromCurrentDay() {
     return updateWeatherState((state) => {
-        const previousTrend = state.activeTrend;
-        state.activeTrend = buildActiveTrend(state.environment, previousTrend);
-        state.activeTrend.dayIndex = 1;
-        state.currentDay.absoluteDay = getAbsoluteWeatherDay();
-        return buildResolvedState(state);
+        const absoluteDay = getAbsoluteWeatherDay();
+        const synced = syncEnvironmentToCalendar(state, absoluteDay);
+        const previousTrend = synced.activeTrend;
+
+        synced.activeTrend = buildActiveTrend(synced.environment, previousTrend);
+        synced.activeTrend.dayIndex = 1;
+        synced.currentDay.absoluteDay = absoluteDay;
+
+        return buildResolvedState(synced);
     });
 }
 
@@ -164,7 +221,7 @@ export async function resetWeatherSystem() {
 }
 
 export function getRenderedWeatherState() {
-    const state = normalizeWeatherState(getWeatherState());
+    const state = buildResolvedState(getWeatherState());
     return {
         state,
         view: renderWeatherViewModel(state)
@@ -173,15 +230,34 @@ export function getRenderedWeatherState() {
 
 export async function updateWeatherEnvironment(patch = {}) {
     return updateWeatherState((state) => {
-        state.environment = {
-            ...state.environment,
+        const currentAbsoluteDay = getAbsoluteWeatherDay();
+        const synced = syncEnvironmentToCalendar(state, currentAbsoluteDay);
+
+        const nextEnvironment = {
+            ...synced.environment,
             ...patch
         };
 
-        state.activeTrend = buildActiveTrend(state.environment, state.activeTrend);
-        state.activeTrend.dayIndex = 1;
-        state.currentDay.absoluteDay = getAbsoluteWeatherDay();
+        const manuallyChangedSeasonOrPhase =
+            Object.prototype.hasOwnProperty.call(patch, "season") ||
+            Object.prototype.hasOwnProperty.call(patch, "phase");
 
-        return buildResolvedState(state);
+        if (manuallyChangedSeasonOrPhase) {
+            nextEnvironment.followCalendar = false;
+        } else if (Object.prototype.hasOwnProperty.call(patch, "followCalendar")) {
+            nextEnvironment.followCalendar = Boolean(patch.followCalendar);
+        }
+
+        synced.environment = nextEnvironment;
+
+        if (synced.environment.followCalendar !== false) {
+            synced.environment = syncEnvironmentToCalendar(synced, currentAbsoluteDay).environment;
+        }
+
+        synced.activeTrend = buildActiveTrend(synced.environment, synced.activeTrend);
+        synced.activeTrend.dayIndex = 1;
+        synced.currentDay.absoluteDay = currentAbsoluteDay;
+
+        return buildResolvedState(synced);
     });
 }

@@ -1,8 +1,8 @@
 /**
- * terr-encounters v0.1.0-b11
+ * terr-encounters v0.1.0-b12
  * Function: owns the persistent weather state document stored in world settings.
  * This includes environment context, active trend, current day, wording matrix,
- * and optional exposure data.
+ * optional exposure data, and whether season/phase are following the calendar.
  */
 
 import { createWeatherId, deepClone } from "./weather-utils.js";
@@ -19,7 +19,8 @@ function buildDefaultEnvironment() {
         climate: defaults.climate,
         season: defaults.season,
         phase: defaults.phase,
-        ruinsEnabled: Boolean(defaults.ruinsEnabled)
+        ruinsEnabled: Boolean(defaults.ruinsEnabled),
+        followCalendar: true
     };
 }
 
@@ -83,7 +84,7 @@ function buildDefaultActiveTrend() {
 
 export function createDefaultWeatherState() {
     return {
-        version: "0.1.0-b11",
+        version: "0.1.0-b12",
         environment: buildDefaultEnvironment(),
         activeTrend: buildDefaultActiveTrend(),
         currentDay: buildDefaultCurrentDay(),

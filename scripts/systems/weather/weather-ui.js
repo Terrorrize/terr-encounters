@@ -1,8 +1,9 @@
 /**
- * terr-encounters v0.1.0-b11
+ * terr-encounters v0.1.0-b12
  * Function: renders the weather panel, displays current trend/day data, and
  * wires the panel controls for refresh, next day, reroll, reset, and
- * environment selection actions.
+ * environment selection actions. Manual season/phase changes now act as
+ * explicit calendar overrides.
  */
 
 import {
@@ -46,29 +47,34 @@ function resolveEnvironmentSelection(environment, key, value) {
         climate: environment?.climate ?? "temperate",
         season: environment?.season ?? "spring",
         phase: environment?.phase ?? "mid",
-        ruinsEnabled: Boolean(environment?.ruinsEnabled)
+        ruinsEnabled: Boolean(environment?.ruinsEnabled),
+        followCalendar: environment?.followCalendar !== false
     };
 
-    next[key] = value;
-
     if (key === "biome") {
+        next.biome = value;
         next.climate = getAvailableClimates(next.biome)[0] ?? next.climate;
-        next.season = getAvailableSeasons(next.biome, next.climate)[0] ?? next.season;
-        next.phase = getAvailablePhases(next.biome, next.climate, next.season)[0] ?? next.phase;
         return next;
     }
 
     if (key === "climate") {
-        next.season = getAvailableSeasons(next.biome, next.climate)[0] ?? next.season;
-        next.phase = getAvailablePhases(next.biome, next.climate, next.season)[0] ?? next.phase;
+        next.climate = value;
         return next;
     }
 
     if (key === "season") {
-        next.phase = getAvailablePhases(next.biome, next.climate, next.season)[0] ?? next.phase;
+        next.season = value;
+        next.followCalendar = false;
         return next;
     }
 
+    if (key === "phase") {
+        next.phase = value;
+        next.followCalendar = false;
+        return next;
+    }
+
+    next[key] = value;
     return next;
 }
 
